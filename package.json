@@ -1,5 +1,5 @@
 {
-  "name": "serverless-aws-service-framework",
+  "name": "serverless-service-framework",
   "version": "0.0.1",
   "description": "",
   "main": "dist/lib.js",
@@ -8,12 +8,10 @@
     "clean-build-dir": "npx rimraf dist",
     "build": "npm run clean-build-dir && npx tsc -p tsconfig.json",
     "build:watch": "npm run build -- -w",
+    "build:with-checkup": "npm run checkup && npm run build",
     "test": "echo No Tests",
     "eslint": "npx eslint --ext .ts ./src",
-    "checkup": "npm run eslint && npm run test",
-    "checkup:with-build": "npm run checkup && npm run build",
-    "prepublish": "npm run checkup",
-    "prepare": "npm run build"
+    "checkup": "npm run eslint && npm run test"
   },
   "repository": {
     "type": "git",
