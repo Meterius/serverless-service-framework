@@ -1,0 +1,39 @@
+{
+  "name": "serverless-aws-service-framework",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
+  "scripts": {
+    "clean-build-dir": "npx rimraf dist",
+    "build": "npm run clean-build-dir && npx tsc -p tsconfig.json",
+    "build:watch": "npm run build -- -w",
+    "test": "echo No Tests",
+    "eslint": "npx eslint --ext .ts ./src",
+    "checkup": "npm run eslint && npm run test",
+    "checkup:with-build": "npm run checkup && npm run build",
+    "prepublish": "npm run checkup",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Meterius/serverless-aws-service-framework.git"
+  },
+  "author": "Jonah Leander Hoff",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Meterius/serverless-aws-service-framework/issues"
+  },
+  "homepage": "https://github.com/Meterius/serverless-aws-service-framework#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.6.1",
+    "@typescript-eslint/parser": "^2.6.1",
+    "eslint": "^6.6.0",
+    "eslint-config-prettier": "^6.5.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "prettier": "^1.19.1",
+    "rimraf": "^3.0.0",
+    "typescript": "^3.7.2",
+    "typescript-eslint": "0.0.1-alpha.0"
+  }
+}
