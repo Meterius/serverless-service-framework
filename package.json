@@ -5,12 +5,12 @@
   "main": "dist/lib.js",
   "types": "dist/lib.d.ts",
   "scripts": {
-    "clean-build-dir": "npx rimraf dist",
-    "build": "npm run clean-build-dir && npx tsc -p tsconfig.json",
+    "clean-build-dir": "npx --no-install rimraf dist",
+    "build": "npm run clean-build-dir && npx --no-install tsc -p tsconfig.json",
     "build:watch": "npm run build -- -w",
     "build:with-checkup": "npm run checkup && npm run build",
     "test": "echo No Tests",
-    "eslint": "npx eslint --ext .ts ./src",
+    "eslint": "npx --no-install eslint --ext .ts ./src",
     "checkup": "npm run eslint && npm run test"
   },
   "repository": {
