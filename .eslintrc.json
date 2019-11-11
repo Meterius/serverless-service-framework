@@ -4,17 +4,22 @@
   "parserOptions": {
     "project": "./tsconfig.json"
   },
-  "plugins": ["@typescript-eslint", "prettier"],
+  "plugins": ["@typescript-eslint", "import"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
-    "prettier",
-    "prettier/@typescript-eslint"
+    "airbnb-typescript/base"
   ],
   "rules": {
-    "prettier/prettier": "error",
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/quotes": ["error", "double"],
+    "@typescript-eslint/no-explicit-any": "off",
+    "import/prefer-default-export": "off",
+    "import/no-cycle": "off",
+    "max-len": ["error", { "code": 100 }],
+    "quotes": ["error", "double"],
+    "no-underscore-dangle": "off",
+    "no-await-in-loop": "off"
   }
 }
