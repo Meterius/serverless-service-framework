@@ -2,11 +2,13 @@
   "name": "serverless-service-framework",
   "version": "0.0.1",
   "description": "",
-  "main": "dist/lib.js",
-  "types": "dist/lib.d.ts",
+  "bin": {
+    "ssf": "dist/cli/cli.js",
+    "sls-sf": "dist/cli/cli.js"
+  },
   "scripts": {
-    "clean-build-dir": "npx --no-install rimraf dist",
-    "build": "npm run clean-build-dir && npx --no-install tsc -p tsconfig.json",
+    "clean-build": "npx --no-install rimraf dist",
+    "build": "npm run clean-build && npx --no-install tsc -p tsconfig.json",
     "build:watch": "npm run build -- -w",
     "build:with-checkup": "npm run checkup && npm run build",
     "test": "echo No Tests",
@@ -30,12 +32,15 @@
     "eslint": "^6.6.0",
     "eslint-config-airbnb-typescript": "^6.1.0",
     "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-prettier": "^3.1.1",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.16.0",
+    "eslint-plugin-react-hooks": "^1.7.0",
     "rimraf": "^3.0.0",
-    "typescript": "^3.7.2",
-    "typescript-eslint": "0.0.1-alpha.0"
+    "typescript": "^3.7.2"
   },
   "dependencies": {
-    "deepmerge": "^4.2.2"
+    "deepmerge": "^4.2.2",
+    "gluegun": "^4.1.0",
+    "ts-node": "^8.5.0"
   }
 }
