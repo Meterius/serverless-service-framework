@@ -2,8 +2,9 @@
   "name": "serverless-service-framework",
   "version": "0.0.1",
   "description": "",
+  "main": "dist/lib.js",
+  "types": "dist/types/lib.d.ts",
   "bin": {
-    "ssf": "dist/cli/cli.js",
     "sls-sf": "dist/cli/cli.js"
   },
   "scripts": {
@@ -39,6 +40,7 @@
     "typescript": "^3.7.2"
   },
   "dependencies": {
+    "chalk": "^3.0.0",
     "deepmerge": "^4.2.2",
     "gluegun": "^4.1.0",
     "ts-node": "^8.5.0"

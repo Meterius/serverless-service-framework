@@ -54,8 +54,13 @@ async function filterExistingFiles(filePaths: string[]): Promise<string[]> {
   return existingFilePaths.filter((filePath): filePath is string => typeof filePath === "string");
 }
 
-function resolveFrameworkPath(frameworkSchemaFilePath: string, relativeFilePath: string): string {
-  return path.join(frameworkSchemaFilePath, relativeFilePath);
+function resolveFrameworkPath(
+  frameworkSchemaFile: FrameworkSchemaFile, relativeFilePath: string,
+): string {
+  return path.join(
+    path.dirname(frameworkSchemaFile.path),
+    relativeFilePath,
+  );
 }
 
 async function getServiceSchemaFile(
@@ -72,24 +77,39 @@ async function getServiceSchemaFile(
   return fileNames[0];
 }
 
-async function loadSchemaFile(filePath: string): Promise<any> {
+async function loadSchemaFile<T>(
+  filePath: string,
+  typeGuard: (val: unknown) => val is T,
+): Promise<T | undefined> {
   const ext = path.extname(filePath);
 
-  if (ext === "ts") {
+  function isObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+  }
+
+  if (ext === ".ts") {
     await import("ts-node"); // required to load ts files in vanilla node
-    return import(filePath);
+    const fileExport = await import(filePath);
+
+    if (typeGuard(fileExport)) {
+      return fileExport;
+    } else if (isObject(fileExport) && typeGuard(fileExport.default)) {
+      return fileExport.default;
+    } else {
+      return undefined;
+    }
   } else {
     throw new Error(`Unsupported Extension "${ext}" for Schema at "${filePath}"`);
   }
 }
 
 export async function loadFrameworkSchemaFile(filePath: string): Promise<FrameworkSchemaFile> {
-  const fileExport = await loadSchemaFile(filePath);
+  const schema = await loadSchemaFile(filePath, isFrameworkSchema);
 
-  if (isFrameworkSchema(fileExport)) {
+  if (schema) {
     return {
       path: filePath,
-      schema: fileExport,
+      schema,
     };
   } else {
     throw new Error(`Framework Schema at "${filePath}" has an invalid format`);
@@ -97,15 +117,15 @@ export async function loadFrameworkSchemaFile(filePath: string): Promise<Framewo
 }
 
 async function loadServiceSchemaFile(filePath: string): Promise<ServiceSchemaFile> {
-  const fileExport = await loadSchemaFile(filePath);
+  const schema = await loadSchemaFile(filePath, isServiceSchema);
 
-  if (isServiceSchema(fileExport)) {
+  if (schema) {
     return {
       path: filePath,
-      schema: fileExport,
+      schema,
     };
   } else {
-    throw new Error(`Framework Schema at "${filePath}" has an invalid format`);
+    throw new Error(`Service Schema at "${filePath}" has an invalid format`);
   }
 }
 
@@ -114,7 +134,7 @@ export async function loadServiceSchemaFiles(
 ): Promise<ServiceSchemaFile[]> {
   // get absolute schema root directory path
   const schemaRoot = resolveFrameworkPath(
-    frameworkSchemaFile.path, frameworkSchemaFile.schema.params.serviceRootDir,
+    frameworkSchemaFile, frameworkSchemaFile.schema.params.serviceRootDir,
   );
 
   // find all directories in schema root directory
@@ -128,5 +148,15 @@ export async function loadServiceSchemaFiles(
   // load the service schema files from the schema file paths
   return Promise.all(
     schemaFilePaths.map((schemaFilePath) => loadServiceSchemaFile(schemaFilePath)),
+  );
+}
+
+export function getServiceSchemaFileByName(
+  serviceSchemaFiles: ServiceSchemaFile[],
+  serviceName: string,
+): ServiceSchemaFile | undefined {
+  return serviceSchemaFiles.find(
+    (file) => file.schema.params.shortName === serviceName
+      || file.schema.params.name === serviceName,
   );
 }

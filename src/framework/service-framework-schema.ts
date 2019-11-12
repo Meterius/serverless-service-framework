@@ -1,7 +1,7 @@
 export interface InlineFrameworkTemplate {
   // framework template cannot have the service name specified
   service?: {
-    name: never;
+    name?: never;
     [key: string]: any;
   };
 
@@ -11,8 +11,8 @@ export interface InlineFrameworkTemplate {
     name: "aws"; // currently only aws is supported
     region: string;
 
-    stage: never; // cannot set stage in template
-    stackName: never; // cannot be used, since services cannot share a stack name
+    stage?: never; // cannot set stage in template
+    stackName?: never; // cannot be used, since services cannot share a stack name
 
     [key: string]: any;
   };

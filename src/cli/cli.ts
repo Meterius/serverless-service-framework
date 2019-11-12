@@ -1,4 +1,5 @@
 import { build, GluegunCommand, GluegunToolbox } from "gluegun";
+import chalk from "chalk";
 
 export async function run(argv: any): Promise<GluegunToolbox> {
   const help: GluegunCommand = {
@@ -10,18 +11,18 @@ export async function run(argv: any): Promise<GluegunToolbox> {
     },
   };
 
-  const defaultCommand: GluegunCommand = {
-    ...help,
-    hidden: true,
-  };
-
   const cli = build("ssf")
     .src(__dirname)
     .help(help)
-    .defaultCommand(defaultCommand)
     .create();
 
   return cli.run(argv);
 }
 
-run(process.argv).then(() => {}, (err) => { throw err; });
+run(process.argv).then(
+  () => {},
+  (err) => {
+    console.log(chalk`{red ${err.message}}`);
+    process.exit(1);
+  },
+);

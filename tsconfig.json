@@ -4,9 +4,10 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "declaration": false,
+    "declaration": true,
     "strict": true,
     "outDir": "dist",
+    "declarationDir": "dist/types",
     "esModuleInterop": true,
     "lib": ["es6"],
     "skipLibCheck": true
