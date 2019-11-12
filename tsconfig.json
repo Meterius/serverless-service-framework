@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es2018",
     "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
     "declaration": false,
     "strict": true,
     "outDir": "dist",
