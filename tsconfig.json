@@ -5,6 +5,7 @@
     "declaration": true,
     "strict": true,
     "outDir": "dist",
+    "esModuleInterop": true,
     "lib": ["es6"]
   },
   "include": [
