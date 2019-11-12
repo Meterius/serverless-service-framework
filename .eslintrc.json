@@ -20,6 +20,7 @@
     "max-len": ["error", { "code": 100 }],
     "quotes": ["error", "double"],
     "no-underscore-dangle": "off",
-    "no-await-in-loop": "off"
+    "no-await-in-loop": "off",
+    "default-case": "off"
   }
 }
