@@ -2,11 +2,12 @@
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
-    "declaration": true,
+    "declaration": false,
     "strict": true,
     "outDir": "dist",
     "esModuleInterop": true,
-    "lib": ["es6"]
+    "lib": ["es6"],
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*.ts"
