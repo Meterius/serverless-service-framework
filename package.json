@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/Meterius/serverless-aws-service-framework#readme",
   "devDependencies": {
+    "@types/node": "^12.12.7",
     "@typescript-eslint/eslint-plugin": "^2.6.1",
     "@typescript-eslint/parser": "^2.6.1",
     "eslint": "^6.6.0",
@@ -33,5 +34,8 @@
     "rimraf": "^3.0.0",
     "typescript": "^3.7.2",
     "typescript-eslint": "0.0.1-alpha.0"
+  },
+  "dependencies": {
+    "deepmerge": "^4.2.2"
   }
 }
