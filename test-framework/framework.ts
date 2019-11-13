@@ -1,6 +1,6 @@
-const { FrameworkSchema } = require("serverless-service-framework");
+import { FrameworkSchema } from "serverless-service-framework";
 
-module.exports = new FrameworkSchema({
+export default new FrameworkSchema({
   name: "Cquenz Backend",
   shortName: "cqz-be",
 
