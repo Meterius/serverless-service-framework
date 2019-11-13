@@ -2,7 +2,7 @@ import path from "path";
 import { execSync } from "child_process";
 import chalk from "chalk";
 import { CliError } from "../utility/exceptions";
-import { buildService, getService, loadFrameworkSchemas } from "../utility/framework";
+import { buildService, getService, loadFrameworkContext } from "../utility/framework";
 import { getFrameworkSchemaOption, requireStageOption } from "../utility/common-options";
 import { GC, TB } from "../cli-types";
 import { requireParameters } from "../utility/options";
@@ -17,7 +17,7 @@ const exec: GC = {
     );
     const stage = requireStageOption(tb);
 
-    const fr = await loadFrameworkSchemas(getFrameworkSchemaOption(tb));
+    const fr = await loadFrameworkContext(getFrameworkSchemaOption(tb));
     const se = getService(fr, serviceName);
     const bi = await buildService(fr, serviceName);
 

@@ -22,14 +22,12 @@ export class FrameworkSchema {
   constructor(params: FrameworkSchemaParams) {
     this.params = params;
   }
+
+  get template(): InlineFrameworkTemplate {
+    return this.params.template;
+  }
 }
 
 export function isFrameworkSchema(value: any): value is FrameworkSchema {
   return value instanceof FrameworkSchema;
-}
-
-export function getInlineFrameworkTemplate(
-  templateSchema: FrameworkSchema,
-): InlineFrameworkTemplate {
-  return templateSchema.params.template;
 }

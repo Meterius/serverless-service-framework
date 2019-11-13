@@ -20,12 +20,12 @@ export class ServiceSchema {
   constructor(params: ServiceSchemaParams) {
     this.params = params;
   }
+
+  get template(): InlineServiceTemplate {
+    return this.params.template;
+  }
 }
 
 export function isServiceSchema(value: any): value is ServiceSchema {
   return value instanceof ServiceSchema;
-}
-
-export function getInlineServiceTemplate(serviceSchema: ServiceSchema): InlineServiceTemplate {
-  return serviceSchema.params.template;
 }

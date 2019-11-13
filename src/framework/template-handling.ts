@@ -1,7 +1,7 @@
 import merge from "deepmerge";
 import {
-  FrameworkSchema, getInlineFrameworkTemplate,
-  getInlineServiceTemplate, ServiceSchema,
+  FrameworkSchema,
+  ServiceSchema,
 } from "./schema";
 import { InlineServerlessTemplate } from "./types";
 import { FrameworkSchemaFile, ServiceSchemaFile } from "./schema-handling";
@@ -12,8 +12,8 @@ export function createServiceServerlessTemplate(
   frameworkSchema: FrameworkSchema,
   serviceSchema: ServiceSchema,
 ): InlineServerlessTemplate {
-  const serviceTemplate = getInlineServiceTemplate(serviceSchema);
-  const frameworkTemplate = getInlineFrameworkTemplate(frameworkSchema);
+  const serviceTemplate = serviceSchema.template;
+  const frameworkTemplate = frameworkSchema.template;
 
   const template: InlineServerlessTemplate = merge.all([
     frameworkTemplate,
