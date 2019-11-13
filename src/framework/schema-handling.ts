@@ -1,10 +1,13 @@
-import fs, { Dirent } from "fs";
 import path from "path";
 import { FrameworkSchema, isFrameworkSchema } from "./service-framework-schema";
 import { isServiceSchema, ServiceSchema } from "./service-schema";
-
-const searchedServiceSchemaNames = ["service"];
-const searchedSchemaExtensions = ["ts"];
+import {
+  frameworkSchemaExtensions,
+  frameworkSchemaNames,
+  serviceSchemaExtensions,
+  serviceSchemaNames,
+} from "./constants";
+import { findMatchingFile, getSubDirectories } from "./file-handling";
 
 interface SchemaFile<T> {
   filePath: string;
@@ -17,44 +20,6 @@ export type FrameworkSchemaFile = SchemaFile<FrameworkSchema>;
 
 export type ServiceSchemaFile = SchemaFile<ServiceSchema>;
 
-async function getSubDirectories(dirPath: string): Promise<string[]> {
-  const dirs = await new Promise<Dirent[]>((resolve, reject) => {
-    fs.readdir(dirPath, { withFileTypes: true }, ((err, files) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(files);
-      }
-    }));
-  });
-
-  return dirs.filter(
-    (entry) => entry.isDirectory(),
-  ).map(
-    (entry) => path.join(dirPath, entry.name),
-  );
-}
-
-async function filterExistingFiles(filePaths: string[]): Promise<string[]> {
-  const existingFilePaths = await Promise.all(
-    filePaths.map((filePath) => new Promise<string | undefined>((resolve, reject) => {
-      fs.stat(filePath, (err) => {
-        if (err) {
-          if (err.code === "ENOENT") {
-            resolve(undefined);
-          } else {
-            reject(err);
-          }
-        } else {
-          resolve(filePath);
-        }
-      });
-    })),
-  );
-
-  return existingFilePaths.filter((filePath): filePath is string => typeof filePath === "string");
-}
-
 function resolveFrameworkPath(
   frameworkSchemaFile: FrameworkSchemaFile, relativeFilePath: string,
 ): string {
@@ -64,18 +29,24 @@ function resolveFrameworkPath(
   );
 }
 
-async function getServiceSchemaFile(
+export async function getServiceSchemaFilePath(
   schemaDir: string,
 ): Promise<string | undefined> {
-  const possibleFileNames = searchedServiceSchemaNames.map(
-    (name) => searchedSchemaExtensions.map((ext) => `${name}.${ext}`),
-  ).reduce((prev, curr) => curr.concat(prev), []);
-
-  const fileNames = await filterExistingFiles(
-    possibleFileNames.map((fileName) => path.join(schemaDir, fileName)),
+  return findMatchingFile(
+    schemaDir,
+    serviceSchemaNames,
+    serviceSchemaExtensions,
   );
+}
 
-  return fileNames[0];
+export async function getFrameworkSchemaFilePath(
+  frameworkDir: string,
+): Promise<string | undefined> {
+  return findMatchingFile(
+    frameworkDir,
+    frameworkSchemaNames,
+    frameworkSchemaExtensions,
+  );
 }
 
 async function loadSchemaFile<T>(
@@ -155,7 +126,7 @@ export async function loadServiceSchemaFiles(
 
   // find all existing schema files
   const schemaFilePaths = (
-    await Promise.all(schemaDirs.map((dir) => getServiceSchemaFile(dir)))
+    await Promise.all(schemaDirs.map((dir) => getServiceSchemaFilePath(dir)))
   ).filter((file): file is string => typeof file === "string");
 
   // load the service schema files from the schema file paths

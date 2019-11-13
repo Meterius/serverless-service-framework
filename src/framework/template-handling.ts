@@ -5,6 +5,7 @@ import { getInlineServiceTemplate, ServiceSchema } from "./service-schema";
 import { FrameworkSchema, getInlineFrameworkTemplate } from "./service-framework-schema";
 import { InlineServerlessTemplate } from "./types";
 import { ServiceSchemaFile } from "./schema-handling";
+import { serviceBuild, serviceBuildDir } from "./constants";
 
 export function createServiceServerlessTemplate(
   frameworkSchema: FrameworkSchema,
@@ -59,7 +60,8 @@ export function writeServiceServerlessTemplate(
 ): void {
   const slsFilePath = path.join(
     serviceFile.dirPath,
-    `serverless.${formatToExt(serializedTemplate.format)}`,
+    serviceBuildDir,
+    `${serviceBuild.serverlessTemplate}.${formatToExt(serializedTemplate.format)}`,
   );
 
   fs.writeFileSync(slsFilePath, serializedTemplate.data);
