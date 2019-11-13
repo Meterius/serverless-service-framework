@@ -17,6 +17,7 @@
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/require-await": "off",
     "@typescript-eslint/ban-ts-ignore": "off",
+    "max-classes-per-file": "off",
     "import/prefer-default-export": "off",
     "import/no-cycle": "off",
     "max-len": ["error", { "code": 100 }],

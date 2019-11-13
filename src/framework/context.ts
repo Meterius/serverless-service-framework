@@ -21,17 +21,29 @@ function verifyServiceNames(
   });
 }
 
+export class ServiceContext extends ServiceSchema {
+  public readonly serviceSchemaFile: ServiceSchemaFile;
+
+  public readonly ctx: FrameworkContext;
+
+  constructor(serviceSchemaFile: ServiceSchemaFile, frameworkContext: FrameworkContext) {
+    super(serviceSchemaFile.schema.params);
+    this.ctx = frameworkContext;
+    this.serviceSchemaFile = serviceSchemaFile;
+  }
+}
+
 export class FrameworkContext {
   public readonly frameworkSchemaFile: FrameworkSchemaFile;
 
-  public readonly serviceSchemaFiles: ServiceSchemaFile[];
+  public readonly services: ServiceContext[];
 
   constructor(
     frameworkSchemaFile: FrameworkSchemaFile,
     serviceSchemaFiles: ServiceSchemaFile[],
   ) {
     this.frameworkSchemaFile = frameworkSchemaFile;
-    this.serviceSchemaFiles = serviceSchemaFiles;
+    this.services = serviceSchemaFiles.map((file) => new ServiceContext(file, this));
 
     verifyServiceNames(frameworkSchemaFile, serviceSchemaFiles);
   }
@@ -40,20 +52,11 @@ export class FrameworkContext {
     return this.frameworkSchemaFile.schema;
   }
 
-  get serviceSchemas(): ServiceSchema[] {
-    return this.serviceSchemaFiles.map((file) => file.schema);
-  }
-
-  getServiceSchemaFile(serviceName: string): ServiceSchemaFile | undefined {
-    return this.serviceSchemaFiles.find(
-      (file) => file.schema.params.name === serviceName
-        || file.schema.params.shortName === serviceName,
+  getService(serviceName: string): ServiceContext | undefined {
+    return this.services.find(
+      (service) => service.params.name === serviceName
+        || service.params.shortName === serviceName,
     );
-  }
-
-  getServiceSchema(serviceName: string): ServiceSchema | undefined {
-    const file = this.getServiceSchemaFile(serviceName);
-    return file ? file.schema : undefined;
   }
 }
 

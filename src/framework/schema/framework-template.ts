@@ -21,11 +21,3 @@ export interface InlineFrameworkTemplate {
 
   [key: string]: any;
 }
-
-export function getProvider(template: InlineFrameworkTemplate): ServerlessProvider {
-  return template.provider.name;
-}
-
-export function getRegion(template: InlineFrameworkTemplate): string {
-  return template.provider.region;
-}

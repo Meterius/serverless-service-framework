@@ -21,19 +21,21 @@ const exec: GC = {
     const se = getService(fr, serviceName);
     const bi = await buildService(fr, serviceName);
 
-    const templatePath = path.relative(se.dirPath, bi.serverlessTemplateFilePath);
+    const serviceDir = se.serviceSchemaFile.dirPath;
+
+    const templatePath = path.relative(serviceDir, bi.serverlessTemplateFilePath);
 
     const slsCmd = `sls ${slsCmdBase} --config "${templatePath}" --stage "${stage}"`;
 
     try {
       tb.print.info(chalk`Running Serverless Command: "{blue ${slsCmd}}"`);
       tb.print.info(
-        chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), se.dirPath)}}"`,
+        chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), serviceDir)}}"`,
       );
 
       execSync(`npx --no-install ${slsCmd}`, {
         stdio: "inherit",
-        cwd: se.dirPath,
+        cwd: serviceDir,
       });
     } catch (err) {
       throw new CliError("Serverless Command Failed");

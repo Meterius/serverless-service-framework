@@ -1,4 +1,5 @@
 import { InlineFrameworkTemplate } from "./framework-template";
+import { ServerlessProvider } from "../types";
 
 interface InlineFrameworkTemplateProperties {
   templateType?: "inline";
@@ -25,6 +26,14 @@ export class FrameworkSchema {
 
   get template(): InlineFrameworkTemplate {
     return this.params.template;
+  }
+
+  get provider(): ServerlessProvider {
+    return this.template.provider.name;
+  }
+
+  get region(): string {
+    return this.template.provider.region;
   }
 }
 

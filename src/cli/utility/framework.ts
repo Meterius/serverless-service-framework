@@ -6,7 +6,7 @@ import {
 } from "../../framework/schema-handling";
 import { CliError } from "./exceptions";
 import { buildServiceServerlessTemplate } from "../../framework/template-handling";
-import { createFrameworkContext, FrameworkContext } from "../../framework/context";
+import {createFrameworkContext, FrameworkContext, ServiceContext} from "../../framework/context";
 
 export async function loadFrameworkContext(
   frameworkSchemaFilePath?: string,
@@ -27,8 +27,8 @@ export async function loadFrameworkContext(
 export function getService(
   ctx: FrameworkContext,
   serviceName: string,
-): ServiceSchemaFile {
-  const sFile = ctx.getServiceSchemaFile(serviceName);
+): ServiceContext {
+  const sFile = ctx.getService(serviceName);
 
   if (sFile === undefined) {
     throw new CliError(`Service "${serviceName}" not found`);
@@ -47,7 +47,7 @@ export async function buildService(
 ): Promise<ServiceBuildInfo> {
   const slsPath = await buildServiceServerlessTemplate(
     ctx.frameworkSchemaFile,
-    getService(ctx, serviceName),
+    getService(ctx, serviceName).serviceSchemaFile,
   );
 
   return {
