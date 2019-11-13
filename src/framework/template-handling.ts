@@ -1,6 +1,8 @@
 import merge from "deepmerge";
-import { getInlineServiceTemplate, ServiceSchema } from "./schema/service-schema";
-import { FrameworkSchema, getInlineFrameworkTemplate } from "./schema/service-framework-schema";
+import {
+  FrameworkSchema, getInlineFrameworkTemplate,
+  getInlineServiceTemplate, ServiceSchema,
+} from "./schema";
 import { InlineServerlessTemplate } from "./types";
 import { FrameworkSchemaFile, ServiceSchemaFile } from "./schema-handling";
 import { serviceBuild } from "./constants";

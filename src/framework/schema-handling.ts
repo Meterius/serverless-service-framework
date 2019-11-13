@@ -1,6 +1,7 @@
 import path from "path";
-import { FrameworkSchema, isFrameworkSchema } from "./schema/service-framework-schema";
-import { isServiceSchema, ServiceSchema } from "./schema/service-schema";
+import {
+  FrameworkSchema, isFrameworkSchema, isServiceSchema, ServiceSchema,
+} from "./schema";
 import {
   frameworkSchemaExtensions,
   frameworkSchemaNames,
