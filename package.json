@@ -40,6 +40,10 @@
     "typescript": "^3.7.2"
   },
   "dependencies": {
+    "@babel/core": "^7.7.2",
+    "@babel/preset-env": "^7.7.1",
+    "@babel/preset-typescript": "^7.7.2",
+    "@babel/register": "^7.7.0",
     "chalk": "^3.0.0",
     "deepmerge": "^4.2.2",
     "gluegun": "^4.1.0",
