@@ -1,21 +1,15 @@
-import fs, { Dirent } from "fs";
 import path from "path";
 import mkdirp from "mkdirp";
+import { readdirSync } from "fs";
+import { pathExists, writeFile } from "fs-extra";
+import { promisify } from "util";
 import { serviceBuildDir } from "./constants";
 
 /**
  * Returns all directories contained in directory dirPath
  */
 export async function getSubDirectories(dirPath: string): Promise<string[]> {
-  const dirs = await new Promise<Dirent[]>((resolve, reject) => {
-    fs.readdir(dirPath, { withFileTypes: true }, ((err, files) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(files);
-      }
-    }));
-  });
+  const dirs = readdirSync(dirPath, { withFileTypes: true });
 
   return dirs.filter(
     (entry) => entry.isDirectory(),
@@ -28,23 +22,11 @@ export async function getSubDirectories(dirPath: string): Promise<string[]> {
  * Takes in a number of file paths and returns only the ones that exist.
  */
 export async function filterExistingFiles(filePaths: string[]): Promise<string[]> {
-  const existingFilePaths = await Promise.all(
-    filePaths.map((filePath) => new Promise<string | undefined>((resolve, reject) => {
-      fs.stat(filePath, (err) => {
-        if (err) {
-          if (err.code === "ENOENT") {
-            resolve(undefined);
-          } else {
-            reject(err);
-          }
-        } else {
-          resolve(filePath);
-        }
-      });
-    })),
+  const filePathExistence = await Promise.all(
+    filePaths.map((filePath) => pathExists(filePath)),
   );
 
-  return existingFilePaths.filter((filePath): filePath is string => typeof filePath === "string");
+  return filePaths.filter((filePath, index) => filePathExistence[index]);
 }
 
 /**
@@ -79,25 +61,9 @@ export async function writeServiceBuildFile(
 ): Promise<string> {
   const filePath = path.join(serviceDirPath, serviceBuildDir, relativeFilePath);
 
-  await new Promise((resolve, reject) => {
-    mkdirp(path.dirname(filePath), (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
+  await promisify(mkdirp)(path.dirname(filePath));
 
-  await new Promise((resolve, reject) => {
-    fs.writeFile(filePath, fileData, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
+  await writeFile(filePath, fileData);
 
   return filePath;
 }
