@@ -1,2 +1,2 @@
-export * from "./framework/service-schema";
-export * from "./framework/service-framework-schema";
+export * from "./framework/schema/service-schema";
+export * from "./framework/schema/service-framework-schema";
