@@ -20,7 +20,12 @@ export class ServiceContext extends ServiceSchemaFile {
   public readonly context: FrameworkContext;
 
   constructor(serviceSchemaFile: ServiceSchemaFile, frameworkContext: FrameworkContext) {
-    super(serviceSchemaFile);
+    super(
+      ServiceSchemaFile.mergeFrameworkAndServiceSchemaFile(
+        frameworkContext.frameworkSchemaFile,
+        serviceSchemaFile,
+      ),
+    );
 
     this.context = frameworkContext;
   }

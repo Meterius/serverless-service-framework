@@ -3,6 +3,7 @@ import { ServiceSchema } from "./service-schema";
 import { loadSchemaFile } from "../schema-file-handling";
 import { isObject } from "../../common/type-guards";
 import { serviceBuildDir } from "../constants";
+import {FrameworkSchemaFile} from "./framework-schema-file";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
@@ -41,6 +42,15 @@ export class ServiceSchemaFile extends ServiceSchema {
 
   protected resolveServiceBuildPath(relPath: string): string {
     return path.join(this.getServiceBuildDir(), relPath);
+  }
+
+  public static mergeFrameworkAndServiceSchemaFile(
+    frameworkSchemaFile: FrameworkSchemaFile, serviceSchemaFile: ServiceSchemaFile,
+  ): ServiceSchemaFile {
+    return new ServiceSchemaFile(
+      ServiceSchema.mergeFrameworkAndServiceSchema(frameworkSchemaFile, serviceSchemaFile),
+      serviceSchemaFile.filePath,
+    );
   }
 
   public static async loadServiceSchemaFile(filePath: string): Promise<ServiceSchemaFile> {

@@ -1,6 +1,7 @@
 import { InlineFrameworkTemplate } from "../templates";
 import { ServerlessProvider } from "../types";
 import { isObject } from "../../common/type-guards";
+import { CommonProperties } from "../schema";
 
 interface InlineFrameworkTemplateProperties {
   templateType?: "inline";
@@ -16,7 +17,7 @@ interface BaseProperties {
   serviceRootDir: string;
 }
 
-type FrameworkSchemaParams = BaseProperties & TemplateProperties;
+type FrameworkSchemaParams = BaseProperties & TemplateProperties & CommonProperties;
 
 /* eslint-disable no-dupe-class-members */
 
