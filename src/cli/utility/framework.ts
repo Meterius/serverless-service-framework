@@ -49,12 +49,20 @@ export function getService(
   }
 }
 
+export interface ServiceBuildInfo {
+  serverlessTemplateFilePath: string;
+}
+
 export async function buildService(
   frameworkFiles: FrameworkFiles,
   serviceName: string,
-): Promise<void> {
-  await buildServiceServerlessTemplate(
+): Promise<ServiceBuildInfo> {
+  const slsPath = await buildServiceServerlessTemplate(
     frameworkFiles.framework,
     getService(frameworkFiles, serviceName),
   );
+
+  return {
+    serverlessTemplateFilePath: slsPath,
+  };
 }
