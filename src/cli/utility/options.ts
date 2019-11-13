@@ -1,39 +1,48 @@
-import { GluegunToolbox } from "gluegun";
 import { CliError } from "./exceptions";
+import { TB } from "../cli-types";
 
 export function requireParameters(
-  tb: GluegunToolbox,
-  names: string[] | string,
-  minLength = 1,
-  maxLength = 1,
+  tb: TB,
+  names: string[],
+  optionalNames: string[] = [],
 ): string[] {
   const parameters = tb.parameters.array || [];
-  const ns = typeof names === "string" ? [names] : names;
 
-  if (parameters.length < minLength || parameters.length > maxLength) {
-    throw new CliError(
-      `Missing required parameter${ns.length > 1 ? "s" : ""} [${ns.join(", ")}]`,
-    );
+  const msg = `Usage ${
+    names.map((name) => `<${name}>`).join(" ")
+  } ${
+    optionalNames.map((name) => `[${name}]`).join(" ")
+  }`;
+
+  if (parameters.length < names.length || parameters.length > names.length + optionalNames.length) {
+    throw new CliError(msg);
   } else {
     return parameters;
   }
 }
 
+export function requireParameter(
+  tb: TB,
+  name: string,
+): string {
+  return requireParameters(tb, [name])[0];
+}
+
 export function getOption(
-  tb: GluegunToolbox,
+  tb: TB,
   name: string,
   shortName?: string,
 ): string | undefined;
 
 export function getOption(
-  tb: GluegunToolbox,
+  tb: TB,
   name: string,
   shortName: string | undefined,
   defaultValue: string,
 ): string;
 
 export function getOption(
-  tb: GluegunToolbox,
+  tb: TB,
   name: string,
   shortName?: string,
   defaultValue?: string,
@@ -44,7 +53,7 @@ export function getOption(
 }
 
 export function requireOption(
-  tb: GluegunToolbox,
+  tb: TB,
   name: string,
   shortName?: string,
 ): string {
