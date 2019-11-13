@@ -6,15 +6,16 @@ import { isServiceSchema, ServiceSchema } from "./service-schema";
 const searchedServiceSchemaNames = ["service"];
 const searchedSchemaExtensions = ["ts"];
 
-export interface FrameworkSchemaFile {
-  path: string;
-  schema: FrameworkSchema;
+interface SchemaFile<T> {
+  filePath: string;
+  dirPath: string;
+
+  schema: T;
 }
 
-export interface ServiceSchemaFile {
-  path: string;
-  schema: ServiceSchema;
-}
+export type FrameworkSchemaFile = SchemaFile<FrameworkSchema>;
+
+export type ServiceSchemaFile = SchemaFile<ServiceSchema>;
 
 async function getSubDirectories(dirPath: string): Promise<string[]> {
   const dirs = await new Promise<Dirent[]>((resolve, reject) => {
@@ -58,7 +59,7 @@ function resolveFrameworkPath(
   frameworkSchemaFile: FrameworkSchemaFile, relativeFilePath: string,
 ): string {
   return path.join(
-    path.dirname(frameworkSchemaFile.path),
+    frameworkSchemaFile.dirPath,
     relativeFilePath,
   );
 }
@@ -80,12 +81,17 @@ async function getServiceSchemaFile(
 async function loadSchemaFile<T>(
   filePath: string,
   typeGuard: (val: unknown) => val is T,
-): Promise<T | undefined> {
+): Promise<SchemaFile<T> | undefined> {
   const ext = path.extname(filePath);
 
   function isObject(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
   }
+
+  const schemaFileBase = {
+    filePath,
+    dirPath: path.dirname(filePath),
+  };
 
   if (ext === ".ts") {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -99,9 +105,15 @@ async function loadSchemaFile<T>(
     const fileExport = require(filePath);
 
     if (typeGuard(fileExport)) {
-      return fileExport;
+      return {
+        ...schemaFileBase,
+        schema: fileExport,
+      };
     } else if (isObject(fileExport) && typeGuard(fileExport.default)) {
-      return fileExport.default;
+      return {
+        ...schemaFileBase,
+        schema: fileExport.default,
+      };
     } else {
       return undefined;
     }
@@ -114,10 +126,7 @@ export async function loadFrameworkSchemaFile(filePath: string): Promise<Framewo
   const schema = await loadSchemaFile(filePath, isFrameworkSchema);
 
   if (schema) {
-    return {
-      path: filePath,
-      schema,
-    };
+    return schema;
   } else {
     throw new Error(`Framework Schema at "${filePath}" has an invalid format`);
   }
@@ -127,10 +136,7 @@ async function loadServiceSchemaFile(filePath: string): Promise<ServiceSchemaFil
   const schema = await loadSchemaFile(filePath, isServiceSchema);
 
   if (schema) {
-    return {
-      path: filePath,
-      schema,
-    };
+    return schema;
   } else {
     throw new Error(`Service Schema at "${filePath}" has an invalid format`);
   }

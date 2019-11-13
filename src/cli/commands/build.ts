@@ -4,7 +4,7 @@ import {
   getServiceSchemaFileByName,
   loadFrameworkSchemaFile,
   loadServiceSchemaFiles,
-} from "../../framework/schema-file-handling";
+} from "../../framework/schema-handling";
 import {
   createServiceServerlessTemplate,
   serializeServiceServerlessTemplate, writeServiceServerlessTemplate,
