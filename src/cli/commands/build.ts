@@ -1,13 +1,13 @@
 import { GluegunCommand, GluegunToolbox } from "gluegun";
-import { requireOption, requireParameters } from "../utility/options";
+import { getOption, requireParameters } from "../utility/options";
 import {
+  getFrameworkSchemaFilePath,
   getServiceSchemaFileByName,
   loadFrameworkSchemaFile,
   loadServiceSchemaFiles,
 } from "../../framework/schema-handling";
 import {
-  createServiceServerlessTemplate,
-  serializeServiceServerlessTemplate, writeServiceServerlessTemplate,
+  buildServiceServerlessTemplate,
 } from "../../framework/template-handling";
 import { CliError } from "../utility/exceptions";
 
@@ -16,7 +16,12 @@ const build: GluegunCommand = {
   description: "Builds serverless template for service",
   run: async (tb: GluegunToolbox): Promise<void> => {
     const [serviceName] = requireParameters(tb, "service-name");
-    const schemaFilePath = requireOption(tb, "schema");
+    const schemaFilePath = getOption(tb, "schema")
+      || await getFrameworkSchemaFilePath(process.cwd());
+
+    if (schemaFilePath === undefined) {
+      throw new CliError("Didn't find framework schema file");
+    }
 
     const frFile = await loadFrameworkSchemaFile(schemaFilePath);
     const seFiles = await loadServiceSchemaFiles(frFile);
@@ -25,9 +30,7 @@ const build: GluegunCommand = {
     if (seFile === undefined) {
       throw new CliError(`Service "${serviceName}" not found`);
     } else {
-      const template = createServiceServerlessTemplate(frFile.schema, seFile.schema);
-      const serTemp = serializeServiceServerlessTemplate(template);
-      writeServiceServerlessTemplate(seFile, serTemp);
+      await buildServiceServerlessTemplate(frFile, seFile);
     }
   },
 };
