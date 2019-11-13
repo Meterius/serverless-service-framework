@@ -1,7 +1,7 @@
 import path from "path";
 import { ServiceSchema } from "./service-schema";
-import { loadSchemaFile } from "../file-handling";
-import { isObject } from "../../common/utility";
+import { loadSchemaFile } from "../schema-file-handling";
+import { isObject } from "../../common/type-guards";
 import { serviceBuildDir } from "../constants";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */

@@ -1,5 +1,5 @@
 import { InlineServiceTemplate } from "../templates";
-import { isObject } from "../../common/utility";
+import { isObject } from "../../common/type-guards";
 
 interface InlineServiceTemplateProperties {
   templateType?: "inline";

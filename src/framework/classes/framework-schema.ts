@@ -1,6 +1,6 @@
 import { InlineFrameworkTemplate } from "../templates";
 import { ServerlessProvider } from "../types";
-import { isObject } from "../../common/utility";
+import { isObject } from "../../common/type-guards";
 
 interface InlineFrameworkTemplateProperties {
   templateType?: "inline";

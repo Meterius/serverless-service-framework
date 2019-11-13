@@ -1,6 +1,6 @@
 import path from "path";
 import { FrameworkSchema } from "./framework-schema";
-import { findMatchingFile, getSubDirectories, loadSchemaFile } from "../file-handling";
+import { findMatchingFile, getSubDirectories } from "../../common/filesystem";
 import {
   frameworkSchemaExtensions,
   frameworkSchemaNames,
@@ -9,7 +9,8 @@ import {
 } from "../constants";
 import { ServiceSchemaFile } from "./service-schema-file";
 import { FrameworkContext, createFrameworkContext } from "./framework-context";
-import { isObject } from "../../common/utility";
+import { isObject } from "../../common/type-guards";
+import { loadSchemaFile } from "../schema-file-handling";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
