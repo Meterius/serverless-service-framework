@@ -9,6 +9,7 @@ import {
   createServiceServerlessTemplate,
   serializeServiceServerlessTemplate, writeServiceServerlessTemplate,
 } from "../../framework/template-handling";
+import { CliError } from "../utility/exceptions";
 
 const build: GluegunCommand = {
   name: "build",
@@ -22,7 +23,7 @@ const build: GluegunCommand = {
     const seFile = getServiceSchemaFileByName(seFiles, serviceName);
 
     if (seFile === undefined) {
-      throw new Error(`No Service named "${serviceName}"`);
+      throw new CliError(`Service "${serviceName}" not found`);
     } else {
       const template = createServiceServerlessTemplate(frFile.schema, seFile.schema);
       const serTemp = serializeServiceServerlessTemplate(template);

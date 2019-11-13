@@ -1,5 +1,6 @@
 import { build, GluegunCommand, GluegunToolbox } from "gluegun";
 import chalk from "chalk";
+import { CliError } from "./utility/exceptions";
 
 export async function run(argv: any): Promise<GluegunToolbox> {
   const help: GluegunCommand = {
@@ -22,7 +23,14 @@ export async function run(argv: any): Promise<GluegunToolbox> {
 run(process.argv).then(
   () => {},
   (err) => {
-    console.log(chalk`{red ${err.message}}`);
+    if (err instanceof CliError) {
+      // eslint-disable-next-line no-console
+      console.error(chalk`{red ${err.message}}`);
+    } else {
+      // eslint-disable-next-line no-console
+      console.error(err);
+    }
+
     process.exit(1);
   },
 );

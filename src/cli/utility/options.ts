@@ -1,4 +1,5 @@
 import { GluegunToolbox } from "gluegun";
+import { CliError } from "./exceptions";
 
 export function requireParameters(
   tb: GluegunToolbox,
@@ -10,7 +11,9 @@ export function requireParameters(
   const ns = typeof names === "string" ? [names] : names;
 
   if (parameters.length < minLength || parameters.length > maxLength) {
-    throw new Error(`Missing required parameter${ns.length > 1 ? "s" : ""} [${ns.join(", ")}]`);
+    throw new CliError(
+      `Missing required parameter${ns.length > 1 ? "s" : ""} [${ns.join(", ")}]`,
+    );
   } else {
     return parameters;
   }
@@ -24,7 +27,7 @@ export function requireOption(
   const option = tb.parameters.options[name] || (shortName && tb.parameters.options[shortName]);
 
   if (option === undefined) {
-    throw new Error(`Missing required option "${name}"`);
+    throw new CliError(`Missing required option "${name}"`);
   } else {
     return option;
   }
