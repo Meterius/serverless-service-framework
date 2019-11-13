@@ -14,6 +14,7 @@
     "build:with-checkup": "npm run checkup && npm run build",
     "test": "echo No Tests",
     "eslint": "npx --no-install eslint --ext .ts ./src",
+    "eslint:fix": "npm run eslint -- --fix",
     "checkup": "npm run eslint && npm run test"
   },
   "repository": {
