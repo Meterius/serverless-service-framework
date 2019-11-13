@@ -19,12 +19,36 @@ export function requireParameters(
   }
 }
 
+export function getOption(
+  tb: GluegunToolbox,
+  name: string,
+  shortName?: string,
+): string | undefined;
+
+export function getOption(
+  tb: GluegunToolbox,
+  name: string,
+  shortName: string | undefined,
+  defaultValue: string,
+): string;
+
+export function getOption(
+  tb: GluegunToolbox,
+  name: string,
+  shortName?: string,
+  defaultValue?: string,
+): string | undefined {
+  const option = tb.parameters.options[name] || (shortName && tb.parameters.options[shortName]);
+
+  return option === undefined ? defaultValue : option;
+}
+
 export function requireOption(
   tb: GluegunToolbox,
   name: string,
   shortName?: string,
 ): string {
-  const option = tb.parameters.options[name] || (shortName && tb.parameters.options[shortName]);
+  const option = getOption(tb, name, shortName);
 
   if (option === undefined) {
     throw new CliError(`Missing required option "${name}"`);
