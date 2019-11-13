@@ -2,7 +2,7 @@ import { TB } from "../cli-types";
 import { ServerlessProvider } from "../../framework/types";
 import { CliError } from "./exceptions";
 import { requireOption } from "./options";
-import { FrameworkContext } from "../../framework/context";
+import { FrameworkContext } from "../../framework/classes/framework-context";
 
 function setupAwsProviderConfig(profile: string, region?: string): void {
   process.env.AWS_SDK_LOAD_CONFIG = "true";
@@ -19,7 +19,7 @@ export async function setupAwsProvider(tb: TB): Promise<void> {
 }
 
 export async function setupProvider(tb: TB, ctx: FrameworkContext): Promise<void> {
-  const { provider } = ctx.frameworkSchema;
+  const { provider } = ctx.frameworkSchemaFile;
 
   switch (provider) {
     default:

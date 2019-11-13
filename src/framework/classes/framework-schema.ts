@@ -1,5 +1,6 @@
-import { InlineFrameworkTemplate } from "./framework-template";
+import { InlineFrameworkTemplate } from "../templates";
 import { ServerlessProvider } from "../types";
+import { isObject } from "../../common/utility";
 
 interface InlineFrameworkTemplateProperties {
   templateType?: "inline";
@@ -17,11 +18,19 @@ interface BaseProperties {
 
 type FrameworkSchemaParams = BaseProperties & TemplateProperties;
 
+/* eslint-disable no-dupe-class-members */
+
 export class FrameworkSchema {
+  private readonly __isFrameworkSchema = true;
+
   public readonly params: FrameworkSchemaParams;
 
-  constructor(params: FrameworkSchemaParams) {
-    this.params = params;
+  constructor(params: FrameworkSchemaParams);
+
+  constructor(frameworkSchema: FrameworkSchema);
+
+  constructor(arg0: FrameworkSchemaParams | FrameworkSchema) {
+    this.params = FrameworkSchema.isFrameworkSchema(arg0) ? arg0.params : arg0;
   }
 
   get template(): InlineFrameworkTemplate {
@@ -35,8 +44,8 @@ export class FrameworkSchema {
   get region(): string {
     return this.template.provider.region;
   }
-}
 
-export function isFrameworkSchema(value: any): value is FrameworkSchema {
-  return value instanceof FrameworkSchema;
+  public static isFrameworkSchema(value: unknown): value is FrameworkSchema {
+    return isObject(value) && value.__isFrameworkSchema === true;
+  }
 }

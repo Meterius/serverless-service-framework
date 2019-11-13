@@ -17,13 +17,13 @@ const exec: GC = {
     );
     const stage = requireStageOption(tb);
 
-    const fr = await loadFrameworkContext(getFrameworkSchemaOption(tb));
-    const se = getService(fr, serviceName);
-    const bi = await buildService(fr, serviceName);
+    const context = await loadFrameworkContext(getFrameworkSchemaOption(tb));
+    const service = getService(context, serviceName);
+    const buildInfo = await buildService(context, serviceName);
 
-    const serviceDir = se.serviceSchemaFile.dirPath;
+    const serviceDir = service.dirPath;
 
-    const templatePath = path.relative(serviceDir, bi.serverlessTemplateFilePath);
+    const templatePath = path.relative(serviceDir, buildInfo.serverlessTemplateFilePath);
 
     const slsCmd = `sls ${slsCmdBase} --config "${templatePath}" --stage "${stage}"`;
 

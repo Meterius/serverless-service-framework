@@ -1,5 +1,6 @@
-import { FrameworkSchemaFile, ServiceSchemaFile } from "./schema-handling";
-import { FrameworkSchema, ServiceSchema } from "./schema";
+import { FrameworkSchemaFile } from "./framework-schema-file";
+import { ServiceSchemaFile } from "./service-schema-file";
+import { ServiceContext } from "./service-context";
 
 function verifyServiceNames(
   frameworkSchemaFile: FrameworkSchemaFile,
@@ -8,7 +9,7 @@ function verifyServiceNames(
   const usedNames: Record<string, boolean> = {};
 
   serviceSchemaFiles.forEach((serviceSchemaFile) => {
-    const { name, shortName } = serviceSchemaFile.schema.params;
+    const { name, shortName } = serviceSchemaFile.params;
 
     if (usedNames[name]) {
       throw new Error(`Name "${name}" is used multiple times`);
@@ -19,18 +20,6 @@ function verifyServiceNames(
       usedNames[shortName] = true;
     }
   });
-}
-
-export class ServiceContext extends ServiceSchema {
-  public readonly serviceSchemaFile: ServiceSchemaFile;
-
-  public readonly ctx: FrameworkContext;
-
-  constructor(serviceSchemaFile: ServiceSchemaFile, frameworkContext: FrameworkContext) {
-    super(serviceSchemaFile.schema.params);
-    this.ctx = frameworkContext;
-    this.serviceSchemaFile = serviceSchemaFile;
-  }
 }
 
 export class FrameworkContext {
@@ -46,10 +35,6 @@ export class FrameworkContext {
     this.services = serviceSchemaFiles.map((file) => new ServiceContext(file, this));
 
     verifyServiceNames(frameworkSchemaFile, serviceSchemaFiles);
-  }
-
-  get frameworkSchema(): FrameworkSchema {
-    return this.frameworkSchemaFile.schema;
   }
 
   getService(serviceName: string): ServiceContext | undefined {
