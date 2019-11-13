@@ -1,5 +1,7 @@
 import fs, { Dirent } from "fs";
 import path from "path";
+import mkdirp from "mkdirp";
+import { serviceBuildDir } from "./constants";
 
 /**
  * Returns all directories contained in directory dirPath
@@ -62,4 +64,40 @@ export async function findMatchingFile(
   ).map((file) => path.join(dirPath, file));
 
   return (await filterExistingFiles(filePaths))[0];
+}
+
+/**
+ * Writes file into service build directory and
+ * creates necessary directories.
+ *
+ * Returns absolute file path of written file.
+ */
+export async function writeServiceBuildFile(
+  serviceDirPath: string,
+  relativeFilePath: string,
+  fileData: string,
+): Promise<string> {
+  const filePath = path.join(serviceDirPath, serviceBuildDir, relativeFilePath);
+
+  await new Promise((resolve, reject) => {
+    mkdirp(path.dirname(filePath), (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+
+  await new Promise((resolve, reject) => {
+    fs.writeFile(filePath, fileData, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+
+  return filePath;
 }

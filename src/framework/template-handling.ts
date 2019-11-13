@@ -1,11 +1,10 @@
 import merge from "deepmerge";
-import path from "path";
-import fs from "fs";
 import { getInlineServiceTemplate, ServiceSchema } from "./service-schema";
 import { FrameworkSchema, getInlineFrameworkTemplate } from "./service-framework-schema";
 import { InlineServerlessTemplate } from "./types";
-import { ServiceSchemaFile } from "./schema-handling";
-import { serviceBuild, serviceBuildDir } from "./constants";
+import { FrameworkSchemaFile, ServiceSchemaFile } from "./schema-handling";
+import { serviceBuild } from "./constants";
+import { writeServiceBuildFile } from "./file-handling";
 
 export function createServiceServerlessTemplate(
   frameworkSchema: FrameworkSchema,
@@ -54,15 +53,38 @@ export function serializeServiceServerlessTemplate(
   }
 }
 
-export function writeServiceServerlessTemplate(
-  serviceFile: ServiceSchemaFile,
+/**
+ * Writes serverless template file.
+ *
+ * Returns absolute file path of written file.
+ */
+export async function writeServiceServerlessTemplate(
+  serviceSchemaFile: ServiceSchemaFile,
   serializedTemplate: SerializedTemplate,
-): void {
-  const slsFilePath = path.join(
-    serviceFile.dirPath,
-    serviceBuildDir,
+): Promise<string> {
+  return writeServiceBuildFile(
+    serviceSchemaFile.dirPath,
     `${serviceBuild.serverlessTemplate}.${formatToExt(serializedTemplate.format)}`,
+    serializedTemplate.data,
   );
+}
 
-  fs.writeFileSync(slsFilePath, serializedTemplate.data);
+/**
+ * Builds serverless template file and writes it.
+ *
+ * Returns absolute file path of written serverless template file.
+ */
+export async function buildServiceServerlessTemplate(
+  frameworkSchemaFile: FrameworkSchemaFile,
+  serviceSchemaFile: ServiceSchemaFile,
+): Promise<string> {
+  const template = createServiceServerlessTemplate(
+    frameworkSchemaFile.schema, serviceSchemaFile.schema,
+  );
+  const serTemp = serializeServiceServerlessTemplate(template, TemplateFormat.JavaScript);
+
+  return writeServiceServerlessTemplate(
+    serviceSchemaFile,
+    serTemp,
+  );
 }
