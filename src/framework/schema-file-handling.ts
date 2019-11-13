@@ -3,7 +3,7 @@ import path from "path";
 import { FrameworkSchema, isFrameworkSchema } from "./service-framework-schema";
 import { isServiceSchema, ServiceSchema } from "./service-schema";
 
-const searchedServiceSchemaNames = ["service-schema"];
+const searchedServiceSchemaNames = ["service"];
 const searchedSchemaExtensions = ["ts"];
 
 export interface FrameworkSchemaFile {
@@ -88,8 +88,15 @@ async function loadSchemaFile<T>(
   }
 
   if (ext === ".ts") {
-    await import("ts-node"); // required to load ts files in vanilla node
-    const fileExport = await import(filePath);
+    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+    require("@babel/register")({
+      extensions: [".ts"],
+      presets: ["@babel/preset-typescript", "@babel/preset-env"],
+    }); // required to transform es6 import syntax and typescript files
+
+    // eslint-disable-next-line max-len
+    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires, import/no-dynamic-require
+    const fileExport = require(filePath);
 
     if (typeGuard(fileExport)) {
       return fileExport;
