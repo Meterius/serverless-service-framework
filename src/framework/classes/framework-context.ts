@@ -4,6 +4,7 @@ import { ServiceSchemaFile } from "./service-schema-file";
 import { ServiceContext } from "./service-context";
 import { Provider } from "./provider";
 import { ServerlessProviderName } from "../templates";
+import { AwsProvider } from "./provider/aws";
 
 export class FrameworkContext extends FrameworkSchemaFile {
   public readonly services: ServiceContext[];
@@ -20,7 +21,7 @@ export class FrameworkContext extends FrameworkSchemaFile {
 
     FrameworkContext.verifyServiceNames(frameworkSchemaFile, serviceSchemaFiles);
 
-    this.provider = FrameworkContext.getProviderFromName(this.schema.provider);
+    this.provider = FrameworkContext.getProviderFromName(this.schema.provider, this);
   }
 
   getService(serviceName: string): ServiceContext | undefined {
@@ -50,8 +51,13 @@ export class FrameworkContext extends FrameworkSchemaFile {
     });
   }
 
-  private static getProviderFromName(name: ServerlessProviderName): Provider {
+  private static getProviderFromName(
+    name: ServerlessProviderName, context: FrameworkContext,
+  ): Provider {
     switch (name) {
+      case "aws":
+        return new AwsProvider(context);
+
       default:
         throw new Error(`Unknown provider "${name}"`);
     }

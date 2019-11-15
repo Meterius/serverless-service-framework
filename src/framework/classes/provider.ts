@@ -3,16 +3,14 @@ import {
 } from "../templates";
 import { FrameworkContext } from "./framework-context";
 import { ServiceContext } from "./service-context";
-import { ImportType, ProcessedImportValue } from "./common-schema";
+import { ProcessedImportValue } from "./common-schema";
 
 export abstract class Provider<ImportData = unknown> {
   public abstract readonly name: ServerlessProviderName;
 
   private readonly context: FrameworkContext;
 
-  private importDataMap: Record<string, ImportData | undefined> = {};
-
-  protected constructor(context: FrameworkContext) {
+  public constructor(context: FrameworkContext) {
     this.context = context;
   }
 
