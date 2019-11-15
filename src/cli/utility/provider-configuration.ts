@@ -1,11 +1,14 @@
 import { TB } from "../cli-types";
 import { CliError } from "./exceptions";
-import { requireOption } from "./options";
 import { FrameworkContext } from "../../framework/classes/framework-context";
+import { getProfileOption } from "./common-options";
 
-function setupAwsProviderConfig(profile: string, region?: string): void {
+function setupAwsProviderConfig(profile?: string, region?: string): void {
   process.env.AWS_SDK_LOAD_CONFIG = "true";
-  process.env.AWS_PROFILE = profile;
+
+  if (profile) {
+    process.env.AWS_PROFILE = profile;
+  }
 
   if (region) {
     process.env.AWS_REGION = region;
@@ -13,7 +16,7 @@ function setupAwsProviderConfig(profile: string, region?: string): void {
 }
 
 export async function setupAwsProvider(tb: TB): Promise<void> {
-  const profile = requireOption(tb, "profile", "p");
+  const profile = getProfileOption(tb);
   setupAwsProviderConfig(profile);
 }
 
