@@ -1,5 +1,4 @@
 import { TB } from "../cli-types";
-import { ServerlessProvider } from "../../framework/types";
 import { CliError } from "./exceptions";
 import { requireOption } from "./options";
 import { FrameworkContext } from "../../framework/classes/framework-context";
@@ -25,7 +24,7 @@ export async function setupProvider(tb: TB, ctx: FrameworkContext): Promise<void
     default:
       throw new CliError(`Unknown Provider "${provider}"`);
 
-    case ServerlessProvider.AWS:
+    case "aws":
       await setupAwsProvider(tb);
       break;
   }
