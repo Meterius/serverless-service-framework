@@ -1,4 +1,4 @@
-import { ServerlessProvider } from "./types";
+import { ServerlessProviderName } from "./types";
 
 export interface InlineFrameworkTemplate {
   // framework template cannot have the service name specified
@@ -10,7 +10,7 @@ export interface InlineFrameworkTemplate {
   provider: {
     // framework requires a provider and region used for all services by default
     // note that provider name cannot be overwritten by service templates
-    name: ServerlessProvider; // currently only aws is supported
+    name: ServerlessProviderName; // currently only aws is supported
     region: string;
 
     stage?: never; // cannot set stage in template

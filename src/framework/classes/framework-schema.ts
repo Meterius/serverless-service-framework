@@ -1,5 +1,5 @@
 import { InlineFrameworkTemplate } from "../templates";
-import { ServerlessProvider } from "../types";
+import { ServerlessProviderName } from "../types";
 import { isObject } from "../../common/type-guards";
 import { CommonSchema, CommonSchemaProperties } from "./common-schema";
 
@@ -41,7 +41,7 @@ export class FrameworkSchema extends CommonSchema {
     this.template = schema.template;
   }
 
-  get provider(): ServerlessProvider {
+  get provider(): ServerlessProviderName {
     return this.template.provider.name;
   }
 
