@@ -2,10 +2,13 @@ import path from "path";
 import { execSync } from "child_process";
 import chalk from "chalk";
 import { CliError } from "../utility/exceptions";
-import { buildService, getService, loadFrameworkContext } from "../utility/framework";
-import { getFrameworkSchemaOption, requireStageOption } from "../utility/common-options";
+import {
+  buildService,
+  getService,
+} from "../utility/framework";
 import { GC, TB } from "../cli-types";
 import { requireParameters } from "../utility/options";
+import { setupFrameworkContextFunction } from "../utility/command-setup";
 
 const exec: GC = {
   name: "exec",
@@ -15,9 +18,9 @@ const exec: GC = {
     const [serviceName, slsCmdBase] = requireParameters(
       tb, ["service-name", "serverless-cmd"],
     );
-    const stage = requireStageOption(tb);
 
-    const context = await loadFrameworkContext(getFrameworkSchemaOption(tb));
+    const { context, stage } = await setupFrameworkContextFunction(tb);
+
     const service = getService(context, serviceName);
     const buildInfo = await buildService(context, serviceName);
 
