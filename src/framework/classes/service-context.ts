@@ -2,6 +2,7 @@ import mkdirp from "mkdirp";
 import path from "path";
 import fs from "fs";
 import merge from "deepmerge";
+// eslint-disable-next-line import/no-cycle
 import { FrameworkContext } from "./framework-context";
 import { ServiceSchemaFile } from "./service-schema-file";
 import { InlineServerlessTemplate } from "../types";
@@ -19,13 +20,8 @@ export interface SerializedServerlessTemplate {
 export class ServiceContext extends ServiceSchemaFile {
   public readonly context: FrameworkContext;
 
-  constructor(serviceSchemaFile: ServiceSchemaFile, frameworkContext: FrameworkContext) {
-    super(
-      ServiceSchemaFile.mergeFrameworkAndServiceSchemaFile(
-        frameworkContext.frameworkSchemaFile,
-        serviceSchemaFile,
-      ),
-    );
+  constructor(schemaFile: ServiceSchemaFile, frameworkContext: FrameworkContext) {
+    super(schemaFile);
 
     this.context = frameworkContext;
   }
@@ -81,16 +77,16 @@ export class ServiceContext extends ServiceSchemaFile {
    * Returns the built template.
    */
   private async buildServiceServerlessTemplate(): Promise<InlineServerlessTemplate> {
-    const serviceTemplate = this.template;
-    const frameworkSchema = this.context.frameworkSchemaFile;
-    const frameworkTemplate = this.context.frameworkSchemaFile.template;
+    const serviceTemplate = this.schema.template;
+    const frameworkSchema = this.context.schema;
+    const frameworkTemplate = frameworkSchema.template;
 
     return merge.all([
       frameworkTemplate,
       serviceTemplate,
       {
         service: {
-          name: `${frameworkSchema.params.shortName}-${this.params.shortName}`,
+          name: `${frameworkSchema.shortName}-${this.schema.shortName}`,
         },
       },
     ]);

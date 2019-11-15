@@ -1,7 +1,7 @@
 import { InlineFrameworkTemplate } from "../templates";
 import { ServerlessProvider } from "../types";
 import { isObject } from "../../common/type-guards";
-import { CommonProperties } from "../schema";
+import { CommonSchema, CommonSchemaProperties } from "./common-schema";
 
 interface InlineFrameworkTemplateProperties {
   templateType?: "inline";
@@ -17,25 +17,28 @@ interface BaseProperties {
   serviceRootDir: string;
 }
 
-type FrameworkSchemaParams = BaseProperties & TemplateProperties & CommonProperties;
+type FrameworkSchemaProperties = BaseProperties & TemplateProperties & CommonSchemaProperties;
 
 /* eslint-disable no-dupe-class-members */
 
-export class FrameworkSchema {
+export class FrameworkSchema extends CommonSchema {
   private readonly __isFrameworkSchema = true;
 
-  public readonly params: FrameworkSchemaParams;
+  public readonly name: string;
 
-  constructor(params: FrameworkSchemaParams);
+  public readonly shortName: string;
 
-  constructor(frameworkSchema: FrameworkSchema);
+  public readonly serviceRootDir: string;
 
-  constructor(arg0: FrameworkSchemaParams | FrameworkSchema) {
-    this.params = FrameworkSchema.isFrameworkSchema(arg0) ? arg0.params : arg0;
-  }
+  public readonly template: InlineFrameworkTemplate;
 
-  get template(): InlineFrameworkTemplate {
-    return this.params.template;
+  constructor(schema: FrameworkSchemaProperties) {
+    super(schema);
+
+    this.name = schema.name;
+    this.shortName = schema.shortName;
+    this.serviceRootDir = schema.serviceRootDir;
+    this.template = schema.template;
   }
 
   get provider(): ServerlessProvider {

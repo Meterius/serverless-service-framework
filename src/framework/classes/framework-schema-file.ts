@@ -8,28 +8,47 @@ import {
   serviceSchemaNames,
 } from "../constants";
 import { ServiceSchemaFile } from "./service-schema-file";
-import { FrameworkContext, createFrameworkContext } from "./framework-context";
 import { isObject } from "../../common/type-guards";
 import { loadSchemaFile } from "../schema-file-handling";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
-export class FrameworkSchemaFile extends FrameworkSchema {
+export class FrameworkSchemaFile {
   private readonly __isFrameworkSchemaFile = true;
 
   public readonly filePath: string;
 
-  public readonly dirPath: string;
+  public readonly schema: FrameworkSchema;
 
-  constructor(schema: FrameworkSchema, schemaFilePath: string) {
-    super(schema.params);
+  constructor(schema: FrameworkSchema, schemaFilePath: string);
 
-    this.filePath = schemaFilePath;
-    this.dirPath = path.dirname(schemaFilePath);
+  /**
+   * Copy Constructor
+   */
+  constructor(schemaFile: FrameworkSchemaFile);
+
+  constructor(schemaOrSchemaFile: FrameworkSchemaFile | FrameworkSchema, schemaFilePath?: string) {
+    if (FrameworkSchemaFile.isFrameworkSchemaFile(schemaOrSchemaFile)) {
+      const schemaFile = schemaOrSchemaFile;
+
+      this.schema = schemaFile.schema;
+      this.filePath = schemaFile.filePath;
+    } else if (schemaFilePath !== undefined) {
+      const schema = schemaOrSchemaFile;
+
+      this.schema = schema;
+      this.filePath = schemaFilePath;
+    } else {
+      throw new Error("Invalid Framework Schema File Constructor Overload");
+    }
+  }
+
+  get dirPath(): string {
+    return path.dirname(this.filePath);
   }
 
   private get serviceRootDirPath(): string {
-    return this.resolveFrameworkPath(this.params.serviceRootDir);
+    return this.resolveFrameworkPath(this.schema.serviceRootDir);
   }
 
   private resolveFrameworkPath(relPath: string): string {
@@ -48,7 +67,7 @@ export class FrameworkSchemaFile extends FrameworkSchema {
     )).filter((filePath): filePath is string => typeof filePath === "string");
   }
 
-  private async loadServiceSchemaFiles(): Promise<ServiceSchemaFile[]> {
+  public async loadServiceSchemaFiles(): Promise<ServiceSchemaFile[]> {
     const serviceSchemaFiles = await this.getServiceSchemaFilePaths();
 
     return Promise.all(
@@ -58,12 +77,6 @@ export class FrameworkSchemaFile extends FrameworkSchema {
     );
   }
 
-  public async loadFrameworkContext(): Promise<FrameworkContext> {
-    const serviceSchemaFiles = await this.loadServiceSchemaFiles();
-
-    return createFrameworkContext(this, serviceSchemaFiles);
-  }
-
   public static async loadFrameworkSchemaFile(filePath: string): Promise<FrameworkSchemaFile> {
     const schema = await loadSchemaFile(
       filePath, FrameworkSchema.isFrameworkSchema, "FrameworkSchema class",
@@ -71,11 +84,11 @@ export class FrameworkSchemaFile extends FrameworkSchema {
     return new FrameworkSchemaFile(schema, filePath);
   }
 
-  public static isFrameworkSchemaFile(value: unknown): value is FrameworkSchemaFile {
-    return isObject(value) && value.__isFrameworkSchemaFile === true;
-  }
-
   public static getFrameworkSchemaFilePath(dirPath: string): Promise<string | undefined> {
     return findMatchingFile(dirPath, frameworkSchemaNames, frameworkSchemaExtensions);
+  }
+
+  public static isFrameworkSchemaFile(value: unknown): value is FrameworkSchemaFile {
+    return isObject(value) && value.__isFrameworkSchemaFile === true;
   }
 }

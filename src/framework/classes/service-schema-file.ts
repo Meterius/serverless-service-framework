@@ -3,33 +3,42 @@ import { ServiceSchema } from "./service-schema";
 import { loadSchemaFile } from "../schema-file-handling";
 import { isObject } from "../../common/type-guards";
 import { serviceBuildDir } from "../constants";
-import {FrameworkSchemaFile} from "./framework-schema-file";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
-export class ServiceSchemaFile extends ServiceSchema {
+export class ServiceSchemaFile {
   private readonly __isServiceSchemaFile = true;
 
   public readonly filePath: string;
 
-  public readonly dirPath: string;
+  public readonly schema: ServiceSchema;
 
   constructor(schema: ServiceSchema, schemaFilePath: string);
 
-  constructor(serviceSchemaFile: ServiceSchemaFile);
+  /**
+   * Copy Constructor
+   */
 
-  constructor(arg0: ServiceSchemaFile | ServiceSchema, arg1?: string) {
-    super(arg0);
+  constructor(schemaFile: ServiceSchemaFile);
 
-    if (ServiceSchemaFile.isServiceSchemaFile(arg0)) {
-      this.filePath = arg0.filePath;
-      this.dirPath = arg0.dirPath;
-    } else if (typeof arg1 === "string") {
-      this.filePath = arg1;
-      this.dirPath = path.dirname(arg1);
+  constructor(schemaOrSchemaFile: ServiceSchemaFile | ServiceSchema, schemaFilePath?: string) {
+    if (ServiceSchemaFile.isServiceSchemaFile(schemaOrSchemaFile)) {
+      const schemaFile = schemaOrSchemaFile;
+
+      this.schema = schemaFile.schema;
+      this.filePath = schemaFile.filePath;
+    } else if (schemaFilePath !== undefined) {
+      const schema = schemaOrSchemaFile;
+
+      this.schema = schema;
+      this.filePath = schemaFilePath;
     } else {
-      throw new Error("Invalid ServiceSchemaFile constructor overload");
+      throw new Error("Invalid Service Schema File Constructor Overload");
     }
+  }
+
+  get dirPath(): string {
+    return path.dirname(this.filePath);
   }
 
   protected resolveServicePath(relPath: string): string {
@@ -44,19 +53,11 @@ export class ServiceSchemaFile extends ServiceSchema {
     return path.join(this.getServiceBuildDir(), relPath);
   }
 
-  public static mergeFrameworkAndServiceSchemaFile(
-    frameworkSchemaFile: FrameworkSchemaFile, serviceSchemaFile: ServiceSchemaFile,
-  ): ServiceSchemaFile {
-    return new ServiceSchemaFile(
-      ServiceSchema.mergeFrameworkAndServiceSchema(frameworkSchemaFile, serviceSchemaFile),
-      serviceSchemaFile.filePath,
-    );
-  }
-
   public static async loadServiceSchemaFile(filePath: string): Promise<ServiceSchemaFile> {
     const schema = await loadSchemaFile(
       filePath, ServiceSchema.isServiceSchema, "ServiceSchema class",
     );
+
     return new ServiceSchemaFile(schema, filePath);
   }
 

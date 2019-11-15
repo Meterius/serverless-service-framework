@@ -19,7 +19,7 @@ export async function setupAwsProvider(tb: TB): Promise<void> {
 }
 
 export async function setupProvider(tb: TB, ctx: FrameworkContext): Promise<void> {
-  const { provider } = ctx.frameworkSchemaFile;
+  const { provider } = ctx.schema;
 
   switch (provider) {
     default:

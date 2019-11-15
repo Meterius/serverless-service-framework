@@ -22,7 +22,7 @@ export async function loadFrameworkContext(
 
   const frFile = await FrameworkSchemaFile.loadFrameworkSchemaFile(frSchemaPath);
 
-  return frFile.loadFrameworkContext();
+  return FrameworkContext.loadFrameworkContext(frFile);
 }
 
 export function getService(

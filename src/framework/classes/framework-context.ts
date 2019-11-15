@@ -1,5 +1,6 @@
 import { FrameworkSchemaFile } from "./framework-schema-file";
 import { ServiceSchemaFile } from "./service-schema-file";
+// eslint-disable-next-line import/no-cycle
 import { ServiceContext } from "./service-context";
 
 function verifyServiceNames(
@@ -9,7 +10,7 @@ function verifyServiceNames(
   const usedNames: Record<string, boolean> = {};
 
   serviceSchemaFiles.forEach((serviceSchemaFile) => {
-    const { name, shortName } = serviceSchemaFile.params;
+    const { name, shortName } = serviceSchemaFile.schema;
 
     if (usedNames[name]) {
       throw new Error(`Name "${name}" is used multiple times`);
@@ -22,16 +23,15 @@ function verifyServiceNames(
   });
 }
 
-export class FrameworkContext {
-  public readonly frameworkSchemaFile: FrameworkSchemaFile;
-
+export class FrameworkContext extends FrameworkSchemaFile {
   public readonly services: ServiceContext[];
 
   constructor(
     frameworkSchemaFile: FrameworkSchemaFile,
     serviceSchemaFiles: ServiceSchemaFile[],
   ) {
-    this.frameworkSchemaFile = frameworkSchemaFile;
+    super(frameworkSchemaFile);
+
     this.services = serviceSchemaFiles.map((file) => new ServiceContext(file, this));
 
     verifyServiceNames(frameworkSchemaFile, serviceSchemaFiles);
@@ -39,15 +39,16 @@ export class FrameworkContext {
 
   getService(serviceName: string): ServiceContext | undefined {
     return this.services.find(
-      (service) => service.params.name === serviceName
-        || service.params.shortName === serviceName,
+      (service) => service.schema.name === serviceName
+        || service.schema.shortName === serviceName,
     );
   }
-}
 
-export function createFrameworkContext(
-  frameworkSchemaFile: FrameworkSchemaFile,
-  serviceSchemaFiles: ServiceSchemaFile[],
-): FrameworkContext {
-  return new FrameworkContext(frameworkSchemaFile, serviceSchemaFiles);
+  public static async loadFrameworkContext(
+    frameworkSchemaFile: FrameworkSchemaFile,
+  ): Promise<FrameworkContext> {
+    const serviceSchemaFiles = await frameworkSchemaFile.loadServiceSchemaFiles();
+
+    return new FrameworkContext(frameworkSchemaFile, serviceSchemaFiles);
+  }
 }
