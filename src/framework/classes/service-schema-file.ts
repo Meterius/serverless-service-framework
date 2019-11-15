@@ -23,14 +23,10 @@ export class ServiceSchemaFile {
 
   constructor(schemaOrSchemaFile: ServiceSchemaFile | ServiceSchema, schemaFilePath?: string) {
     if (ServiceSchemaFile.isServiceSchemaFile(schemaOrSchemaFile)) {
-      const schemaFile = schemaOrSchemaFile;
-
-      this.schema = schemaFile.schema;
-      this.filePath = schemaFile.filePath;
+      this.schema = schemaOrSchemaFile.schema;
+      this.filePath = schemaOrSchemaFile.filePath;
     } else if (schemaFilePath !== undefined) {
-      const schema = schemaOrSchemaFile;
-
-      this.schema = schema;
+      this.schema = schemaOrSchemaFile;
       this.filePath = schemaFilePath;
     } else {
       throw new Error("Invalid Service Schema File Constructor Overload");

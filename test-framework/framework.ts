@@ -2,7 +2,7 @@
 import { FrameworkSchema } from "serverless-service-framework";
 
 export default new FrameworkSchema({
-  name: "Cquenz Backend",
+  name: "Test Backend",
   shortName: "cqz-be",
 
   serviceRootDir: "services",

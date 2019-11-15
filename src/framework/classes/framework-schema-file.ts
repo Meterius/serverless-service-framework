@@ -29,14 +29,10 @@ export class FrameworkSchemaFile {
 
   constructor(schemaOrSchemaFile: FrameworkSchemaFile | FrameworkSchema, schemaFilePath?: string) {
     if (FrameworkSchemaFile.isFrameworkSchemaFile(schemaOrSchemaFile)) {
-      const schemaFile = schemaOrSchemaFile;
-
-      this.schema = schemaFile.schema;
-      this.filePath = schemaFile.filePath;
+      this.schema = schemaOrSchemaFile.schema;
+      this.filePath = schemaOrSchemaFile.filePath;
     } else if (schemaFilePath !== undefined) {
-      const schema = schemaOrSchemaFile;
-
-      this.schema = schema;
+      this.schema = schemaOrSchemaFile;
       this.filePath = schemaFilePath;
     } else {
       throw new Error("Invalid Framework Schema File Constructor Overload");
