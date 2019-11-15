@@ -13,10 +13,7 @@ export async function loadSchemaFile<T>(
 
   if (ext === ".ts") {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-    require("@babel/register")({
-      extensions: [".ts"],
-      presets: ["@babel/preset-typescript", "@babel/preset-env"],
-    }); // required to transform es6 import syntax and typescript files
+    require("ts-node/register"); // required to transform es6 import syntax and typescript files
 
     // eslint-disable-next-line max-len
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires, import/no-dynamic-require
