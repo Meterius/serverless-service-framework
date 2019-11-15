@@ -1,7 +1,14 @@
+import deepmerge from "deepmerge";
 import { InlineServiceTemplate } from "../templates";
 import { isObject } from "../../common/type-guards";
 import {
-  CommonSchema, CommonSchemaProperties, ExportMap, ImportMap,
+  CommonSchema,
+  CommonSchemaProperties,
+  ExportMap,
+  ImportMap,
+  ImportSettings,
+  ImportType, ImportValue,
+  ProcessedImportMap, ProcessedImportValue,
 } from "./common-schema";
 import { FrameworkSchema } from "./framework-schema";
 
@@ -13,8 +20,8 @@ interface InlineServiceTemplateProperties {
 type TemplateProperties = InlineServiceTemplateProperties;
 
 export interface DependencyProperties {
-  importMap: ImportMap;
-  exportMap: ExportMap;
+  importMap?: ImportMap;
+  exportMap?: ExportMap;
 }
 
 interface BaseProperties {
@@ -35,7 +42,7 @@ export class ServiceSchema extends CommonSchema {
 
   public readonly shortName: string;
 
-  public readonly importMap: ImportMap;
+  public readonly importMap: ProcessedImportMap;
 
   public readonly exportMap: ExportMap;
 
@@ -79,8 +86,12 @@ export class ServiceSchema extends CommonSchema {
 
     this.name = schema.name;
     this.shortName = schema.shortName;
-    this.importMap = schema.importMap;
-    this.exportMap = schema.exportMap;
+
+    this.importMap = ServiceSchema.processImportMap(
+      schema.importMap || {}, this.importSettings,
+    );
+
+    this.exportMap = schema.exportMap || {};
     this.template = schema.template;
   }
 
@@ -97,6 +108,37 @@ export class ServiceSchema extends CommonSchema {
 
       ...this.extractCommonSchemaProperties(),
     };
+  }
+
+  private static readonly defaultImportSettings: Required<ImportSettings> = {
+    defaultImportType: ImportType.ProviderBased,
+  };
+
+  private static processImportMap(
+    importMap: ImportMap,
+    usedImportSettings: ImportSettings = {},
+  ): ProcessedImportMap {
+    const importSettings = deepmerge(usedImportSettings, ServiceSchema.defaultImportSettings);
+
+    const processedImportMap: ProcessedImportMap = {};
+
+    Object.entries(importMap).forEach(([serviceName, imports]: [string, ImportValue[]]) => {
+      processedImportMap[serviceName] = imports.map((importValue): ProcessedImportValue => {
+        if (typeof importValue === "string") {
+          return {
+            name: importValue,
+            type: importSettings.defaultImportType,
+          };
+        } else {
+          return {
+            name: importValue.name,
+            type: importValue.type || importSettings.defaultImportType,
+          };
+        }
+      });
+    });
+
+    return processedImportMap;
   }
 
   public static isServiceSchema(value: unknown): value is ServiceSchema {

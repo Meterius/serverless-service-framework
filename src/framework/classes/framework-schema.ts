@@ -1,5 +1,4 @@
-import { InlineFrameworkTemplate } from "../templates";
-import { ServerlessProviderName } from "../types";
+import { InlineFrameworkTemplate, ServerlessProviderName } from "../templates";
 import { isObject } from "../../common/type-guards";
 import { CommonSchema, CommonSchemaProperties } from "./common-schema";
 

@@ -10,8 +10,14 @@ export enum ImportType {
 // value = string <=> { name: value } <=> { name: value; type: "provider-based" }
 export type ImportValue = string | { name: string; type?: ImportType };
 
+export type ProcessedImportValue = { name: string; type: ImportType };
+
 export interface ImportMap {
   [serviceName: string]: ImportValue[];
+}
+
+export interface ProcessedImportMap {
+  [serviceName: string]: ProcessedImportValue[];
 }
 
 export type ExportValue = string;
@@ -22,7 +28,6 @@ export interface ExportMap {
 
 export interface ImportSettings {
   defaultImportType?: ImportType;
-  useNamespaceImportVariables?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface

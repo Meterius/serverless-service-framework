@@ -3,27 +3,7 @@ import { ServiceSchemaFile } from "./service-schema-file";
 // eslint-disable-next-line import/no-cycle
 import { ServiceContext } from "./service-context";
 import { Provider } from "./provider";
-import { ServerlessProviderName } from "../types";
-
-function verifyServiceNames(
-  frameworkSchemaFile: FrameworkSchemaFile,
-  serviceSchemaFiles: ServiceSchemaFile[],
-): void {
-  const usedNames: Record<string, boolean> = {};
-
-  serviceSchemaFiles.forEach((serviceSchemaFile) => {
-    const { name, shortName } = serviceSchemaFile.schema;
-
-    if (usedNames[name]) {
-      throw new Error(`Name "${name}" is used multiple times`);
-    } else if (usedNames[shortName]) {
-      throw new Error(`Name "${shortName}" is used multiple times`);
-    } else {
-      usedNames[name] = true;
-      usedNames[shortName] = true;
-    }
-  });
-}
+import { ServerlessProviderName } from "../templates";
 
 export class FrameworkContext extends FrameworkSchemaFile {
   public readonly services: ServiceContext[];
@@ -38,7 +18,7 @@ export class FrameworkContext extends FrameworkSchemaFile {
 
     this.services = serviceSchemaFiles.map((file) => new ServiceContext(file, this));
 
-    verifyServiceNames(frameworkSchemaFile, serviceSchemaFiles);
+    FrameworkContext.verifyServiceNames(frameworkSchemaFile, serviceSchemaFiles);
 
     this.provider = FrameworkContext.getProviderFromName(this.schema.provider);
   }
@@ -48,6 +28,26 @@ export class FrameworkContext extends FrameworkSchemaFile {
       (service) => service.schema.name === serviceName
         || service.schema.shortName === serviceName,
     );
+  }
+
+  private static verifyServiceNames(
+    frameworkSchemaFile: FrameworkSchemaFile,
+    serviceSchemaFiles: ServiceSchemaFile[],
+  ): void {
+    const usedNames: Record<string, boolean> = {};
+
+    serviceSchemaFiles.forEach((serviceSchemaFile) => {
+      const { name, shortName } = serviceSchemaFile.schema;
+
+      if (usedNames[name]) {
+        throw new Error(`Name "${name}" is used multiple times`);
+      } else if (usedNames[shortName]) {
+        throw new Error(`Name "${shortName}" is used multiple times`);
+      } else {
+        usedNames[name] = true;
+        usedNames[shortName] = true;
+      }
+    });
   }
 
   private static getProviderFromName(name: ServerlessProviderName): Provider {

@@ -5,8 +5,17 @@ import merge from "deepmerge";
 // eslint-disable-next-line import/no-cycle
 import { FrameworkContext } from "./framework-context";
 import { ServiceSchemaFile } from "./service-schema-file";
-import { InlineServerlessTemplate } from "../types";
+import {
+  PostCompilationServerlessTemplate, PreCompilationServerlessTemplate,
+  ServerlessTemplatePostImports,
+  ServerlessTemplatePostMerging, ServerlessTemplatePostNaming,
+  ServerlessTemplatePostPreparation, ServerlessTemplatePreImports,
+  ServerlessTemplatePreMerging, ServerlessTemplatePreNaming,
+  ServerlessTemplatePrePreparation,
+} from "../templates";
 import { serviceBuild } from "../constants";
+
+/* eslint-disable class-methods-use-this */
 
 export enum ServerlessTemplateFormat {
   JavaScript = "js"
@@ -72,24 +81,115 @@ export class ServiceContext extends ServiceSchemaFile {
     );
   }
 
+  private getTemplateServiceName(): string {
+    return `${this.context.schema.shortName}-${this.schema.shortName}`;
+  }
+
+  private getTemplateProviderStackName(): string {
+    // eslint-disable-next-line no-template-curly-in-string
+    return "${self:service.name}-${self:provider.stage}";
+  }
+
+  private getTemplateProviderStage(): string {
+    // eslint-disable-next-line no-template-curly-in-string
+    return "${opt:service}";
+  }
+
+  private async processTemplateMerging(
+    template: ServerlessTemplatePreMerging,
+  ): Promise<ServerlessTemplatePostMerging> {
+    const templateWithFramework = merge(
+      template,
+      this.context.schema.template,
+    );
+
+    return merge(
+      templateWithFramework,
+      this.schema.template,
+    );
+  }
+
+  private async processTemplatePreperation(
+    template: ServerlessTemplatePrePreparation,
+  ): Promise<ServerlessTemplatePostPreparation> {
+    return {
+      ...template,
+      service: template.service || {},
+      custom: template.custom || {},
+    };
+  }
+
+  private async processTemplateNaming(
+    template: ServerlessTemplatePreNaming,
+  ): Promise<ServerlessTemplatePostNaming> {
+    return {
+      ...template,
+      service: {
+        ...template.service,
+        name: this.getTemplateServiceName(),
+      },
+
+      provider: {
+        ...template.provider,
+        stage: this.getTemplateProviderStackName(),
+        stackName: this.getTemplateProviderStage(),
+      },
+    };
+  }
+
+  private async processTemplateImports(
+    template: ServerlessTemplatePreImports,
+  ): Promise<ServerlessTemplatePostImports> {
+    const { importMap } = this.schema;
+    const importedServices = Object.keys(importMap);
+
+    const importValueMap: Record<string, unknown> = {};
+
+    for (let i = 0; i < importedServices.length; i += 1) {
+      const importedServiceName = importedServices[i];
+      const importedService = this.context.getService(importedServiceName);
+
+      if (importedService === undefined) {
+        throw new Error(
+          `Service "${this.schema.name}" imports non-existent service "${importedServiceName}"`,
+        );
+      }
+
+      const importData = await this.context.provider.retrieveImportData(this, importedService);
+
+      const importedValues = importMap[importedServiceName];
+
+      for (let j = 0; j < importedValues.length; j += 1) {
+        const importValue = importedValues[j];
+
+        importValueMap[importValue.name] = await this.context.provider.retrieveTemplateImportValue(
+          this, importedService, importData, importValue,
+        );
+      }
+    }
+
+    return {
+      ...template,
+      custom: {
+        ...template.custom,
+        imports: importValueMap,
+      },
+    };
+  }
+
   /**
    * Builds (in memory) serverless template used for service.
    * Returns the built template.
    */
-  private async buildServiceServerlessTemplate(): Promise<InlineServerlessTemplate> {
-    const serviceTemplate = this.schema.template;
-    const frameworkSchema = this.context.schema;
-    const frameworkTemplate = frameworkSchema.template;
+  private async buildServiceServerlessTemplate(): Promise<PostCompilationServerlessTemplate> {
+    const preCompilationTemplate: PreCompilationServerlessTemplate = {};
 
-    return merge.all([
-      frameworkTemplate,
-      serviceTemplate,
-      {
-        service: {
-          name: `${frameworkSchema.shortName}-${this.schema.shortName}`,
-        },
-      },
-    ]);
+    const mergedTemplate = await this.processTemplateMerging(preCompilationTemplate);
+    const preparedTemplate = await this.processTemplatePreperation(mergedTemplate);
+    const namedTemplate = await this.processTemplateNaming(preparedTemplate);
+    const importedTemplate = await this.processTemplateImports(namedTemplate);
+
+    return importedTemplate;
   }
 
   /**
@@ -110,7 +210,7 @@ export class ServiceContext extends ServiceSchemaFile {
    * Returns data and used format for the file.
    */
   private static async serializeServiceServerlessTemplate(
-    template: InlineServerlessTemplate, // which template will be serialized
+    template: PostCompilationServerlessTemplate, // which template will be serialized
     format: ServerlessTemplateFormat, // which file format will be generated
   ): Promise<SerializedServerlessTemplate> {
     if (format === ServerlessTemplateFormat.JavaScript) {
