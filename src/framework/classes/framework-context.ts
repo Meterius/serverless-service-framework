@@ -24,11 +24,31 @@ export class FrameworkContext extends FrameworkSchemaFile {
     this.provider = FrameworkContext.getProviderFromName(this.schema.provider, this);
   }
 
+  /**
+   * Looks up service context with the serviceName as name or shortName.
+   * Returns the found service if it exists.
+   * Otherwise returns null.
+   */
   getService(serviceName: string): ServiceContext | undefined {
     return this.services.find(
       (service) => service.schema.name === serviceName
         || service.schema.shortName === serviceName,
     );
+  }
+
+  /**
+   * Like getService, but throws if service was not found.
+   * Returns the found service.
+   * Otherwise throws error.
+   */
+  referenceService(serviceName: string): ServiceContext {
+    const service = this.getService(serviceName);
+
+    if (service === undefined) {
+      throw new Error(`Service "${serviceName}" was referenced but not found`);
+    } else {
+      return service;
+    }
   }
 
   private static verifyServiceNames(
