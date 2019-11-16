@@ -5,9 +5,14 @@ import { ServiceContext } from "./service-context";
 import { Provider } from "./provider";
 import { ServerlessProviderName } from "../templates";
 import { AwsProvider } from "./provider/aws";
+import { ServiceSchema } from "./service-schema";
+
+/* eslint-disable no-dupe-class-members */
 
 export class FrameworkContext extends FrameworkSchemaFile {
   public readonly services: ServiceContext[];
+
+  public readonly serviceSchemas: ServiceSchema[];
 
   public readonly provider: Provider;
 
@@ -17,35 +22,63 @@ export class FrameworkContext extends FrameworkSchemaFile {
   ) {
     super(frameworkSchemaFile);
 
-    this.services = serviceSchemaFiles.map((file) => new ServiceContext(file, this));
-
     FrameworkContext.verifyServiceNames(frameworkSchemaFile, serviceSchemaFiles);
 
     this.provider = FrameworkContext.getProviderFromName(this.schema.provider, this);
+
+    // need to be set up before service contexts, since they use it in their constructor
+    this.serviceSchemas = serviceSchemaFiles.map((service) => service.schema);
+
+    // careful constructor programming needs to be done in service context, since the
+    // service contexts are not available when they are constructed
+    this.services = serviceSchemaFiles.map((file) => new ServiceContext(file, this));
   }
 
+
   /**
-   * Looks up service context with the serviceName as name or shortName.
+   * Looks up service context that the service identifier refers to.
    * Returns the found service if it exists.
    * Otherwise returns null.
    */
-  getService(serviceName: string): ServiceContext | undefined {
+  getService(serviceIdentifier: string): ServiceContext | undefined;
+
+  /**
+   * Looks up service context that the service schema refers to.
+   * Returns the found service if it exists.
+   * Otherwise returns null.
+   */
+  getService(serviceSchema: ServiceSchema): ServiceContext | undefined;
+
+  getService(serviceReference: string | ServiceSchema): ServiceContext | undefined {
     return this.services.find(
-      (service) => service.schema.name === serviceName
-        || service.schema.shortName === serviceName,
+      (service) => service.schema.isReferredToBy(
+        typeof serviceReference === "string" ? serviceReference : serviceReference.identifier,
+      ),
     );
   }
 
   /**
-   * Like getService, but throws if service was not found.
-   * Returns the found service.
+   * Looks up service context that the service identifier refers to.
+   * Returns the found service if it exists.
    * Otherwise throws error.
    */
-  referenceService(serviceName: string): ServiceContext {
-    const service = this.getService(serviceName);
+  referenceService(serviceIdentifier: string): ServiceContext;
+
+  /**
+   * Looks up service context that the service schema refers to.
+   * Returns the found service if it exists.
+   * Otherwise throws error.
+   */
+  referenceService(serviceSchema: ServiceSchema): ServiceContext;
+
+  referenceService(serviceReference: string | ServiceSchema): ServiceContext {
+    const service = typeof serviceReference === "string"
+      ? this.getService(serviceReference) : this.getService(serviceReference);
 
     if (service === undefined) {
-      throw new Error(`Service "${serviceName}" was referenced but not found`);
+      throw new Error(
+        `Service "${serviceReference}" is references but does not exist`,
+      );
     } else {
       return service;
     }

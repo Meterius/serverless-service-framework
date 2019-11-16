@@ -44,6 +44,9 @@ export class ServiceSchema extends CommonSchema {
 
   public readonly importMap: ProcessedImportMap;
 
+  // list of service identifiers of services that this service imports
+  public readonly importedServices: string[];
+
   public readonly exportMap: ExportMap;
 
   public readonly template: InlineServiceTemplate;
@@ -91,8 +94,20 @@ export class ServiceSchema extends CommonSchema {
       schema.importMap || {}, this.importSettings,
     );
 
+    this.importedServices = ServiceSchema.getImportedServices(this.importMap);
+
     this.exportMap = schema.exportMap || {};
     this.template = schema.template;
+  }
+
+  /**
+   * Returns an identifier that returns true when given to isReferredToBy.
+   * A service is identified by multiple identifiers (name and shortName).
+   * (should be used when mapping services and needs to be collision free when used with multiple
+   * other service schemas)
+   */
+  get identifier(): string {
+    return this.name;
   }
 
   private extractServiceSchemaProperties(): ServiceSchemaProperties {
@@ -108,6 +123,29 @@ export class ServiceSchema extends CommonSchema {
 
       ...this.extractCommonSchemaProperties(),
     };
+  }
+
+  /**
+   * Returns whether the identifier refers to this service description.
+   */
+  isReferredToBy(identifier: string): boolean {
+    return this.name === identifier || this.shortName === identifier;
+  }
+
+  /**
+   * Whether this service imports the other service.
+   */
+  isImporting(otherServiceSchema: ServiceSchema): boolean {
+    return this.importedServices.some(
+      (importedServiceIdentifier) => otherServiceSchema.isReferredToBy(importedServiceIdentifier),
+    );
+  }
+
+  /**
+   * Whether the other service imports this service.
+   */
+  isExportedTo(otherServiceSchema: ServiceSchema): boolean {
+    return otherServiceSchema.importedServices.includes(this.identifier);
   }
 
   private static readonly defaultImportSettings: Required<ImportSettings> = {
@@ -139,6 +177,12 @@ export class ServiceSchema extends CommonSchema {
     });
 
     return processedImportMap;
+  }
+
+  private static getImportedServices(
+    importMap: ImportMap,
+  ): string[] {
+    return Object.keys(importMap);
   }
 
   public static isServiceSchema(value: unknown): value is ServiceSchema {

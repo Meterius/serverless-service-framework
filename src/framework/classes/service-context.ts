@@ -14,6 +14,7 @@ import {
   ServerlessTemplatePrePreparation,
 } from "../templates";
 import { serviceBuild } from "../constants";
+import { ServiceSchema } from "./service-schema";
 
 /* eslint-disable class-methods-use-this */
 
@@ -29,10 +30,36 @@ export interface SerializedServerlessTemplate {
 export class ServiceContext extends ServiceSchemaFile {
   public readonly context: FrameworkContext;
 
+  private readonly __importedServices: ServiceSchema[];
+
+  private readonly __exportedToServices: ServiceSchema[];
+
   constructor(schemaFile: ServiceSchemaFile, frameworkContext: FrameworkContext) {
     super(schemaFile);
 
+    // note that the framework context calls this constructor
+    // and that it will not have initialized the services attribute yet
+    // i.e. only references to service schemas can be used here and no properties
+    // that use service contexts
+
     this.context = frameworkContext;
+
+    const {
+      importedServices, exportedToServices,
+    } = ServiceContext.computeLocalizedServicesDependencies(
+      schemaFile.schema, frameworkContext.serviceSchemas,
+    );
+
+    this.__exportedToServices = exportedToServices;
+    this.__importedServices = importedServices;
+  }
+
+  get importedServices(): ServiceContext[] {
+    return this.__importedServices.map((schema) => this.context.referenceService(schema));
+  }
+
+  get exportedToServices(): ServiceContext[] {
+    return this.__exportedToServices.map((schema) => this.context.referenceService(schema));
   }
 
   /**
@@ -177,6 +204,14 @@ export class ServiceContext extends ServiceSchemaFile {
     };
   }
 
+  importsService(otherService: ServiceContext): boolean {
+    return this.importedServices.includes(otherService);
+  }
+
+  exportedToService(otherService: ServiceContext): boolean {
+    return this.exportedToServices.includes(otherService);
+  }
+
   /**
    * Builds serverless template used for service.
    * Returns the built template.
@@ -222,5 +257,21 @@ export class ServiceContext extends ServiceSchemaFile {
     } else {
       throw new Error("Invalid Template Format");
     }
+  }
+
+  private static computeLocalizedServicesDependencies(
+    serviceSchema: ServiceSchema, serviceSchemas: ServiceSchema[],
+  ): { importedServices: ServiceSchema[]; exportedToServices: ServiceSchema[] } {
+    const importedServices = serviceSchemas.filter(
+      (otherService) => serviceSchema.isImporting(otherService),
+    );
+
+    const exportedToServices = serviceSchemas.filter(
+      (otherService) => serviceSchema.isExportedTo(otherService),
+    );
+
+    return {
+      importedServices, exportedToServices,
+    };
   }
 }
