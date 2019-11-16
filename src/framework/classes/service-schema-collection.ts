@@ -31,8 +31,8 @@ export class ServiceSchemaCollection {
     );
   }
 
-  public getServicesWithoutUniqueIdentifiers(schemas: ServiceSchema[]): ServiceSchema[] {
-    return schemas.filter((schema) => schema.identifiers.some(
+  public getServicesWithoutUniqueIdentifiers(): ServiceSchema[] {
+    return this.schemas.filter((schema) => schema.identifiers.some(
       (id) => this.duplicatedIdentifiers.includes(id),
     ));
   }
@@ -65,7 +65,7 @@ export class ServiceSchemaCollection {
         importValues: ProcessedImportValue[],
         importedServiceIdentifier: string,
       ) => importValues.filter(
-        (importValue) => ServiceSchemaCollection.isServiceImportExportedByAnotherService(
+        (importValue) => !ServiceSchemaCollection.isServiceImportExportedByAnotherService(
           this.schemas, importedServiceIdentifier, importValue,
         ),
       ));
