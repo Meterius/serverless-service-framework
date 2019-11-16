@@ -6,6 +6,8 @@ import { Provider } from "./provider";
 import { ServerlessProviderName } from "../templates";
 import { AwsProvider } from "./provider/aws";
 import { ServiceSchema } from "./service-schema";
+import { ServiceSchemaCollection } from "./service-schema-collection";
+import { filterObject } from "../../common/utility";
 
 /* eslint-disable no-dupe-class-members */
 
@@ -13,6 +15,8 @@ export class FrameworkContext extends FrameworkSchemaFile {
   public readonly services: ServiceContext[];
 
   public readonly serviceSchemas: ServiceSchema[];
+
+  public readonly serviceCollection: ServiceSchemaCollection;
 
   public readonly provider: Provider;
 
@@ -30,6 +34,12 @@ export class FrameworkContext extends FrameworkSchemaFile {
     // careful constructor programming needs to be done in service context, since the
     // service contexts are not available when they are constructed
     this.services = serviceSchemaFiles.map((file) => new ServiceContext(file, this));
+
+    this.serviceCollection = new ServiceSchemaCollection(this.serviceSchemas);
+
+    // ensures assumptions about a collection of service schemas
+    // for example names are not reused, no imports cycles are contained, ...
+    FrameworkContext.ensureValidity(this.serviceCollection);
   }
 
   /**
@@ -78,6 +88,88 @@ export class FrameworkContext extends FrameworkSchemaFile {
       );
     } else {
       return service;
+    }
+  }
+
+  private static ensureValidity(collection: ServiceSchemaCollection): void {
+    function joinC(arr: string[]): string {
+      if (arr.length >= 2) {
+        return arr.slice(0, arr.length - 2).concat(
+          [`${arr[arr.length - 2]} and ${arr[arr.length - 1]}`],
+        ).join(", ");
+      } else {
+        return arr[0] || "";
+      }
+    }
+
+    function joinCQ(arr: string[]): string {
+      return joinC(arr.map((str) => `"${str}"`));
+    }
+
+    const test1 = collection.getServicesWithoutUniqueIdentifiers();
+
+    if (test1.length > 0) {
+      throw new Error(
+        `Services ${joinCQ(test1.map((s) => s.name))} have common short names or names`,
+      );
+    }
+
+    const test2 = collection.getServiceImportsUsingNonExistentIdentifiers();
+    const test2Item = test2.find((item) => item.nonExistentIdentifiersUsed.length > 0);
+
+    if (test2Item !== undefined) {
+      const missing = joinCQ(test2Item.nonExistentIdentifiersUsed);
+
+      throw new Error(
+        `Service "${test2Item.schema.name}" imports from ${missing} that does not exist`,
+      );
+    }
+
+    const test3 = collection.getServiceImportsUsingNonDefaultIdentifier();
+    const test3Item = test3.find((item) => item.nonDefaultIdentifiersUsed.length > 0);
+
+    if (test3Item) {
+      const nonDefaults = joinCQ(test3Item.nonDefaultIdentifiersUsed);
+
+      throw new Error(
+        `Service "${test3Item.schema.name}" imports ${nonDefaults} that isn't a services name"`,
+      );
+    }
+
+    const test4 = collection.getServiceImportsNotExportedByTheOtherServices();
+
+    const test4Item = test4.map((item) => ({
+      schema: item.schema,
+      notExportedImportsMap: filterObject(
+        item.notExportedImportsMap, (list) => list.length > 0,
+      ),
+    })).find((item) => Object.values(item.notExportedImportsMap).length > 0);
+
+    if (test4Item) {
+      const [importedService, notExportedValues] = Object.entries(
+        test4Item.notExportedImportsMap,
+      )[0];
+
+      const notExportedDisplay = joinCQ(notExportedValues.map((s) => s.name));
+
+      throw new Error(
+        `Service "${test4Item.schema.name}" tries to import ${notExportedDisplay} `
+        + `from "${importedService}" which it does not export`,
+      );
+    }
+
+    const test5 = collection.getCyclicImportChains().map((cycle) => cycle.concat([cycle[0]]));
+
+    if (test5.length > 0) {
+      const cycleDisplay = test5.length === 1 ? "Cycle" : "Cycles";
+
+      const cycles = joinC(test5
+        .map((cycle) => cycle.map((schema) => `"${schema.name}"`).join(" > "))
+        .map((str) => `(${str})`));
+
+      throw new Error(
+        `Import ${cycleDisplay} ${cycles} found`,
+      );
     }
   }
 
