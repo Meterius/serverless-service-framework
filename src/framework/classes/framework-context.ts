@@ -22,8 +22,6 @@ export class FrameworkContext extends FrameworkSchemaFile {
   ) {
     super(frameworkSchemaFile);
 
-    FrameworkContext.verifyServiceNames(frameworkSchemaFile, serviceSchemaFiles);
-
     this.provider = FrameworkContext.getProviderFromName(this.schema.provider, this);
 
     // need to be set up before service contexts, since they use it in their constructor
@@ -33,7 +31,6 @@ export class FrameworkContext extends FrameworkSchemaFile {
     // service contexts are not available when they are constructed
     this.services = serviceSchemaFiles.map((file) => new ServiceContext(file, this));
   }
-
 
   /**
    * Looks up service context that the service identifier refers to.
@@ -82,26 +79,6 @@ export class FrameworkContext extends FrameworkSchemaFile {
     } else {
       return service;
     }
-  }
-
-  private static verifyServiceNames(
-    frameworkSchemaFile: FrameworkSchemaFile,
-    serviceSchemaFiles: ServiceSchemaFile[],
-  ): void {
-    const usedNames: Record<string, boolean> = {};
-
-    serviceSchemaFiles.forEach((serviceSchemaFile) => {
-      const { name, shortName } = serviceSchemaFile.schema;
-
-      if (usedNames[name]) {
-        throw new Error(`Name "${name}" is used multiple times`);
-      } else if (usedNames[shortName]) {
-        throw new Error(`Name "${shortName}" is used multiple times`);
-      } else {
-        usedNames[name] = true;
-        usedNames[shortName] = true;
-      }
-    });
   }
 
   private static getProviderFromName(

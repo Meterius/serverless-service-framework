@@ -13,11 +13,11 @@ export type ImportValue = string | { name: string; type?: ImportType };
 export type ProcessedImportValue = { name: string; type: ImportType };
 
 export interface ImportMap {
-  [serviceName: string]: ImportValue[];
+  [serviceDefaultIdentifier: string]: ImportValue[];
 }
 
 export interface ProcessedImportMap {
-  [serviceName: string]: ProcessedImportValue[];
+  [serviceDefaultIdentifier: string]: ProcessedImportValue[];
 }
 
 export type ExportValue = string;

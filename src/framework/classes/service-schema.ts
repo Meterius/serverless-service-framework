@@ -25,7 +25,7 @@ export interface DependencyProperties {
 }
 
 interface BaseProperties {
-  name: string;
+  name: string; // the name is used as the default service identifier
   shortName: string;
 }
 
@@ -44,7 +44,7 @@ export class ServiceSchema extends CommonSchema {
 
   public readonly importMap: ProcessedImportMap;
 
-  // list of service identifiers of services that this service imports
+  // list of default service identifiers of services that this service imports
   public readonly importedServices: string[];
 
   public readonly exportMap: ExportMap;
@@ -101,13 +101,20 @@ export class ServiceSchema extends CommonSchema {
   }
 
   /**
-   * Returns an identifier that returns true when given to isReferredToBy.
+   * Returns the default identifier.
+   */
+  get identifier(): string {
+    return this.identifiers[0];
+  }
+
+  /**
+   * Returns all possible identifiers.
    * A service is identified by multiple identifiers (name and shortName).
    * (should be used when mapping services and needs to be collision free when used with multiple
    * other service schemas)
    */
-  get identifier(): string {
-    return this.name;
+  get identifiers(): string[] {
+    return [this.name, this.shortName];
   }
 
   private extractServiceSchemaProperties(): ServiceSchemaProperties {
@@ -126,10 +133,10 @@ export class ServiceSchema extends CommonSchema {
   }
 
   /**
-   * Returns whether the identifier refers to this service description.
+   * Returns whether the identifier is an identifier of this schema.
    */
   isReferredToBy(identifier: string): boolean {
-    return this.name === identifier || this.shortName === identifier;
+    return this.identifiers.includes(identifier);
   }
 
   /**
@@ -146,6 +153,13 @@ export class ServiceSchema extends CommonSchema {
    */
   isExportedTo(otherServiceSchema: ServiceSchema): boolean {
     return otherServiceSchema.importedServices.includes(this.identifier);
+  }
+
+  /**
+   * Whether the import value is exported by this service
+   */
+  isExportingImportValue(importValue: ProcessedImportValue): boolean {
+    return this.exportMap[importValue.name] !== undefined;
   }
 
   private static readonly defaultImportSettings: Required<ImportSettings> = {
