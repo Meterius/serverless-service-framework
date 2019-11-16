@@ -95,7 +95,7 @@ export class ServiceContext extends ServiceSchemaFile {
     return "${opt:service}";
   }
 
-  private async processTemplateMerging(
+  private async processServiceServerlessTemplateMerging(
     template: ServerlessTemplatePreMerging,
   ): Promise<ServerlessTemplatePostMerging> {
     const templateWithFramework = merge(
@@ -109,7 +109,7 @@ export class ServiceContext extends ServiceSchemaFile {
     );
   }
 
-  private async processTemplatePreperation(
+  private async processServiceServerlessTemplatePreperation(
     template: ServerlessTemplatePrePreparation,
   ): Promise<ServerlessTemplatePostPreparation> {
     return {
@@ -119,7 +119,7 @@ export class ServiceContext extends ServiceSchemaFile {
     };
   }
 
-  private async processTemplateNaming(
+  private async processServiceServerlessTemplateNaming(
     template: ServerlessTemplatePreNaming,
   ): Promise<ServerlessTemplatePostNaming> {
     return {
@@ -137,7 +137,7 @@ export class ServiceContext extends ServiceSchemaFile {
     };
   }
 
-  private async processTemplateImports(
+  private async processServiceServerlessTemplateImports(
     template: ServerlessTemplatePreImports,
   ): Promise<ServerlessTemplatePostImports> {
     const { importMap } = this.schema;
@@ -178,26 +178,27 @@ export class ServiceContext extends ServiceSchemaFile {
   }
 
   /**
-   * Builds (in memory) serverless template used for service.
+   * Builds serverless template used for service.
    * Returns the built template.
    */
-  private async buildServiceServerlessTemplate(): Promise<PostCompilationServerlessTemplate> {
-    const preCompilationTemplate: PreCompilationServerlessTemplate = {};
+  async buildServiceServerlessTemplateInMemory(
 
-    const mergedTemplate = await this.processTemplateMerging(preCompilationTemplate);
-    const preparedTemplate = await this.processTemplatePreperation(mergedTemplate);
-    const namedTemplate = await this.processTemplateNaming(preparedTemplate);
-    const importedTemplate = await this.processTemplateImports(namedTemplate);
+  ): Promise<PostCompilationServerlessTemplate> {
+    const step0: PreCompilationServerlessTemplate = {};
+    const step1 = await this.processServiceServerlessTemplateMerging(step0);
+    const step2 = await this.processServiceServerlessTemplatePreperation(step1);
+    const step3 = await this.processServiceServerlessTemplateNaming(step2);
+    const step4 = await this.processServiceServerlessTemplateImports(step3);
 
-    return importedTemplate;
+    return step4;
   }
 
   /**
-   * Builds serverless template used for service and writes it to build directory.
-   * Returns absolute file path of written template file.
+   * Builds serverless template used for service and writes it to disk.
+   * Returns the file path of the written template file.
    */
-  async compileServiceServerlessTemplate(): Promise<string> {
-    const template = await this.buildServiceServerlessTemplate();
+  async buildServiceServerlessTemplate(): Promise<string> {
+    const template = await this.buildServiceServerlessTemplateInMemory();
     const serializedTemplate = await ServiceContext.serializeServiceServerlessTemplate(
       template, ServerlessTemplateFormat.JavaScript,
     );
