@@ -184,15 +184,13 @@ export class ServiceContext extends ServiceSchemaFile {
         );
       }
 
-      const importData = await this.context.provider.retrieveImportData(this, importedService);
-
       const importedValues = importMap[importedServiceName];
 
       for (let j = 0; j < importedValues.length; j += 1) {
         const importValue = importedValues[j];
 
         importValueMap[importValue.name] = await this.context.provider.retrieveTemplateImportValue(
-          this, importedService, importData, importValue,
+          this, importedService, importValue,
         );
       }
     }
