@@ -1,4 +1,5 @@
-import { Provider } from "../provider";
+import * as Aws from "aws-sdk";
+import { ProviderImplementation } from "./provider";
 import { ServiceContext } from "../service-context";
 import { ExportValue, ImportType, ProcessedImportValue } from "../common-schema";
 import {
@@ -9,44 +10,97 @@ import { isObject } from "../../../common/type-guards";
 
 /* eslint-disable @typescript-eslint/no-unused-vars, class-methods-use-this */
 
+const deletedStackStates = ["DELETE_IN_PROGRESS", "DELETE_COMPLETE"];
+
 type TemplateExportValue = { Value: string };
 
-export class AwsProvider extends Provider<TemplateExportValue> {
+type Stack = Aws.CloudFormation.Stack;
+
+export class AwsProvider extends ProviderImplementation<
+TemplateExportValue, Stack, undefined, Stack> {
   public readonly name = "aws";
 
-  async retrieveTemplateImportValue(
-    service: ServiceContext,
-    importedService: ServiceContext,
-    importValue: ProcessedImportValue,
-  ): Promise<unknown> {
-    switch (importValue.type) {
-      default:
-        throw new Error(
-          `For provider "${this.name}" imports of type "${importValue.type}" are not implemented`,
-        );
+  async retrieveServiceStack(service: ServiceContext): Promise<Stack | undefined> {
+    const cf = AwsProvider.getCloudFormation(service);
 
-      case ImportType.ProviderBased:
-        return {
-          "Fn::ImportValue": `${importedService.stackName}-${importValue.name}`,
-        };
-    }
+    const response: Aws.CloudFormation.DescribeStacksOutput = await cf.describeStacks({
+      StackName: service.stackName,
+    }).promise();
+
+    return (response.Stacks || []).find(
+      (stack) => !deletedStackStates.includes(stack.StackStatus),
+    );
   }
 
-  async retrieveTemplateExportValue(
+  async prepareTemplateProviderBasedImports(
+    service: ServiceContext,
+    importedService: ServiceContext,
+  ): Promise<undefined> {
+    return undefined;
+  }
+
+  async prepareTemplateDirectImports(
+    service: ServiceContext,
+    importedService: ServiceContext,
+  ): Promise<Stack> {
+    const stack = await this.retrieveServiceStack(importedService);
+
+    if (stack === undefined) {
+      throw new Error(
+        `Service "${service.schema.name}" imports via direct import`
+      + `from "${importedService.schema.name}" that is not deployed`,
+      );
+    }
+
+    return stack;
+  }
+
+  async retrieveTemplateProviderBasedImportValue(
+    service: ServiceContext,
+    importedService: ServiceContext,
+    importValue: Omit<ProcessedImportValue, "type"> & { type: ImportType.ProviderBased },
+    importData: undefined,
+  ): Promise<unknown> {
+    return {
+      "Fn::ImportValue": `${importedService.stackName}-${importValue.name}`,
+    };
+  }
+
+  async retrieveTemplateDirectImportValue(
+    service: ServiceContext,
+    importedService: ServiceContext,
+    importValue: Omit<ProcessedImportValue, "type"> & { type: ImportType.Direct },
+    importData: Stack,
+  ): Promise<unknown> {
+    const output = (importData.Outputs || []).find(
+      (item) => item.OutputKey === importValue.name,
+    );
+
+    if (output === undefined) {
+      throw new Error(
+        `Service "${service.schema.name}" imports via direct import "${importValue.name}" `
+        + `from "${importedService.schema.name}" that is not exported by the stack`,
+      );
+    }
+
+    return output.OutputValue;
+  }
+
+  retrieveTemplateExportValue(
     service: ServiceContext,
     exportName: string,
     exportValue: ExportValue,
-  ): Promise<TemplateExportValue> {
+  ): TemplateExportValue {
     return {
       Value: exportValue,
     };
   }
 
-  async insertTemplateExportValues(
+  insertTemplateExportValues(
     service: ServiceContext,
     exportValueMap: Record<string, TemplateExportValue>,
     template: ServerlessTemplatePreExports,
-  ): Promise<ServerlessTemplatePostExports> {
+  ): ServerlessTemplatePostExports {
     /* eslint-disable no-param-reassign */
 
     const resources = isObject(template.resources.Resources) ? template.resources.Resources : {};
@@ -59,5 +113,11 @@ export class AwsProvider extends Provider<TemplateExportValue> {
     };
 
     return template;
+  }
+
+  private static getCloudFormation(service: ServiceContext): Aws.CloudFormation {
+    return new Aws.CloudFormation({
+      region: service.region,
+    });
   }
 }

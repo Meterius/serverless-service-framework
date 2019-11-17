@@ -48,6 +48,7 @@
     "@babel/preset-env": "^7.7.1",
     "@babel/preset-typescript": "^7.7.2",
     "@babel/register": "^7.7.0",
+    "aws-sdk": "^2.573.0",
     "chalk": "^3.0.0",
     "fs-extra": "^8.1.0",
     "gluegun": "^4.1.0",

@@ -7,7 +7,8 @@ import { FrameworkContext } from "./framework-context";
 import { ServiceSchemaFile } from "./service-schema-file";
 import {
   PostCompilationServerlessTemplate,
-  PreCompilationServerlessTemplate, ServerlessTemplate,
+  PreCompilationServerlessTemplate,
+  ServerlessTemplate,
   ServerlessTemplatePostExports,
   ServerlessTemplatePostImports,
   ServerlessTemplatePostMerging,
@@ -21,6 +22,7 @@ import {
 } from "../templates";
 import { serviceBuild } from "../constants";
 import { ServiceSchema } from "./service-schema";
+import { ImportType, ProcessedImportValue } from "./common-schema";
 
 /* eslint-disable class-methods-use-this */
 
@@ -65,6 +67,11 @@ export class ServiceContext extends ServiceSchemaFile {
 
   get stackName(): string {
     return `${this.context.schema.shortName}-${this.schema.shortName}-${this.context.stage}`;
+  }
+
+  get region(): string {
+    return (this.schema.template.provider || {}).region
+      || this.context.schema.template.provider.region;
   }
 
   get importedServices(): ServiceContext[] {
@@ -179,6 +186,8 @@ export class ServiceContext extends ServiceSchemaFile {
   private async processServiceServerlessTemplateImports(
     template: ServerlessTemplatePreImports,
   ): Promise<ServerlessTemplatePostImports> {
+    const { provider } = this.context;
+
     const { importMap } = this.schema;
     const importedServices = Object.keys(importMap);
 
@@ -196,12 +205,40 @@ export class ServiceContext extends ServiceSchemaFile {
 
       const importedValues = importMap[importedServiceName];
 
-      for (let j = 0; j < importedValues.length; j += 1) {
-        const importValue = importedValues[j];
+      const directImportedValues = importedValues.filter(
+        (importValue): importValue is ProcessedImportValue<
+        ImportType.Direct
+        > => importValue.type === ImportType.Direct,
+      );
 
-        importValueMap[importValue.name] = await this.context.provider.retrieveTemplateImportValue(
-          this, importedService, importValue,
+      if (directImportedValues.length > 0) {
+        const directImportData = await provider.prepareTemplateDirectImports(
+          this, importedService,
         );
+
+        directImportedValues.forEach((importValue) => {
+          importValueMap[importValue.name] = provider.retrieveTemplateDirectImportValue(
+            this, importedService, importValue, directImportData,
+          );
+        });
+      }
+
+      const providerBasedImportedValues = importedValues.filter(
+        (importValue): importValue is ProcessedImportValue<
+        ImportType.ProviderBased
+        > => importValue.type === ImportType.ProviderBased,
+      );
+
+      if (providerBasedImportedValues.length > 0) {
+        const providerBasedImportData = await provider.prepareTemplateProviderBasedImports(
+          this, importedService,
+        );
+
+        providerBasedImportedValues.forEach((importValue) => {
+          importValueMap[importValue.name] = provider.retrieveTemplateProviderBasedImportValue(
+            this, importedService, importValue, providerBasedImportData,
+          );
+        });
       }
     }
 
@@ -217,13 +254,13 @@ export class ServiceContext extends ServiceSchemaFile {
   private async processServiceServerlessTemplateExports(
     template: ServerlessTemplatePreExports,
   ): Promise<ServerlessTemplatePostExports> {
-    const exportTemplateValueMap: Record<string, unknown> = {};
+    const exportTemplateValueMap: Record<string, any> = {};
 
     const entries = Object.entries(this.schema.exportMap);
     for (let i = 0; i < entries.length; i += 1) {
       const [exportName, exportValue] = entries[i];
 
-      exportTemplateValueMap[exportName] = await this.context.provider.retrieveTemplateExportValue(
+      exportTemplateValueMap[exportName] = this.context.provider.retrieveTemplateExportValue(
         this, exportName, exportValue,
       );
     }

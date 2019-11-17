@@ -2,12 +2,12 @@ import { FrameworkSchemaFile } from "./framework-schema-file";
 import { ServiceSchemaFile } from "./service-schema-file";
 // eslint-disable-next-line import/no-cycle
 import { ServiceContext } from "./service-context";
-import { Provider } from "./provider";
 import { ServerlessProviderName } from "../templates";
 import { AwsProvider } from "./provider/aws";
 import { ServiceSchema } from "./service-schema";
 import { ServiceSchemaCollection } from "./service-schema-collection";
 import { filterObject } from "../../common/utility";
+import { Provider } from "./provider";
 
 /* eslint-disable no-dupe-class-members */
 
