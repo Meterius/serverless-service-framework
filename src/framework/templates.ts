@@ -258,3 +258,5 @@ export type ServerlessTemplatePostExports = {
 // OUTPUT
 
 export type PostCompilationServerlessTemplate = ServerlessTemplatePostExports;
+
+export type ServerlessTemplate = PostCompilationServerlessTemplate;

@@ -50,6 +50,6 @@ export async function buildService(
   const service = getService(ctx, serviceName);
 
   return {
-    serverlessTemplateFilePath: await service.buildServiceServerlessTemplate(),
+    serverlessTemplateFilePath: await service.getServerlessTemplateFilePath(),
   };
 }

@@ -7,7 +7,7 @@ import { FrameworkContext } from "./framework-context";
 import { ServiceSchemaFile } from "./service-schema-file";
 import {
   PostCompilationServerlessTemplate,
-  PreCompilationServerlessTemplate,
+  PreCompilationServerlessTemplate, ServerlessTemplate,
   ServerlessTemplatePostExports,
   ServerlessTemplatePostImports,
   ServerlessTemplatePostMerging,
@@ -39,6 +39,8 @@ export class ServiceContext extends ServiceSchemaFile {
   private readonly __importedServices: ServiceSchema[];
 
   private readonly __exportedToServices: ServiceSchema[];
+
+  private __serverlessTemplate: ServerlessTemplate | null = null;
 
   constructor(schemaFile: ServiceSchemaFile, frameworkContext: FrameworkContext) {
     super(schemaFile);
@@ -240,11 +242,23 @@ export class ServiceContext extends ServiceSchemaFile {
 
   /**
    * Builds serverless template used for service.
+   * Returns the built template. (caches built)
+   */
+  async getServerlessTemplate(): Promise<ServerlessTemplate> {
+    if (this.__serverlessTemplate === null) {
+      this.__serverlessTemplate = await this.buildServiceServerlessTemplateInMemory();
+    }
+
+    return this.__serverlessTemplate;
+  }
+
+  /**
+   * Builds serverless template used for service.
    * Returns the built template.
    */
-  async buildServiceServerlessTemplateInMemory(
+  private async buildServiceServerlessTemplateInMemory(
 
-  ): Promise<PostCompilationServerlessTemplate> {
+  ): Promise<ServerlessTemplate> {
     const step0: PreCompilationServerlessTemplate = {};
     const step1 = await this.processServiceServerlessTemplateMerging(step0);
     const step2 = await this.processServiceServerlessTemplatePreperation(step1);
@@ -257,10 +271,10 @@ export class ServiceContext extends ServiceSchemaFile {
 
   /**
    * Builds serverless template used for service and writes it to disk.
-   * Returns the file path of the written template file.
+   * Returns the file path of the written template file. (caches built)
    */
-  async buildServiceServerlessTemplate(): Promise<string> {
-    const template = await this.buildServiceServerlessTemplateInMemory();
+  async getServerlessTemplateFilePath(): Promise<string> {
+    const template = await this.getServerlessTemplate();
     const serializedTemplate = await ServiceContext.serializeServiceServerlessTemplate(
       template, ServerlessTemplateFormat.JavaScript,
     );
