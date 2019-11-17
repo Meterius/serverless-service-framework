@@ -10,7 +10,7 @@ export enum ImportType {
 // value = string <=> { name: value } <=> { name: value; type: "provider-based" }
 export type ImportValue = string | { name: string; type?: ImportType };
 
-export type ProcessedImportValue = { name: string; type: ImportType };
+export type ProcessedImportValue<T extends ImportType = ImportType> = { name: string; type: T };
 
 export interface ImportMap {
   [serviceDefaultIdentifier: string]: ImportValue[];
