@@ -6,11 +6,17 @@ import merge from "deepmerge";
 import { FrameworkContext } from "./framework-context";
 import { ServiceSchemaFile } from "./service-schema-file";
 import {
-  PostCompilationServerlessTemplate, PreCompilationServerlessTemplate,
+  PostCompilationServerlessTemplate,
+  PreCompilationServerlessTemplate,
+  ServerlessTemplatePostExports,
   ServerlessTemplatePostImports,
-  ServerlessTemplatePostMerging, ServerlessTemplatePostNaming,
-  ServerlessTemplatePostPreparation, ServerlessTemplatePreImports,
-  ServerlessTemplatePreMerging, ServerlessTemplatePreNaming,
+  ServerlessTemplatePostMerging,
+  ServerlessTemplatePostNaming,
+  ServerlessTemplatePostPreparation,
+  ServerlessTemplatePreExports,
+  ServerlessTemplatePreImports,
+  ServerlessTemplatePreMerging,
+  ServerlessTemplatePreNaming,
   ServerlessTemplatePrePreparation,
 } from "../templates";
 import { serviceBuild } from "../constants";
@@ -145,6 +151,7 @@ export class ServiceContext extends ServiceSchemaFile {
       ...template,
       service: template.service || {},
       custom: template.custom || {},
+      resources: template.resources || {},
     };
   }
 
@@ -204,6 +211,25 @@ export class ServiceContext extends ServiceSchemaFile {
     };
   }
 
+  private async processServiceServerlessTemplateExports(
+    template: ServerlessTemplatePreExports,
+  ): Promise<ServerlessTemplatePostExports> {
+    const exportTemplateValueMap: Record<string, unknown> = {};
+
+    const entries = Object.entries(this.schema.exportMap);
+    for (let i = 0; i < entries.length; i += 1) {
+      const [exportName, exportValue] = entries[i];
+
+      exportTemplateValueMap[exportName] = await this.context.provider.retrieveTemplateExportValue(
+        this, exportName, exportValue,
+      );
+    }
+
+    return this.context.provider.insertTemplateExportValues(
+      this, exportTemplateValueMap, template,
+    );
+  }
+
   importsService(otherService: ServiceContext): boolean {
     return this.importedServices.includes(otherService);
   }
@@ -224,8 +250,9 @@ export class ServiceContext extends ServiceSchemaFile {
     const step2 = await this.processServiceServerlessTemplatePreperation(step1);
     const step3 = await this.processServiceServerlessTemplateNaming(step2);
     const step4 = await this.processServiceServerlessTemplateImports(step3);
+    const step5 = await this.processServiceServerlessTemplateExports(step4);
 
-    return step4;
+    return step5;
   }
 
   /**

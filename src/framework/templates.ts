@@ -54,6 +54,10 @@ export interface InlineFrameworkTemplate {
     [key: string]: unknown;
   };
 
+  resources?: {
+    [key: string]: unknown;
+  };
+
   [key: string]: unknown;
 }
 
@@ -73,6 +77,10 @@ export interface InlineServiceTemplate {
   custom?: {
     imports?: never;
 
+    [key: string]: unknown;
+  };
+
+  resources?: {
     [key: string]: unknown;
   };
 
@@ -112,6 +120,10 @@ export type ServerlessTemplatePostMerging = {
     [key: string]: unknown;
   };
 
+  resources?: {
+    [key: string]: unknown;
+  };
+
   [key: string]: unknown;
 };
 
@@ -138,6 +150,10 @@ export type ServerlessTemplatePostPreparation = {
     stage?: never;
     stackName?: never;
 
+    [key: string]: unknown;
+  };
+
+  resources: {
     [key: string]: unknown;
   };
 
@@ -170,6 +186,10 @@ export type ServerlessTemplatePostNaming = {
     [key: string]: unknown;
   };
 
+  resources: {
+    [key: string]: unknown;
+  };
+
   [key: string]: unknown;
 };
 
@@ -199,9 +219,42 @@ export type ServerlessTemplatePostImports = {
     [key: string]: unknown;
   };
 
+  resources: {
+    [key: string]: unknown;
+  };
+
+  [key: string]: unknown;
+};
+
+// STEP 5
+
+export type ServerlessTemplatePreExports = ServerlessTemplatePostImports;
+
+export type ServerlessTemplatePostExports = {
+  service: {
+    name: string;
+    [key: string]: unknown;
+  };
+
+  custom: {
+    imports: Record<string, unknown>;
+
+    [key: string]: unknown;
+  };
+
+  provider: {
+    name: ServerlessProviderName;
+    region: string;
+
+    stage: string;
+    stackName: string;
+
+    [key: string]: unknown;
+  };
+
   [key: string]: unknown;
 };
 
 // OUTPUT
 
-export type PostCompilationServerlessTemplate = ServerlessTemplatePostImports;
+export type PostCompilationServerlessTemplate = ServerlessTemplatePostExports;

@@ -1,11 +1,11 @@
 import {
-  ServerlessProviderName,
+  ServerlessProviderName, ServerlessTemplatePostExports, ServerlessTemplatePreExports,
 } from "../templates";
 import { FrameworkContext } from "./framework-context";
 import { ServiceContext } from "./service-context";
-import { ProcessedImportValue } from "./common-schema";
+import { ExportValue, ProcessedImportValue } from "./common-schema";
 
-export abstract class Provider {
+export abstract class Provider<TemplateExportValue = unknown> {
   public abstract readonly name: ServerlessProviderName;
 
   private readonly context: FrameworkContext;
@@ -19,4 +19,16 @@ export abstract class Provider {
     importedService: ServiceContext,
     importValue: ProcessedImportValue,
   ): Promise<unknown>;
+
+  public abstract retrieveTemplateExportValue(
+    service: ServiceContext,
+    exportName: string,
+    exportValue: ExportValue,
+  ): Promise<TemplateExportValue>;
+
+  public abstract insertTemplateExportValues(
+    service: ServiceContext,
+    exportTemplateValueMap: Record<string, TemplateExportValue>,
+    template: ServerlessTemplatePreExports,
+  ): Promise<ServerlessTemplatePostExports>;
 }

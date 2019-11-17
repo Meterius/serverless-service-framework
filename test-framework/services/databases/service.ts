@@ -10,7 +10,7 @@ export default new ServiceSchema({
   },
 
   exportMap: {
-    "b": "",
+    "b": "asdasd",
   },
 
   template,

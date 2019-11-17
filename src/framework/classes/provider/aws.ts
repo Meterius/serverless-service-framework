@@ -1,23 +1,22 @@
 import { Provider } from "../provider";
 import { ServiceContext } from "../service-context";
-import { ImportType, ProcessedImportValue } from "../common-schema";
+import { ExportValue, ImportType, ProcessedImportValue } from "../common-schema";
+import {
+  ServerlessTemplatePostExports,
+  ServerlessTemplatePreExports,
+} from "../../templates";
+import { isObject } from "../../../common/type-guards";
 
 /* eslint-disable @typescript-eslint/no-unused-vars, class-methods-use-this */
 
-export class AwsProvider extends Provider<undefined> {
-  public readonly name = "aws";
+type TemplateExportValue = { Value: string };
 
-  async retrieveImportData(
-    service: ServiceContext,
-    importedService: ServiceContext,
-  ): Promise<undefined> {
-    return undefined;
-  }
+export class AwsProvider extends Provider<TemplateExportValue> {
+  public readonly name = "aws";
 
   async retrieveTemplateImportValue(
     service: ServiceContext,
     importedService: ServiceContext,
-    importData: undefined,
     importValue: ProcessedImportValue,
   ): Promise<unknown> {
     switch (importValue.type) {
@@ -31,5 +30,34 @@ export class AwsProvider extends Provider<undefined> {
           "Fn::ImportValue": `${importedService.stackName}-${importValue.name}`,
         };
     }
+  }
+
+  async retrieveTemplateExportValue(
+    service: ServiceContext,
+    exportName: string,
+    exportValue: ExportValue,
+  ): Promise<TemplateExportValue> {
+    return {
+      Value: exportValue,
+    };
+  }
+
+  async insertTemplateExportValues(
+    service: ServiceContext,
+    exportValueMap: Record<string, TemplateExportValue>,
+    template: ServerlessTemplatePreExports,
+  ): Promise<ServerlessTemplatePostExports> {
+    /* eslint-disable no-param-reassign */
+
+    const resources = isObject(template.resources.Resources) ? template.resources.Resources : {};
+    template.resources.Resources = resources;
+
+    const outputs = isObject(resources.Outputs) ? resources.Outputs : {};
+    resources.Outputs = {
+      ...outputs,
+      ...exportValueMap,
+    };
+
+    return template;
   }
 }
