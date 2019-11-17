@@ -1,3 +1,5 @@
+import { isObject } from "./type-guards";
+
 /**
  * Returns object where Object.entries will equal entries,
  * i.e. a object with the structure {
@@ -61,4 +63,66 @@ export function filterObject<V>(
   });
 
   return filtered;
+}
+
+export function clone<T>(value: T): T {
+  if (Array.isArray(value)) {
+    // @ts-ignore
+    return value.map((item) => clone(item));
+  } else if (isObject(value)) {
+    // @ts-ignore
+    return mapObject(value, (item) => clone(item));
+  } else {
+    return value;
+  }
+}
+
+/**
+ * Returns merged base and specific values.
+ * If ignoreUndefined is set when specific is undefined base value is used.
+ * (i.e. an undefined value does not overwrite a base value)
+ */
+export function merge<B, S>(
+  base: B,
+  specific: S,
+  ignoreUndefined = false,
+): B & S {
+  if (Array.isArray(specific)) {
+    if (Array.isArray(base)) {
+      // @ts-ignore
+      return clone(base).concat(clone(specific));
+    } else {
+      // @ts-ignore
+      return clone(specific);
+    }
+  } else if (isObject(specific)) {
+    if (isObject(base)) {
+      const result: Record<string, any> = {};
+
+      const baseKeys = Object.keys(base);
+      const specKeys = Object.keys(specific);
+
+      baseKeys.concat(specKeys).forEach((key) => {
+        if (baseKeys.includes(key) && specKeys.includes(key)) {
+          result[key] = merge(base[key], specific[key], ignoreUndefined);
+        } else if (baseKeys.includes(key)) {
+          result[key] = clone(base[key]);
+        } else {
+          result[key] = clone(specific[key]);
+        }
+      });
+
+      // @ts-ignore
+      return result;
+    } else {
+      // @ts-ignore
+      return clone(specific);
+    }
+  } else if (ignoreUndefined && specific === undefined) {
+    // @ts-ignore
+    return base;
+  } else {
+    // @ts-ignore
+    return specific;
+  }
 }
