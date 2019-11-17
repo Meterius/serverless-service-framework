@@ -15,22 +15,13 @@ export class ServiceSchemaFile {
 
   constructor(schema: ServiceSchema, schemaFilePath: string);
 
-  /**
-   * Copy Constructor
-   */
+  constructor(newSchema: ServiceSchema, oldSchemaFile: ServiceSchemaFile);
 
-  constructor(schemaFile: ServiceSchemaFile);
+  constructor(schema: ServiceSchema, schemaFileOrFilePath: string | ServiceSchemaFile) {
+    this.filePath = ServiceSchemaFile.isServiceSchemaFile(schemaFileOrFilePath)
+      ? schemaFileOrFilePath.filePath : schemaFileOrFilePath;
 
-  constructor(schemaOrSchemaFile: ServiceSchemaFile | ServiceSchema, schemaFilePath?: string) {
-    if (ServiceSchemaFile.isServiceSchemaFile(schemaOrSchemaFile)) {
-      this.schema = schemaOrSchemaFile.schema;
-      this.filePath = schemaOrSchemaFile.filePath;
-    } else if (schemaFilePath !== undefined) {
-      this.schema = schemaOrSchemaFile;
-      this.filePath = schemaFilePath;
-    } else {
-      throw new Error("Invalid Service Schema File Constructor Overload");
-    }
+    this.schema = schema;
   }
 
   get dirPath(): string {

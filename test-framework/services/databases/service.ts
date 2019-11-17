@@ -1,4 +1,4 @@
-import { ServiceSchema } from "serverless-service-framework";
+import {ImportType, ServiceSchema} from "serverless-service-framework";
 import template from "./serverless-template";
 
 export default new ServiceSchema({

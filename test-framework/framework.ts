@@ -1,11 +1,15 @@
 // @ts-ignore
-import { FrameworkSchema } from "serverless-service-framework";
+import {FrameworkSchema, ImportType} from "serverless-service-framework";
 
 export default new FrameworkSchema({
   name: "Test Backend",
   shortName: "cqz-be",
 
   serviceRootDir: "services",
+
+  importSettings: {
+    defaultImportType: ImportType.Direct,
+  },
 
   template: {
     provider: {

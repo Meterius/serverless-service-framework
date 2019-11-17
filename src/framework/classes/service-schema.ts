@@ -1,4 +1,3 @@
-import deepmerge from "deepmerge";
 import { InlineServiceTemplate } from "../templates";
 import { isObject } from "../../common/type-guards";
 import {
@@ -11,6 +10,7 @@ import {
   ProcessedImportMap, ProcessedImportValue,
 } from "./common-schema";
 import { FrameworkSchema } from "./framework-schema";
+import { merge } from "../../common/utility";
 
 interface InlineServiceTemplateProperties {
   templateType?: "inline";
@@ -51,7 +51,9 @@ export class ServiceSchema extends CommonSchema {
 
   public readonly template: InlineServiceTemplate;
 
-  constructor(schema: ServiceSchemaProperties);
+  private readonly serviceSchema: ServiceSchemaProperties;
+
+  constructor(serviceSchema: ServiceSchemaProperties);
 
   /**
    * Special Constructor to merge common schema properties from framework schema and service schema.
@@ -98,6 +100,8 @@ export class ServiceSchema extends CommonSchema {
 
     this.exportMap = schema.exportMap || {};
     this.template = schema.template;
+
+    this.serviceSchema = schema;
   }
 
   /**
@@ -118,18 +122,7 @@ export class ServiceSchema extends CommonSchema {
   }
 
   private extractServiceSchemaProperties(): ServiceSchemaProperties {
-    return {
-      name: this.name,
-      shortName: this.shortName,
-
-      importMap: this.importMap,
-      exportMap: this.exportMap,
-
-      templateType: "inline",
-      template: this.template,
-
-      ...this.extractCommonSchemaProperties(),
-    };
+    return this.serviceSchema;
   }
 
   /**
@@ -170,7 +163,9 @@ export class ServiceSchema extends CommonSchema {
     importMap: ImportMap,
     usedImportSettings: ImportSettings = {},
   ): ProcessedImportMap {
-    const importSettings = deepmerge(usedImportSettings, ServiceSchema.defaultImportSettings);
+    const importSettings = merge(
+      ServiceSchema.defaultImportSettings, usedImportSettings, true,
+    );
 
     const processedImportMap: ProcessedImportMap = {};
 

@@ -1,4 +1,5 @@
 import path from "path";
+import { isObject } from "../common/type-guards";
 
 export async function loadSchemaFile<T>(
   filePath: string,
@@ -6,10 +7,6 @@ export async function loadSchemaFile<T>(
   schemaTypeName: string,
 ): Promise<T> {
   const ext = path.extname(filePath);
-
-  function isObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null;
-  }
 
   if (ext === ".ts") {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires

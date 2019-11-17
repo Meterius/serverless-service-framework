@@ -1,7 +1,7 @@
 import mkdirp from "mkdirp";
 import path from "path";
 import fs from "fs";
-import merge from "deepmerge";
+import { merge } from "../../common/utility";
 // eslint-disable-next-line import/no-cycle
 import { FrameworkContext } from "./framework-context";
 import { ServiceSchemaFile } from "./service-schema-file";
@@ -43,7 +43,8 @@ export class ServiceContext extends ServiceSchemaFile {
   private __serverlessTemplate: ServerlessTemplate | null = null;
 
   constructor(schemaFile: ServiceSchemaFile, frameworkContext: FrameworkContext) {
-    super(schemaFile);
+    // create new service schema with merged common schema properties and use it with the file
+    super(new ServiceSchema(frameworkContext.schema, schemaFile.schema), schemaFile);
 
     // note that the framework context calls this constructor
     // and that it will not have initialized the services attribute yet

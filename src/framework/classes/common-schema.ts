@@ -1,9 +1,9 @@
-import deepmerge from "deepmerge";
 import { isObject } from "../../common/type-guards";
+import { merge } from "../../common/utility";
 
 export enum ImportType {
   // eslint-disable-next-line max-len
-  // Direct = "direct", // retrieve values before deploying and insert them directly into the template
+  Direct = "direct", // retrieve values before deploying and inserts them directly into the template
   ProviderBased = "provider-based" // import the value using proper template tools from the provider
 }
 
@@ -48,6 +48,8 @@ const commonSchemaPropertyMap: Required<{ [key in keyof CommonSchemaProperties]:
 
 const commonSchemaPropertyKeys = Object.keys(commonSchemaPropertyMap);
 
+/* eslint-disable no-dupe-class-members */
+
 export class CommonSchema implements CommonSchemaProperties {
   private readonly __isCommonSchema = true;
 
@@ -55,16 +57,16 @@ export class CommonSchema implements CommonSchemaProperties {
 
   public readonly exportSettings?: ExportSettings;
 
+  private readonly commonSchema: CommonSchemaProperties;
+
   constructor(commonSchema: CommonSchemaProperties) {
     this.importSettings = commonSchema.importSettings;
     this.exportSettings = commonSchema.exportSettings;
+    this.commonSchema = commonSchema;
   }
 
   protected extractCommonSchemaProperties(): CommonSchemaProperties {
-    return {
-      importSettings: this.importSettings,
-      exportSettings: this.exportSettings,
-    };
+    return this.commonSchema;
   }
 
   /**
@@ -89,7 +91,8 @@ export class CommonSchema implements CommonSchemaProperties {
    * only contains common schema properties. (i.e. excess properties will be filtered out)
    */
   static merge(
-    base: CommonSchemaProperties | CommonSchema, specific: CommonSchemaProperties | CommonSchema,
+    base: CommonSchemaProperties | CommonSchema,
+    specific: CommonSchemaProperties | CommonSchema,
   ): CommonSchemaProperties {
     const filteredBase = CommonSchema.filter(
       CommonSchema.isCommonSchema(base) ? base.extractCommonSchemaProperties() : base,
@@ -98,7 +101,7 @@ export class CommonSchema implements CommonSchemaProperties {
       CommonSchema.isCommonSchema(specific) ? specific.extractCommonSchemaProperties() : specific,
     );
 
-    return deepmerge(filteredBase, filteredSpecific);
+    return merge(filteredBase, filteredSpecific, true);
   }
 
   public static isCommonSchema(value: unknown): value is CommonSchema {

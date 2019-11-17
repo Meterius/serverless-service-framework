@@ -49,7 +49,6 @@
     "@babel/preset-typescript": "^7.7.2",
     "@babel/register": "^7.7.0",
     "chalk": "^3.0.0",
-    "deepmerge": "^4.2.2",
     "fs-extra": "^8.1.0",
     "gluegun": "^4.1.0",
     "graphlib": "^2.1.7",
