@@ -69,7 +69,10 @@ export interface InlineServiceTemplate {
 
   provider?: {
     name?: never; // cannot overwrite framework setting
+    region?: string; // may overwrite framework region
+
     stage?: never; // cannot set stage in template
+    stackName?: never; // cannot set stack name
 
     [key: string]: any;
   };
