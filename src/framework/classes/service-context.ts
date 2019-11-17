@@ -54,6 +54,10 @@ export class ServiceContext extends ServiceSchemaFile {
     this.__importedServices = importedServices;
   }
 
+  get stackName(): string {
+    return `${this.context.schema.shortName}-${this.schema.shortName}-${this.context.stage}`;
+  }
+
   get importedServices(): ServiceContext[] {
     return this.__importedServices.map((schema) => this.context.referenceService(schema));
   }
@@ -113,13 +117,11 @@ export class ServiceContext extends ServiceSchemaFile {
   }
 
   private getTemplateProviderStackName(): string {
-    // eslint-disable-next-line no-template-curly-in-string
-    return "${self:service.name}-${self:provider.stage}";
+    return this.stackName;
   }
 
   private getTemplateProviderStage(): string {
-    // eslint-disable-next-line no-template-curly-in-string
-    return "${opt:service}";
+    return this.context.stage;
   }
 
   private async processServiceServerlessTemplateMerging(
@@ -158,8 +160,8 @@ export class ServiceContext extends ServiceSchemaFile {
 
       provider: {
         ...template.provider,
-        stage: this.getTemplateProviderStackName(),
-        stackName: this.getTemplateProviderStage(),
+        stage: this.getTemplateProviderStage(),
+        stackName: this.getTemplateProviderStackName(),
       },
     };
   }

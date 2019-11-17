@@ -1,6 +1,6 @@
 import { Provider } from "../provider";
 import { ServiceContext } from "../service-context";
-import { ProcessedImportValue } from "../common-schema";
+import { ImportType, ProcessedImportValue } from "../common-schema";
 
 /* eslint-disable @typescript-eslint/no-unused-vars, class-methods-use-this */
 
@@ -20,6 +20,16 @@ export class AwsProvider extends Provider<undefined> {
     importData: undefined,
     importValue: ProcessedImportValue,
   ): Promise<unknown> {
-    return undefined;
+    switch (importValue.type) {
+      default:
+        throw new Error(
+          `For provider "${this.name}" imports of type "${importValue.type}" are not implemented`,
+        );
+
+      case ImportType.ProviderBased:
+        return {
+          "Fn::ImportValue": `${importedService.stackName}-${importValue.name}`,
+        };
+    }
   }
 }

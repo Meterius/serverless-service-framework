@@ -5,7 +5,8 @@ import { CliError } from "./exceptions";
 import { ServiceContext } from "../../framework/classes/service-context";
 
 export async function loadFrameworkContext(
-  frameworkSchemaFilePath?: string,
+  frameworkSchemaFilePath: string | undefined,
+  stage: string,
 ): Promise<FrameworkContext> {
   const frSchemaPath = frameworkSchemaFilePath
     || (await FrameworkSchemaFile.getFrameworkSchemaFilePath(process.cwd()));
@@ -22,7 +23,7 @@ export async function loadFrameworkContext(
 
   const frFile = await FrameworkSchemaFile.loadFrameworkSchemaFile(frSchemaPath);
 
-  return FrameworkContext.loadFrameworkContext(frFile);
+  return FrameworkContext.loadFrameworkContext(frFile, stage);
 }
 
 export function getService(

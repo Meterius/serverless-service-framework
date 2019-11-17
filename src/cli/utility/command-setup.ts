@@ -8,7 +8,6 @@ import { loadFrameworkContext } from "./framework";
 
 export interface FrameworkContextSetup {
   context: FrameworkContext;
-  stage: string;
 }
 
 /**
@@ -22,11 +21,11 @@ export async function setupFrameworkContextFunction(
   const stage = requireStageOption(tb);
   const filePath = getFrameworkSchemaOption(tb);
 
-  const context = await loadFrameworkContext(filePath);
+  const context = await loadFrameworkContext(filePath, stage);
   await setupProvider(tb, context);
 
   return {
-    stage, context,
+    context,
   };
 }
 

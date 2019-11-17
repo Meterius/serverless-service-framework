@@ -19,7 +19,7 @@ const exec: GC = {
       tb, ["service-name", "serverless-cmd"],
     );
 
-    const { context, stage } = await setupFrameworkContextFunction(tb);
+    const { context } = await setupFrameworkContextFunction(tb);
 
     const service = getService(context, serviceName);
     const buildInfo = await buildService(context, serviceName);
@@ -28,7 +28,7 @@ const exec: GC = {
 
     const templatePath = path.relative(serviceDir, buildInfo.serverlessTemplateFilePath);
 
-    const slsCmd = `sls ${slsCmdBase} --config "${templatePath}" --stage "${stage}"`;
+    const slsCmd = `sls ${slsCmdBase} --config "${templatePath}" --stage "${context.stage}"`;
 
     try {
       tb.print.info(chalk`Running Serverless Command: "{blue ${slsCmd}}"`);

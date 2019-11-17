@@ -20,11 +20,16 @@ export class FrameworkContext extends FrameworkSchemaFile {
 
   public readonly provider: Provider;
 
+  public readonly stage: string;
+
   constructor(
     frameworkSchemaFile: FrameworkSchemaFile,
     serviceSchemaFiles: ServiceSchemaFile[],
+    stage: string,
   ) {
     super(frameworkSchemaFile);
+
+    this.stage = stage;
 
     this.provider = FrameworkContext.getProviderFromName(this.schema.provider, this);
 
@@ -187,9 +192,10 @@ export class FrameworkContext extends FrameworkSchemaFile {
 
   public static async loadFrameworkContext(
     frameworkSchemaFile: FrameworkSchemaFile,
+    stage: string,
   ): Promise<FrameworkContext> {
     const serviceSchemaFiles = await frameworkSchemaFile.loadServiceSchemaFiles();
 
-    return new FrameworkContext(frameworkSchemaFile, serviceSchemaFiles);
+    return new FrameworkContext(frameworkSchemaFile, serviceSchemaFiles, stage);
   }
 }
