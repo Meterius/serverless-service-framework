@@ -15,7 +15,7 @@ export class FrameworkContextActionLogic {
    * Returns all services not in the performed services array.
    */
   getNotPerformedServices(performedServices: ServiceContext[]): ServiceContext[] {
-    return this.context.services.filter((service) => performedServices.includes(service));
+    return this.context.services.filter((service) => !performedServices.includes(service));
   }
 
   /**
