@@ -1,17 +1,8 @@
 import { GluegunCommand, GluegunToolbox } from "gluegun";
+import { Log } from "./extensions/log";
 
 export interface TB extends GluegunToolbox {
-  /**
-   * Prints formatted message with print functions that defaults to process.stdout.write.
-   * If title is specified the format will include it.
-   * If raw is true then the message is passed directly.
-   */
-  log: (
-    msg: string,
-    title?: string | undefined,
-    raw?: boolean | undefined,
-    print?: (data: string) => void,
-  ) => void;
+  log: Log;
 }
 
 // @ts-ignore
