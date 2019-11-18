@@ -1,4 +1,4 @@
-import { build, GluegunCommand, GluegunToolbox } from "gluegun";
+import { build } from "gluegun";
 import chalk from "chalk";
 import { CliError } from "./utility/exceptions";
 import { TB, GC } from "./cli-types";
