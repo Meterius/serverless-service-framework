@@ -1,5 +1,9 @@
-import { getOption, requireOption } from "./options";
+import { getFlag, getOption, requireOption } from "./options";
 import { TB } from "../cli-types";
+
+export function getParallelFlag(tb: TB): boolean {
+  return getFlag(tb, "parallel");
+}
 
 export function getFrameworkSchemaOption(tb: TB): string | undefined {
   return getOption(tb, "schema");

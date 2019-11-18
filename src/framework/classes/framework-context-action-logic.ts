@@ -19,6 +19,14 @@ export class FrameworkContextActionLogic {
   }
 
   /**
+   * Returns all services that are regarded as performed
+   * when only performing on a subset of all services.
+   */
+  getPerformedServices(toBePerformedServices: ServiceContext[]): ServiceContext[] {
+    return this.context.services.filter((service) => !toBePerformedServices.includes(service));
+  }
+
+  /**
    * Returns list of services that can have an action performed on them.
    * The decision is based on whether all the imported services have already had the action
    * performed on them. (Example would be deploying, then it returns all services that can be

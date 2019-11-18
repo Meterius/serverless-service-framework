@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/Meterius/serverless-aws-service-framework#readme",
   "devDependencies": {
+    "@types/change-case": "^2.3.1",
     "@types/fs-extra": "^8.0.1",
     "@types/graphlib": "^2.1.5",
     "@types/mkdirp": "^0.5.2",
@@ -50,6 +51,7 @@
     "@babel/register": "^7.7.0",
     "aws-sdk": "^2.573.0",
     "chalk": "^3.0.0",
+    "change-case": "^3.1.0",
     "fs-extra": "^8.1.0",
     "gluegun": "^4.1.0",
     "graphlib": "^2.1.7",

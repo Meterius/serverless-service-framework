@@ -1,12 +1,13 @@
 import { build, GluegunCommand, GluegunToolbox } from "gluegun";
 import chalk from "chalk";
 import { CliError } from "./utility/exceptions";
+import { TB, GC } from "./cli-types";
 
-const help: GluegunCommand = {
+const help: GC = {
   name: "help",
   alias: "h",
   description: "Displays Help Page",
-  run: async (tb: GluegunToolbox): Promise<void> => {
+  run: async (tb: TB): Promise<void> => {
     tb.print.printHelp(tb);
   },
 };

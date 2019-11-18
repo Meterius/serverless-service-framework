@@ -1,9 +1,5 @@
-import path from "path";
-import { execSync } from "child_process";
-import chalk from "chalk";
-import { CliError } from "../utility/exceptions";
 import {
-  buildService,
+  execServerlessCommand,
   getService,
 } from "../utility/framework";
 import { GC, TB } from "../cli-types";
@@ -22,27 +18,10 @@ const exec: GC = {
     const { context } = await setupFrameworkContextFunction(tb);
 
     const service = getService(context, serviceName);
-    const buildInfo = await buildService(context, serviceName);
 
-    const serviceDir = service.dirPath;
-
-    const templatePath = path.relative(serviceDir, buildInfo.serverlessTemplateFilePath);
-
-    const slsCmd = `sls ${slsCmdBase} --config "${templatePath}" --stage "${context.stage}"`;
-
-    try {
-      tb.print.info(chalk`Running Serverless Command: "{blue ${slsCmd}}"`);
-      tb.print.info(
-        chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), serviceDir)}}"`,
-      );
-
-      execSync(`npx --no-install ${slsCmd}`, {
-        stdio: "inherit",
-        cwd: serviceDir,
-      });
-    } catch (err) {
-      throw new CliError("Serverless Command Failed");
-    }
+    await execServerlessCommand(
+      tb, service, slsCmdBase, {},
+    );
   },
 };
 

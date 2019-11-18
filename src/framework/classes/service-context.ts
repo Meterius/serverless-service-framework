@@ -65,6 +65,10 @@ export class ServiceContext extends ServiceSchemaFile {
     this.__importedServices = importedServices;
   }
 
+  get name(): string {
+    return this.schema.name;
+  }
+
   get stackName(): string {
     return `${this.context.schema.shortName}-${this.schema.shortName}-${this.context.stage}`;
   }

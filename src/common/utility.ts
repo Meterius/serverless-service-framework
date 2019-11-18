@@ -1,5 +1,20 @@
 import { isObject } from "./type-guards";
 
+export function filterDuplicates<T>(
+  arr: T[],
+  equal: (a: T, b: T) => boolean = (a: T, b: T): boolean => a === b,
+): T[] {
+  const result: T[] = [];
+
+  arr.forEach((item) => {
+    if (result.every((item2) => !equal(item, item2))) {
+      result.push(item);
+    }
+  });
+
+  return result;
+}
+
 /**
  * Returns object where Object.entries will equal entries,
  * i.e. a object with the structure {

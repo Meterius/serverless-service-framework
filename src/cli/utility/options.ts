@@ -1,6 +1,24 @@
 import { CliError } from "./exceptions";
 import { TB } from "../cli-types";
 
+export function requireVariadicParameters(
+  tb: TB,
+  name: string,
+  minLength = 0,
+  maxLength = Infinity,
+): string[] {
+  const parameters = tb.parameters.array || [];
+
+  const msg = `Usage <${name}-0> <${name}-1> ...`
+    + `(Minimum: ${minLength}${maxLength !== Infinity ? ` Maximum: ${maxLength}` : ""})`;
+
+  if (parameters.length < minLength || parameters.length > maxLength) {
+    throw new Error(msg);
+  } else {
+    return parameters;
+  }
+}
+
 export function requireParameters(
   tb: TB,
   names: string[],
@@ -28,6 +46,16 @@ export function requireParameter(
   return requireParameters(tb, [name])[0];
 }
 
+export function getFlag(
+  tb: TB,
+  name: string,
+  shortName?: string,
+): boolean {
+  const option = tb.parameters.options[name] || (shortName && tb.parameters.options[shortName]);
+
+  return option === true;
+}
+
 export function getOption(
   tb: TB,
   name: string,
@@ -49,7 +77,7 @@ export function getOption(
 ): string | undefined {
   const option = tb.parameters.options[name] || (shortName && tb.parameters.options[shortName]);
 
-  return option === undefined ? defaultValue : option;
+  return option === undefined ? defaultValue : option.toString();
 }
 
 export function requireOption(

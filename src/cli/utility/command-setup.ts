@@ -31,12 +31,12 @@ export async function setupFrameworkContextFunction(
 
 export function getService(
   ctx: FrameworkContext,
-  serviceName: string,
+  serviceIdentifier: string,
 ): ServiceContext {
-  const sFile = ctx.getService(serviceName);
+  const sFile = ctx.getService(serviceIdentifier);
 
   if (sFile === undefined) {
-    throw new CliError(`Service "${serviceName}" not found`);
+    throw new CliError(`Service "${serviceIdentifier}" not found`);
   } else {
     return sFile;
   }
