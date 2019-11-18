@@ -44,9 +44,11 @@ export class ServiceContext extends ServiceSchemaFile {
 
   private __serverlessTemplate: ServerlessTemplate | null = null;
 
-  constructor(schemaFile: ServiceSchemaFile, frameworkContext: FrameworkContext) {
-    // create new service schema with merged common schema properties and use it with the file
-    super(new ServiceSchema(frameworkContext.schema, schemaFile.schema), schemaFile);
+  constructor(
+    frameworkContext: FrameworkContext,
+    originalSchemaFile: ServiceSchemaFile,
+  ) {
+    super(originalSchemaFile);
 
     // note that the framework context calls this constructor
     // and that it will not have initialized the services attribute yet
@@ -58,7 +60,7 @@ export class ServiceContext extends ServiceSchemaFile {
     const {
       importedServices, exportedToServices,
     } = ServiceContext.computeLocalizedServicesDependencies(
-      schemaFile.schema, frameworkContext.serviceSchemas,
+      this.schema, frameworkContext.serviceSchemas,
     );
 
     this.__exportedToServices = exportedToServices;

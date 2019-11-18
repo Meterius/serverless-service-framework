@@ -1,8 +1,8 @@
 import path from "path";
-import { ServiceSchema } from "./service-schema";
-import { loadSchemaFile } from "../schema-file-handling";
-import { isObject } from "../../common/type-guards";
+import { ServiceSchema, ServiceSchemaProperties } from "./service-schema";
+import { loadSchemaPropertiesFile } from "../schema-file-handling";
 import { serviceBuildDir } from "../constants";
+import { FrameworkSchemaFile } from "./framework-schema-file";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
@@ -15,13 +15,21 @@ export class ServiceSchemaFile {
 
   constructor(schema: ServiceSchema, schemaFilePath: string);
 
-  constructor(newSchema: ServiceSchema, oldSchemaFile: ServiceSchemaFile);
+  /**
+   * Copy Constructor
+   */
+  constructor(schemaFile: ServiceSchemaFile);
 
-  constructor(schema: ServiceSchema, schemaFileOrFilePath: string | ServiceSchemaFile) {
-    this.filePath = ServiceSchemaFile.isServiceSchemaFile(schemaFileOrFilePath)
-      ? schemaFileOrFilePath.filePath : schemaFileOrFilePath;
-
-    this.schema = schema;
+  constructor(schemaOrSchemaFile: ServiceSchema | ServiceSchemaFile, filePath?: string) {
+    if (schemaOrSchemaFile instanceof ServiceSchemaFile) {
+      this.schema = schemaOrSchemaFile.schema;
+      this.filePath = schemaOrSchemaFile.filePath;
+    } else if (filePath !== undefined) {
+      this.schema = schemaOrSchemaFile;
+      this.filePath = filePath;
+    } else {
+      throw new Error("Invalid Service Schema File Constructor");
+    }
   }
 
   get dirPath(): string {
@@ -40,15 +48,13 @@ export class ServiceSchemaFile {
     return path.join(this.getServiceBuildDir(), relPath);
   }
 
-  public static async loadServiceSchemaFile(filePath: string): Promise<ServiceSchemaFile> {
-    const schema = await loadSchemaFile(
-      filePath, ServiceSchema.isServiceSchema, "ServiceSchema class",
+  public static async loadServiceSchemaFile(
+    filePath: string, frameworkSchemaFile: FrameworkSchemaFile,
+  ): Promise<ServiceSchemaFile> {
+    const schema: ServiceSchemaProperties = await loadSchemaPropertiesFile(
+      filePath, ServiceSchema.isServiceSchemaProperties, "ServiceSchema class",
     );
 
-    return new ServiceSchemaFile(schema, filePath);
-  }
-
-  public static isServiceSchemaFile(value: unknown): value is ServiceSchemaFile {
-    return isObject(value) && value.__isServiceSchemaFile === true;
+    return new ServiceSchemaFile(new ServiceSchema(frameworkSchemaFile.schema, schema), filePath);
   }
 }

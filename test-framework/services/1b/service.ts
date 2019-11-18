@@ -1,6 +1,6 @@
-import {ImportType, ServiceSchema} from "serverless-service-framework";
+import { ServiceSchemaProperties } from "serverless-service-framework";
 
-export default new ServiceSchema({
+export const schema: ServiceSchemaProperties = {
   name: "1b",
   shortName: "1b",
 
@@ -14,4 +14,5 @@ export default new ServiceSchema({
   template: {
 
   },
-})
+};
+

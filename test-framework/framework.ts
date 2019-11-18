@@ -1,7 +1,6 @@
-// @ts-ignore
-import {FrameworkSchema, ImportType} from "serverless-service-framework";
+import { FrameworkSchemaProperties, ImportType } from "serverless-service-framework";
 
-export default new FrameworkSchema({
+export const schema: FrameworkSchemaProperties = {
   name: "Test Backend",
   shortName: "cqz-be",
 
@@ -17,4 +16,4 @@ export default new FrameworkSchema({
       region: "eu-central-1",
     }
   }
-});
+};

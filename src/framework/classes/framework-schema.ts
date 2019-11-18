@@ -1,5 +1,4 @@
 import { InlineFrameworkTemplate, ServerlessProviderName } from "../templates";
-import { isObject } from "../../common/type-guards";
 import { CommonSchema, CommonSchemaProperties } from "./common-schema";
 
 interface InlineFrameworkTemplateProperties {
@@ -16,7 +15,7 @@ interface BaseProperties {
   serviceRootDir: string;
 }
 
-type FrameworkSchemaProperties = BaseProperties & TemplateProperties & CommonSchemaProperties;
+export type FrameworkSchemaProperties = BaseProperties & TemplateProperties & CommonSchemaProperties;
 
 /* eslint-disable no-dupe-class-members */
 
@@ -48,7 +47,7 @@ export class FrameworkSchema extends CommonSchema {
     return this.template.provider.region;
   }
 
-  public static isFrameworkSchema(value: unknown): value is FrameworkSchema {
-    return isObject(value) && value.__isFrameworkSchema === true;
+  public static isFrameworkSchemaProperties(value: unknown): value is FrameworkSchemaProperties {
+    return true;
   }
 }

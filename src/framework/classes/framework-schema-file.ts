@@ -8,8 +8,7 @@ import {
   serviceSchemaNames,
 } from "../constants";
 import { ServiceSchemaFile } from "./service-schema-file";
-import { isObject } from "../../common/type-guards";
-import { loadSchemaFile } from "../schema-file-handling";
+import { loadSchemaPropertiesFile } from "../schema-file-handling";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
@@ -20,20 +19,20 @@ export class FrameworkSchemaFile {
 
   public readonly schema: FrameworkSchema;
 
-  constructor(schema: FrameworkSchema, schemaFilePath: string);
+  constructor(schema: FrameworkSchema, filePath: string);
 
   /**
    * Copy Constructor
    */
   constructor(schemaFile: FrameworkSchemaFile);
 
-  constructor(schemaOrSchemaFile: FrameworkSchemaFile | FrameworkSchema, schemaFilePath?: string) {
-    if (FrameworkSchemaFile.isFrameworkSchemaFile(schemaOrSchemaFile)) {
+  constructor(schemaOrSchemaFile: FrameworkSchemaFile | FrameworkSchema, filePath?: string) {
+    if (schemaOrSchemaFile instanceof FrameworkSchemaFile) {
       this.schema = schemaOrSchemaFile.schema;
       this.filePath = schemaOrSchemaFile.filePath;
-    } else if (schemaFilePath !== undefined) {
+    } else if (filePath !== undefined) {
       this.schema = schemaOrSchemaFile;
-      this.filePath = schemaFilePath;
+      this.filePath = filePath;
     } else {
       throw new Error("Invalid Framework Schema File Constructor Overload");
     }
@@ -68,23 +67,19 @@ export class FrameworkSchemaFile {
 
     return Promise.all(
       serviceSchemaFiles.map(
-        (filePath) => ServiceSchemaFile.loadServiceSchemaFile(filePath),
+        (filePath) => ServiceSchemaFile.loadServiceSchemaFile(filePath, this),
       ),
     );
   }
 
   public static async loadFrameworkSchemaFile(filePath: string): Promise<FrameworkSchemaFile> {
-    const schema = await loadSchemaFile(
-      filePath, FrameworkSchema.isFrameworkSchema, "FrameworkSchema class",
+    const schema = await loadSchemaPropertiesFile(
+      filePath, FrameworkSchema.isFrameworkSchemaProperties, "Framework Schema",
     );
-    return new FrameworkSchemaFile(schema, filePath);
+    return new FrameworkSchemaFile(new FrameworkSchema(schema), filePath);
   }
 
   public static getFrameworkSchemaFilePath(dirPath: string): Promise<string | undefined> {
     return findMatchingFile(dirPath, frameworkSchemaNames, frameworkSchemaExtensions);
-  }
-
-  public static isFrameworkSchemaFile(value: unknown): value is FrameworkSchemaFile {
-    return isObject(value) && value.__isFrameworkSchemaFile === true;
   }
 }

@@ -1,5 +1,4 @@
 import { InlineServiceTemplate } from "../templates";
-import { isObject } from "../../common/type-guards";
 import {
   CommonSchema,
   CommonSchemaProperties,
@@ -53,41 +52,8 @@ export class ServiceSchema extends CommonSchema {
 
   private readonly serviceSchema: ServiceSchemaProperties;
 
-  constructor(serviceSchema: ServiceSchemaProperties);
-
-  /**
-   * Special Constructor to merge common schema properties from framework schema and service schema.
-   */
-  constructor(frameworkSchema: FrameworkSchema, serviceSchema: ServiceSchema);
-
-  constructor(arg0: ServiceSchemaProperties | FrameworkSchema, arg1?: ServiceSchema) {
-    // this ugly piece of code is required since typescript inserts
-    // class attribute initializations before the super call otherwise (i.e. __isServiceSchema)
-    super(((): CommonSchemaProperties => {
-      if (FrameworkSchema.isFrameworkSchema(arg0)) {
-        if (ServiceSchema.isServiceSchema(arg1)) {
-          return CommonSchema.merge(
-            arg0, arg1,
-          );
-        } else {
-          throw new Error("Invalid ServiceSchema Constructor Overload");
-        }
-      } else {
-        return arg0;
-      }
-    })());
-
-    let schema: ServiceSchemaProperties;
-
-    if (FrameworkSchema.isFrameworkSchema(arg0)) {
-      if (ServiceSchema.isServiceSchema(arg1)) {
-        schema = arg1.extractServiceSchemaProperties();
-      } else {
-        throw new Error("Invalid ServiceSchema Constructor Overload");
-      }
-    } else {
-      schema = arg0;
-    }
+  constructor(frameworkSchema: FrameworkSchema, schema: ServiceSchemaProperties) {
+    super(CommonSchema.merge(frameworkSchema, schema));
 
     this.name = schema.name;
     this.shortName = schema.shortName;
@@ -194,7 +160,7 @@ export class ServiceSchema extends CommonSchema {
     return Object.keys(importMap);
   }
 
-  public static isServiceSchema(value: unknown): value is ServiceSchema {
-    return isObject(value) && value.__isServiceSchema === true;
+  public static isServiceSchemaProperties(value: unknown): value is ServiceSchemaProperties {
+    return true;
   }
 }

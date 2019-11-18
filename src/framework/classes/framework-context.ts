@@ -41,7 +41,7 @@ export class FrameworkContext extends FrameworkSchemaFile {
 
     // careful constructor programming needs to be done in service context, since the
     // service contexts are not available when they are constructed
-    this.services = serviceSchemaFiles.map((file) => new ServiceContext(file, this));
+    this.services = serviceSchemaFiles.map((file) => new ServiceContext(this, file));
 
     this.serviceCollection = new ServiceSchemaCollection(this.serviceSchemas);
 
