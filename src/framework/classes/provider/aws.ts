@@ -23,9 +23,19 @@ TemplateExportValue, Stack, undefined, Stack> {
   async retrieveServiceStack(service: ServiceContext): Promise<Stack | undefined> {
     const cf = AwsProvider.getCloudFormation(service);
 
-    const response: Aws.CloudFormation.DescribeStacksOutput = await cf.describeStacks({
-      StackName: service.stackName,
-    }).promise();
+    let response: Aws.CloudFormation.DescribeStacksOutput;
+    try {
+      response = await cf.describeStacks({
+        StackName: service.stackName,
+      }).promise();
+    } catch (err) {
+      if (err.code === "ValidationError"
+        && err.message === `Stack with id ${service.stackName} does not exist`) {
+        return undefined;
+      } else {
+        throw err;
+      }
+    }
 
     return (response.Stacks || []).find(
       (stack) => !deletedStackStates.includes(stack.StackStatus),
@@ -48,7 +58,7 @@ TemplateExportValue, Stack, undefined, Stack> {
     if (stack === undefined) {
       throw new Error(
         `Service "${service.schema.name}" imports via direct import`
-      + `from "${importedService.schema.name}" that is not deployed`,
+      + ` from service "${importedService.schema.name}" that is not deployed`,
       );
     }
 
