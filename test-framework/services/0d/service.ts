@@ -1,17 +1,17 @@
 import {ImportType, ServiceSchema} from "serverless-service-framework";
-import template from "./serverless-template";
 
 export default new ServiceSchema({
-  name: "databases",
-  shortName: "dbs",
+  name: "0d",
+  shortName: "0d",
 
   importMap: {
-    "functions": ["a"],
+    "0c": [],
   },
 
   exportMap: {
-    "b": "asdasd",
   },
 
-  template,
+  template: {
+
+  },
 })
