@@ -113,12 +113,11 @@ TemplateExportValue, Stack, undefined, Stack> {
   ): ServerlessTemplatePostExports {
     /* eslint-disable no-param-reassign */
 
-    const resources = isObject(template.resources.Resources) ? template.resources.Resources : {};
-    template.resources.Resources = resources;
+    const resources = isObject(template.resources) ? template.resources : {};
+    template.resources = resources;
 
-    const outputs = isObject(resources.Outputs) ? resources.Outputs : {};
     resources.Outputs = {
-      ...outputs,
+      ...(isObject(resources.Outputs) ? resources.Outputs : {}),
       ...exportValueMap,
     };
 
