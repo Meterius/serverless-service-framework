@@ -21,34 +21,39 @@ interface PerformEnvironment {
 }
 
 function cap(str: string): string {
-  return str.length > 0 ? str[1].toUpperCase() + str.substr(1) : "";
+  return str.length > 0 ? str[0].toUpperCase() + str.substr(1) : "";
 }
 
 function joinC(arr: string[]): string {
-  if (arr.length >= 2) {
-    return arr.slice(0, arr.length - 2).concat(
-      [`${arr[arr.length - 2]} and ${arr[arr.length - 1]}`],
-    ).join(", ");
-  } else {
-    return arr[0] || "";
-  }
+  return `[${arr.join(", ")}]`;
 }
 
 function joinCQ(arr: string[], clr: string | undefined = "blue"): string {
   return joinC(arr.map((str) => (clr ? chalk`"{${clr} ${str}}"` : `"${str}"`)));
 }
 
+function createLogTitle(env: PerformEnvironment, service?: ServiceContext): string {
+  return chalk`{blue ${env.actionTitle}${service ? ` "${service.name}"` : ""}}`;
+}
+
+function createLog(
+  env: PerformEnvironment,
+  service?: ServiceContext,
+  print?: (msg: string) => void,
+): (msg: string) => void {
+  return (msg: string): void => {
+    env.tb.log(msg, createLogTitle(env, service), false, print);
+  };
+}
 
 async function performService(
   service: ServiceContext, env: PerformEnvironment, print?: (msg: string) => void,
 ): Promise<void> {
   const {
-    actPres, actPast, actionServerlessCommand, tb, actionTitle,
+    actPres, actPast, actionServerlessCommand, tb,
   } = env;
 
-  function log(msg: string): void {
-    tb.log(msg, `${actionTitle} ${service.name}`, false, print);
-  }
+  const log = createLog(env, service, print);
 
   log(chalk`${cap(actPres)} "{blue ${service.name}}" in region "{blue ${service.region}}"`);
 
@@ -56,7 +61,12 @@ async function performService(
 
   if (actionServerlessCommand) {
     await execServerlessCommand(
-      tb, service, actionServerlessCommand, {}, print,
+      tb,
+      service,
+      actionServerlessCommand,
+      {},
+      print,
+      createLogTitle(env, service),
     );
   }
 
@@ -67,16 +77,14 @@ async function performService(
 
 async function performParallel(env: PerformEnvironment): Promise<void> {
   const {
-    tb, context, performingServices, actionTitle, actPast, actPres,
+    tb, context, performingServices, actPast, actPres,
   } = env;
 
-  function log(msg: string): void {
-    tb.log(msg, actionTitle);
-  }
+  const log = createLog(env);
 
   interface Task {
     service: ServiceContext;
-    output: string;
+    outputReference: { output: string };
     promise: Promise<[ServiceContext, undefined | Error]>;
   }
 
@@ -101,15 +109,19 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
     if (possible.length > 0 && failedTasks.length === 0) {
       tasks.push(
         ...possible.map((service: ServiceContext): Task => {
+          const outputReference = {
+            output: "",
+          };
+
           const task: Task = {
             service,
             // output from the service is redirected to a string buffer
-            output: "",
+            outputReference,
             // perform service and resolve with the error instead of
             // rejecting to simplify handling with Promise.race
             promise: new Promise((resolve) => {
               performService(
-                service, env, (msg: string) => { task.output += msg; },
+                service, env, (msg: string) => { outputReference.output += msg; },
               ).then(() => {
                 resolve([service, undefined]);
               }, (err) => {
@@ -124,11 +136,11 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
     }
 
     const remaining = context.actionLogic.getNotPerformedServices(performedServices)
-      .filter((service) => tasks.some((task) => task.service === service))
+      .filter((service) => !tasks.some((task) => task.service === service))
       .map((service) => service.name);
 
     log(`${cap(actPres)} ${joinCQ(tasks.map((task) => task.service.name))}`);
-    log(chalk`Remaining services are ${joinCQ(remaining)}\n`);
+    log(chalk`Remaining services are ${joinCQ(remaining)}`);
 
     // wait for the next task to finish
     const [finishedService, error] = await Promise.race(tasks.map((task) => task.promise));
@@ -141,12 +153,16 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
     if (error === undefined) {
       performedServices.push(finishedService);
 
-      let execLog = chalk`\n##### START OF LOG "{green ${finishedService.name}}" #####\n\n`;
-      execLog += `${finishedTask.output}\n`;
-      execLog += chalk`##### END OF LOG "{green ${finishedService.name}}" #####\n`;
-
+      let execLog = chalk`\n##### START OF LOG "{green ${finishedService.name}}" #####\n`;
+      execLog += `${finishedTask.outputReference.output}`;
+      execLog += chalk`##### END OF LOG "{green ${finishedService.name}}" #####\n\n`;
       tb.log(execLog, undefined, true);
     } else {
+      let execLog = chalk`\n##### START OF ERROR "{red ${finishedService.name}}" #####\n`;
+      execLog += `${error}\n`;
+      execLog += chalk`##### END OF ERROR "{red ${finishedService.name}}" #####\n\n`;
+      tb.log(execLog, undefined, true);
+
       let infoMsg = chalk`"{blue ${finishedService.name}}" has encountered an error,`;
       infoMsg += " the output will be emitted after all remaining services currently";
       infoMsg += ` being ${actPast} have been finished`;
@@ -164,9 +180,9 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
 
   if (failedTasks.length > 0) {
     failedTasks.forEach((task) => {
-      let execLog = chalk`\n##### START OF LOG "{red ${task.service.name}}" #####\n\n`;
-      execLog += `${task.output}\n`;
-      execLog += chalk`##### END OF LOG "{red ${task.service.name}}" #####\n`;
+      let execLog = chalk`\n##### START OF LOG "{red ${task.service.name}}" #####\n`;
+      execLog += `${task.outputReference.output}\n`;
+      execLog += chalk`##### END OF LOG "{red ${task.service.name}}" #####\n\n`;
 
       tb.log(execLog, undefined, true);
     });
@@ -188,12 +204,10 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
 
 async function performSequential(env: PerformEnvironment): Promise<void> {
   const {
-    context, actPast, actPres, performingServices, actionTitle, tb,
+    context, actPast, actPres, performingServices,
   } = env;
 
-  function log(msg: string): void {
-    tb.log(msg, actionTitle);
-  }
+  const log = createLog(env);
 
   const order = context.actionLogic.getTotalSequentialOrder()
     .filter((service) => performingServices.includes(service));
@@ -204,13 +218,15 @@ async function performSequential(env: PerformEnvironment): Promise<void> {
     try {
       await performService(service, env);
     } catch (err) {
-      const notDeployed = order.slice(i).map((s) => chalk`{blue ${s.name}}`);
-      const deployed = order.slice(0, i).map((s) => chalk`{blue ${s.name}}`);
-      const serviceName = chalk`{blue ${service.name}}`;
+      const notDeployed = order.slice(i).map((s) => s.name);
+      const deployed = order.slice(0, i).map((s) => s.name);
+      const serviceName = service.name;
 
-      log(chalk`${cap(actPast)} services are ${joinCQ(deployed)}}`);
-      log(chalk`Not ${actPast} services are ${joinCQ(notDeployed)}}`);
-      log(chalk`{red ${cap(actPres)} service "${serviceName}" failed`);
+      log(chalk`{red ${cap(actPres)} service "${serviceName}" failed}`);
+      log(chalk`${cap(actPast)} services are ${joinCQ(deployed, "green")}`);
+      log(chalk`Not ${actPast} services are ${joinCQ(notDeployed, "red")}`);
+
+      throw err;
     }
   }
 }
@@ -222,37 +238,31 @@ export function createMultiServiceCommandRun(
 ): (tb: TB) => Promise<void> {
   return async function cmd(tb: TB): Promise<void> {
     // ENVIRONMENT SETUP
+
     const { context } = await setupFrameworkContextFunction(tb);
 
     const [...serviceIds] = requireVariadicParameters(tb, "service-name");
 
-    const performingServices = filterDuplicates(serviceIds.map((id) => getService(context, id)));
+    const performingServices = serviceIds.length === 0 ? context.services
+      : filterDuplicates(serviceIds.map((id) => getService(context, id)));
 
     const parallel = getParallelFlag(tb);
-
-    // MESSAGE DISPLAY
-
-    function log(msg: string): void {
-      tb.log(msg, actionTitle);
-    }
-
-    // ACTION PHRASE ALIASES
 
     const actPres = actionPhrases.presentContinuous;
     const actPast = actionPhrases.pastSimple;
 
-    // ACTION FUNCTIONS
+    const env: PerformEnvironment = {
+      tb, performingServices, actPast, actPres, context, actionServerlessCommand, actionTitle,
+    };
 
     // EXECUTION
+
+    const log = createLog(env);
 
     log(`${cap(actPres)} Services ${joinCQ(performingServices.map((s) => s.schema.name))}`);
     log(`Stage: "${context.stage}"`);
 
     const startTime = hrtime();
-
-    const env: PerformEnvironment = {
-      tb, performingServices, actPast, actPres, context, actionServerlessCommand, actionTitle,
-    };
 
     if (parallel) {
       await performParallel(env);
