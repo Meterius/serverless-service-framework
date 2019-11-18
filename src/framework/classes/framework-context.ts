@@ -8,6 +8,7 @@ import { ServiceSchema } from "./service-schema";
 import { ServiceSchemaCollection } from "./service-schema-collection";
 import { filterObject } from "../../common/utility";
 import { Provider } from "./provider";
+import { FrameworkContextActionLogic } from "./framework-context-action-logic";
 
 /* eslint-disable no-dupe-class-members */
 
@@ -21,6 +22,8 @@ export class FrameworkContext extends FrameworkSchemaFile {
   public readonly provider: Provider;
 
   public readonly stage: string;
+
+  public readonly actionLogic: FrameworkContextActionLogic;
 
   constructor(
     frameworkSchemaFile: FrameworkSchemaFile,
@@ -45,6 +48,8 @@ export class FrameworkContext extends FrameworkSchemaFile {
     // ensures assumptions about a collection of service schemas
     // for example names are not reused, no imports cycles are contained, ...
     FrameworkContext.ensureValidity(this.serviceCollection);
+
+    this.actionLogic = new FrameworkContextActionLogic(this);
   }
 
   /**
