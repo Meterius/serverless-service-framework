@@ -10,15 +10,10 @@ export class ServiceSchemaCollection {
 
   public readonly usedIdentifiers: string[];
 
-  public readonly duplicatedIdentifiers: string[];
-
   constructor(schemas: ServiceSchema[]) {
     this.schemas = schemas;
     this.usedIdentifiers = ServiceSchemaCollection.computeIdentifiers(schemas);
     this.usedDefaultIdentifiers = ServiceSchemaCollection.computeDefaultIdentifiers(schemas);
-    this.duplicatedIdentifiers = ServiceSchemaCollection.computeDuplicatedIdentifiers(
-      this.usedIdentifiers,
-    );
   }
 
   public static isServiceImportExportedByAnotherService(
@@ -31,10 +26,16 @@ export class ServiceSchemaCollection {
     );
   }
 
-  public getServicesWithoutUniqueIdentifiers(): ServiceSchema[] {
-    return this.schemas.filter((schema) => schema.identifiers.some(
-      (id) => this.duplicatedIdentifiers.includes(id),
+  public doesServiceHaveDuplicateIdentifiers(schema: ServiceSchema): boolean {
+    return schema.identifiers.some((id) => this.schemas.some(
+      (otherSchema) => otherSchema !== schema && otherSchema.identifiers.includes(id),
     ));
+  }
+
+  public getServicesWithoutUniqueIdentifiers(): ServiceSchema[] {
+    return this.schemas.filter(
+      (schema) => this.doesServiceHaveDuplicateIdentifiers(schema),
+    );
   }
 
   public getServiceImportsUsingNonExistentIdentifiers(
@@ -103,12 +104,5 @@ export class ServiceSchemaCollection {
 
   private static computeDefaultIdentifiers(schemas: ServiceSchema[]): string[] {
     return schemas.map((schema) => schema.identifier);
-  }
-
-  private static computeDuplicatedIdentifiers(identifiers: string[]): string[] {
-    return identifiers.filter(
-      (id, index) => identifiers.indexOf(id) === index
-        && identifiers.lastIndexOf(id) !== index,
-    );
   }
 }
