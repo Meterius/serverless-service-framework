@@ -15,7 +15,8 @@ interface BaseProperties {
   serviceRootDir: string;
 }
 
-export type FrameworkSchemaProperties = BaseProperties & TemplateProperties & CommonSchemaProperties;
+export type FrameworkSchemaProperties =
+  BaseProperties & TemplateProperties & CommonSchemaProperties;
 
 /* eslint-disable no-dupe-class-members */
 
@@ -47,6 +48,7 @@ export class FrameworkSchema extends CommonSchema {
     return this.template.provider.region;
   }
 
+  // TODO: proper type guard implementation for framework schema properties
   public static isFrameworkSchemaProperties(value: unknown): value is FrameworkSchemaProperties {
     return true;
   }

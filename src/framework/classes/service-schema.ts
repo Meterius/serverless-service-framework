@@ -160,6 +160,7 @@ export class ServiceSchema extends CommonSchema {
     return Object.keys(importMap);
   }
 
+  // TODO: proper type guard implementation for service schema properties
   public static isServiceSchemaProperties(value: unknown): value is ServiceSchemaProperties {
     return true;
   }
