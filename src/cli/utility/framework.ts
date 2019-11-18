@@ -65,6 +65,7 @@ export async function execServerlessCommand(
   serverlessCommand: string,
   serverlessOptions: Record<string, string | boolean>,
   print?: (data: string) => void,
+  logTitle?: string,
 ): Promise<void> {
   const serviceDir = service.dirPath;
 
@@ -89,14 +90,13 @@ export async function execServerlessCommand(
   const slsCmd = `sls ${serverlessCommand} ${serverlessOptionList}`.trimRight();
 
   function log(msg: string, raw = false): void {
-    tb.log(msg, undefined, raw, print);
+    tb.log(msg, logTitle, raw, print);
   }
 
   log(chalk`Running Serverless Command: "{blue ${slsCmd}}"`);
   log(chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), serviceDir)}}"`);
 
   const command = `npx --no-install ${slsCmd}`;
-
 
   if (print) {
     const [err, stdout, stderr] = await execAsync(command, {
@@ -111,10 +111,14 @@ export async function execServerlessCommand(
       throw err;
     }
   } else {
+    tb.log.divider(print);
+
     execSync(command, {
       cwd: service.dirPath,
       env: { ...process.env, AWS_REGION: service.region },
       stdio: "inherit",
     });
+
+    tb.log.divider(print);
   }
 }
