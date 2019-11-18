@@ -16,6 +16,7 @@ interface PerformEnvironment {
   performingServices: ServiceContext[];
   actionTitle: string;
   actionServerlessCommand: string | undefined;
+  actionDependenciesReversed: boolean;
   actPres: string;
   actPast: string;
 }
@@ -77,7 +78,7 @@ async function performService(
 
 async function performParallel(env: PerformEnvironment): Promise<void> {
   const {
-    tb, context, performingServices, actPast, actPres,
+    tb, context, performingServices, actPast, actPres, actionDependenciesReversed,
   } = env;
 
   const log = createLog(env);
@@ -102,8 +103,9 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
     )
   ) {
     // get all services that could be performed and are not currently being performed
-    const possible = context.actionLogic.getAllPerformable(performedServices)
-      .filter((service) => !tasks.map((task) => task.service).includes(service));
+    const possible = context.actionLogic.getAllPerformable(
+      performedServices, actionDependenciesReversed,
+    ).filter((service) => !tasks.map((task) => task.service).includes(service));
 
     // if no service failed and there are services to perform add them
     if (possible.length > 0 && failedTasks.length === 0) {
@@ -204,12 +206,12 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
 
 async function performSequential(env: PerformEnvironment): Promise<void> {
   const {
-    context, actPast, actPres, performingServices,
+    context, actPast, actPres, performingServices, actionDependenciesReversed,
   } = env;
 
   const log = createLog(env);
 
-  const order = context.actionLogic.getTotalSequentialOrder()
+  const order = context.actionLogic.getTotalSequentialOrder(actionDependenciesReversed)
     .filter((service) => performingServices.includes(service));
 
   for (let i = 0; i < order.length; i += 1) {
@@ -235,6 +237,7 @@ export function createMultiServiceCommandRun(
   actionTitle: string,
   actionPhrases: { presentContinuous: string; pastSimple: string },
   actionServerlessCommand: string | undefined,
+  actionDependenciesReversed = false,
 ): (tb: TB) => Promise<void> {
   return async function cmd(tb: TB): Promise<void> {
     // ENVIRONMENT SETUP
@@ -252,7 +255,14 @@ export function createMultiServiceCommandRun(
     const actPast = actionPhrases.pastSimple;
 
     const env: PerformEnvironment = {
-      tb, performingServices, actPast, actPres, context, actionServerlessCommand, actionTitle,
+      tb,
+      performingServices,
+      actPast,
+      actPres,
+      context,
+      actionServerlessCommand,
+      actionTitle,
+      actionDependenciesReversed,
     };
 
     // EXECUTION

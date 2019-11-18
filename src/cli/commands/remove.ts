@@ -10,6 +10,7 @@ const removeCommand: GC = {
       pastSimple: "removed", presentContinuous: "removing",
     },
     "remove",
+    true,
   ),
 };
 
