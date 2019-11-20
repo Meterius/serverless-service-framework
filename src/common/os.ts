@@ -1,5 +1,8 @@
 import { exec } from "child_process";
 
+/**
+ * Like exec but as promise based instead of callback based
+ */
 export function execAsync(
   command: string, options: Record<string, unknown>,
 ): Promise<[Error | undefined, string, string]> {

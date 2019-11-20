@@ -20,7 +20,7 @@ import {
   ServerlessTemplatePreNaming,
   ServerlessTemplatePrePreparation,
 } from "../templates.types";
-import { serviceBuild } from "../constants";
+import { serviceBuild } from "../../common/constants";
 import { ServiceSchema } from "./service-schema";
 
 /* eslint-disable class-methods-use-this */

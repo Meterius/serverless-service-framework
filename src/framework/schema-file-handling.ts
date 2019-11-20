@@ -2,18 +2,14 @@ import path from "path";
 import { pathExists } from "fs-extra";
 import { ValidationError } from "runtypes";
 import { isObject } from "../common/type-guards";
+import { requireModule } from "../common/require";
 
 function loadTypeCheckedExport<T>(
   filePath: string,
   typeCheck: (val: unknown) => T,
   exportName = "default",
 ): T {
-  // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-  require("ts-node/register"); // required to transform es6 import syntax and typescript files
-
-  // eslint-disable-next-line max-len
-  // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires, import/no-dynamic-require
-  const fileExport: unknown = require(filePath) as unknown;
+  const fileExport = requireModule(filePath);
 
   if (isObject(fileExport) && Object.keys(fileExport).includes(exportName)) {
     try {

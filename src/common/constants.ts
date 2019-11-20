@@ -13,3 +13,7 @@ export const serviceBuildDir = ".serverless-service";
 export const serviceBuild = {
   serverlessTemplate: "serverless-template",
 };
+
+// service hook names and extensions searched for in service directories
+export const serviceHookNames = ["service-hooks"];
+export const serviceHookExtensions = ["ts"];

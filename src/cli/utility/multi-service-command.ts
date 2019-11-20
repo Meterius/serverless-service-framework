@@ -7,6 +7,7 @@ import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
 import { FrameworkContext } from "../../framework/classes/framework-context";
 import { execServerlessCommand, getService } from "./framework";
+import {runPostDeploy, runPrePackage} from "./hook-execution";
 
 const { hrtime } = process;
 

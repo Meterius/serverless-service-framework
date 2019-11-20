@@ -6,7 +6,7 @@ import {
   frameworkSchemaNames,
   serviceSchemaExtensions,
   serviceSchemaNames,
-} from "../constants";
+} from "../../common/constants";
 import { ServiceSchemaFile } from "./service-schema-file";
 import { loadSchemaPropertiesFile } from "../schema-file-handling";
 

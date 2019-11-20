@@ -1,7 +1,7 @@
 import path from "path";
 import { ServiceSchema } from "./service-schema";
 import { loadSchemaPropertiesFile } from "../schema-file-handling";
-import { serviceBuildDir } from "../constants";
+import { serviceBuildDir } from "../../common/constants";
 import { FrameworkSchemaFile } from "./framework-schema-file";
 import { ServiceSchemaProperties } from "./types/service-schema.types";
 
@@ -35,7 +35,7 @@ export class ServiceSchemaFile {
     return path.dirname(this.filePath);
   }
 
-  protected resolveServicePath(relPath: string): string {
+  resolveServicePath(relPath: string): string {
     return path.join(this.dirPath, relPath);
   }
 

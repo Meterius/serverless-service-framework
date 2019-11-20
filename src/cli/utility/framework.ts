@@ -8,6 +8,7 @@ import { CliError } from "./exceptions";
 import { ServiceContext } from "../../framework/classes/service-context";
 import { execAsync } from "../../common/os";
 import { TB } from "../cli-types";
+import {runPostDeploy, runPrePackage} from "./hook-execution";
 
 export async function loadFrameworkContext(
   frameworkSchemaFilePath: string | undefined,
@@ -87,11 +88,14 @@ export async function execServerlessCommand(
     },
   ).join("");
 
+  const isDeploying = serverlessCommand.includes("deploy");
   const slsCmd = `sls ${serverlessCommand} ${serverlessOptionList}`.trimRight();
 
   function log(msg: string, raw = false): void {
     tb.log(msg, logTitle, raw, print);
   }
+
+  await runPrePackage(service, log);
 
   log(chalk`Running Serverless Command: "{blue ${slsCmd}}"`);
   log(chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), serviceDir)}}"`);
@@ -120,5 +124,9 @@ export async function execServerlessCommand(
     });
 
     tb.log.divider(print);
+  }
+
+  if (isDeploying) {
+    await runPostDeploy(service, log);
   }
 }

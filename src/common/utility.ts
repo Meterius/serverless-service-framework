@@ -1,5 +1,8 @@
 import { isObject } from "./type-guards";
 
+/**
+ * Removes items that are contained multiple times in arr by using equal to compare the items.
+ */
 export function filterDuplicates<T>(
   arr: T[],
   equal: (a: T, b: T) => boolean = (a: T, b: T): boolean => a === b,
