@@ -18,6 +18,10 @@ export abstract class ProviderImplementation<
 
   protected abstract retrieveServiceStack(service: ServiceContext): Promise<Stack | undefined>;
 
+  public abstract retrieveStackExports(
+    stack: Stack,
+  ): Record<string, string | undefined>;
+
   public abstract prepareTemplateProviderBasedImports(
     service: ServiceContext,
     importedService: ServiceContext,

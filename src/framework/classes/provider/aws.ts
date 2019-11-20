@@ -42,6 +42,18 @@ TemplateExportValue, Stack, undefined, Stack> {
     );
   }
 
+  retrieveStackExports(stack: Stack): Record<string, string | undefined> {
+    const exportMap: Record<string, string | undefined> = {};
+
+    (stack.Outputs || []).forEach((output) => {
+      if (output.OutputKey !== undefined) {
+        exportMap[output.OutputKey] = output.OutputValue;
+      }
+    });
+
+    return exportMap;
+  }
+
   async prepareTemplateProviderBasedImports(
     service: ServiceContext,
     importedService: ServiceContext,
