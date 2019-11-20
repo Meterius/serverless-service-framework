@@ -1,13 +1,11 @@
 import chalk from "chalk";
 import { setupFrameworkContextFunction } from "./command-setup";
 import { TB } from "../cli-types";
-import { ServiceContext } from "../../framework/classes/service-context";
+import { ServiceContext, FrameworkContext } from "../../framework/classes";
 import { getParallelFlag } from "./common-options";
 import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
-import { FrameworkContext } from "../../framework/classes/framework-context";
 import { execServerlessCommand, getService } from "./framework";
-import {runPostDeploy, runPrePackage} from "./hook-execution";
 
 const { hrtime } = process;
 
@@ -116,13 +114,13 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
             output: "",
           };
 
-          const task: Task = {
+          return {
             service,
             // output from the service is redirected to a string buffer
             outputReference,
             // perform service and resolve with the error instead of
             // rejecting to simplify handling with Promise.race
-            promise: new Promise((resolve) => {
+            promise: new Promise<[ServiceContext, Error | undefined]>((resolve) => {
               performService(
                 service, env, (msg: string) => { outputReference.output += msg; },
               ).then(() => {
@@ -132,8 +130,6 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
               });
             }),
           };
-
-          return task;
         }),
       );
     }

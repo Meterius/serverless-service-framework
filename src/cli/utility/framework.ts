@@ -2,13 +2,11 @@ import { pathExists } from "fs-extra";
 import chalk from "chalk";
 import { execSync } from "child_process";
 import path from "path";
-import { FrameworkContext } from "../../framework/classes/framework-context";
-import { FrameworkSchemaFile } from "../../framework/classes/framework-schema-file";
+import { FrameworkContext, FrameworkSchemaFile, ServiceContext } from "../../framework/classes";
 import { CliError } from "./exceptions";
-import { ServiceContext } from "../../framework/classes/service-context";
 import { execAsync } from "../../common/os";
 import { TB } from "../cli-types";
-import {runPostDeploy, runPrePackage} from "./hook-execution";
+import { runPostDeploy, runPrePackage } from "./hook-execution";
 
 export async function loadFrameworkContext(
   frameworkSchemaFilePath: string | undefined,

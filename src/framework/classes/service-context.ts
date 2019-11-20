@@ -159,7 +159,7 @@ export class ServiceContext extends ServiceSchemaFile {
     );
   }
 
-  private async processServiceServerlessTemplatePreperation(
+  private async processServiceServerlessTemplatePreparation(
     template: ServerlessTemplatePrePreparation,
   ): Promise<ServerlessTemplatePostPreparation> {
     return {
@@ -300,7 +300,7 @@ export class ServiceContext extends ServiceSchemaFile {
   ): Promise<ServerlessTemplate> {
     const step0: PreCompilationServerlessTemplate = {};
     const step1 = await this.processServiceServerlessTemplateMerging(step0);
-    const step2 = await this.processServiceServerlessTemplatePreperation(step1);
+    const step2 = await this.processServiceServerlessTemplatePreparation(step1);
     const step3 = await this.processServiceServerlessTemplateNaming(step2);
     const step4 = await this.processServiceServerlessTemplateImports(step3);
     const step5 = await this.processServiceServerlessTemplateExports(step4);
