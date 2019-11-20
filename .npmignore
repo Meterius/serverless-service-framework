@@ -1,2 +1,5 @@
 test-framework/
 node_modules/
+.idea/
+.eslintrc.json
+.gitignore
