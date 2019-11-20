@@ -14,7 +14,7 @@ const deletedStackStates = ["DELETE_IN_PROGRESS", "DELETE_COMPLETE"];
 
 type TemplateExportValue = { Value: string };
 
-type Stack = Aws.CloudFormation.Stack;
+export type Stack = Aws.CloudFormation.Stack & { Service: ServiceContext };
 
 export class AwsProvider extends ProviderImplementation<
 TemplateExportValue, Stack, undefined, Stack> {
@@ -37,9 +37,18 @@ TemplateExportValue, Stack, undefined, Stack> {
       }
     }
 
-    return (response.Stacks || []).find(
-      (stack) => !deletedStackStates.includes(stack.StackStatus),
+    const stack = (response.Stacks || []).find(
+      (foundStack) => !deletedStackStates.includes(foundStack.StackStatus),
     );
+
+    if (stack !== undefined) {
+      return {
+        ...stack,
+        Service: service,
+      };
+    } else {
+      return stack;
+    }
   }
 
   retrieveStackExports(stack: Stack): Record<string, string | undefined> {
