@@ -5,7 +5,8 @@
   "main": "dist/lib.js",
   "types": "dist/types/lib.d.ts",
   "bin": {
-    "ssf": "dist/cli/cli.js"
+    "sls-sf": "bin/ssf.js",
+    "ssf": "bin/ssf.js"
   },
   "scripts": {
     "clean-build": "npx --no-install rimraf dist",
