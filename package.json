@@ -5,7 +5,7 @@
   "main": "dist/lib.js",
   "types": "dist/types/lib.d.ts",
   "bin": {
-    "sls-sf": "dist/cli/cli.js"
+    "ssf": "dist/cli/cli.js"
   },
   "scripts": {
     "clean-build": "npx --no-install rimraf dist",
@@ -15,7 +15,8 @@
     "test": "echo No Tests",
     "eslint": "npx --no-install eslint --ext .ts ./src",
     "eslint:fix": "npm run eslint -- --fix",
-    "checkup": "npm run eslint && npm run test"
+    "checkup": "npm run eslint && npm run test",
+    "prepublishOnly": "npm run checkup && npm run build"
   },
   "repository": {
     "type": "git",
@@ -45,10 +46,6 @@
     "typescript": "^3.7.2"
   },
   "dependencies": {
-    "@babel/core": "^7.7.2",
-    "@babel/preset-env": "^7.7.1",
-    "@babel/preset-typescript": "^7.7.2",
-    "@babel/register": "^7.7.0",
     "aws-sdk": "^2.573.0",
     "chalk": "^3.0.0",
     "change-case": "^3.1.0",
