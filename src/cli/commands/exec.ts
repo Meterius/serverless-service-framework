@@ -3,7 +3,7 @@ import {
   getService,
 } from "../utility/framework";
 import { GC, TB } from "../cli-types";
-import { requireParameters } from "../utility/options";
+import { requireParameters } from "../utility/options-handling";
 import { setupFrameworkContextFunction } from "../utility/command-setup";
 
 const exec: GC = {

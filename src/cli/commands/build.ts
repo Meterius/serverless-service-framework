@@ -1,4 +1,4 @@
-import { requireParameter } from "../utility/options";
+import { requireParameter } from "../utility/options-handling";
 import {
   buildService,
 } from "../utility/framework";

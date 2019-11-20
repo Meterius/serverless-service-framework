@@ -1,4 +1,4 @@
-import { getFlag, getOption, requireOption } from "./options";
+import { getFlag, getOption, requireOption } from "./options-handling";
 import { TB } from "../cli-types";
 
 export function getParallelFlag(tb: TB): boolean {

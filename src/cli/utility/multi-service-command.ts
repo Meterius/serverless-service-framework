@@ -1,12 +1,12 @@
 import chalk from "chalk";
-import { getService, setupFrameworkContextFunction } from "./command-setup";
+import { setupFrameworkContextFunction } from "./command-setup";
 import { TB } from "../cli-types";
 import { ServiceContext } from "../../framework/classes/service-context";
 import { getParallelFlag } from "./common-options";
-import { requireVariadicParameters } from "./options";
+import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
 import { FrameworkContext } from "../../framework/classes/framework-context";
-import { execServerlessCommand } from "./framework";
+import { execServerlessCommand, getService } from "./framework";
 
 const { hrtime } = process;
 

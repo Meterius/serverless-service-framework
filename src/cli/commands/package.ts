@@ -1,5 +1,5 @@
 import { GC } from "../cli-types";
-import { createMultiServiceCommandRun } from "../utility/service-command";
+import { createMultiServiceCommandRun } from "../utility/multi-service-command";
 
 const packageCommand: GC = {
   name: "package",

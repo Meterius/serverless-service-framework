@@ -2,8 +2,6 @@ import { TB } from "../cli-types";
 import { getFrameworkSchemaOption, requireStageOption } from "./common-options";
 import { setupProvider } from "./provider-configuration";
 import { FrameworkContext } from "../../framework/classes/framework-context";
-import { ServiceContext } from "../../framework/classes/service-context";
-import { CliError } from "./exceptions";
 import { loadFrameworkContext } from "./framework";
 
 export interface FrameworkContextSetup {
@@ -27,17 +25,4 @@ export async function setupFrameworkContextFunction(
   return {
     context,
   };
-}
-
-export function getService(
-  ctx: FrameworkContext,
-  serviceIdentifier: string,
-): ServiceContext {
-  const sFile = ctx.getService(serviceIdentifier);
-
-  if (sFile === undefined) {
-    throw new CliError(`Service "${serviceIdentifier}" not found`);
-  } else {
-    return sFile;
-  }
 }
