@@ -19,10 +19,9 @@ import {
   ServerlessTemplatePreMerging,
   ServerlessTemplatePreNaming,
   ServerlessTemplatePrePreparation,
-} from "../templates";
+} from "../templates.types";
 import { serviceBuild } from "../constants";
 import { ServiceSchema } from "./service-schema";
-import { ImportType, ProcessedImportValue } from "./common-schema";
 
 /* eslint-disable class-methods-use-this */
 
@@ -211,10 +210,8 @@ export class ServiceContext extends ServiceSchemaFile {
 
       const importedValues = importMap[importedServiceName];
 
-      const directImportedValues = importedValues.filter(
-        (importValue): importValue is ProcessedImportValue<
-        ImportType.Direct
-        > => importValue.type === ImportType.Direct,
+      const directImportedValues = ServiceSchema.filterImportValuesByType(
+        importedValues, "direct",
       );
 
       if (directImportedValues.length > 0) {
@@ -229,10 +226,8 @@ export class ServiceContext extends ServiceSchemaFile {
         });
       }
 
-      const providerBasedImportedValues = importedValues.filter(
-        (importValue): importValue is ProcessedImportValue<
-        ImportType.ProviderBased
-        > => importValue.type === ImportType.ProviderBased,
+      const providerBasedImportedValues = ServiceSchema.filterImportValuesByType(
+        importedValues, "provider-based",
       );
 
       if (providerBasedImportedValues.length > 0) {

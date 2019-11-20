@@ -1,14 +1,13 @@
 import path from "path";
-import { ServiceSchema, ServiceSchemaProperties } from "./service-schema";
+import { ServiceSchema } from "./service-schema";
 import { loadSchemaPropertiesFile } from "../schema-file-handling";
 import { serviceBuildDir } from "../constants";
 import { FrameworkSchemaFile } from "./framework-schema-file";
+import { ServiceSchemaProperties } from "./types/service-schema.types";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
 export class ServiceSchemaFile {
-  private readonly __isServiceSchemaFile = true;
-
   public readonly filePath: string;
 
   public readonly schema: ServiceSchema;
@@ -52,7 +51,7 @@ export class ServiceSchemaFile {
     filePath: string, frameworkSchemaFile: FrameworkSchemaFile,
   ): Promise<ServiceSchemaFile> {
     const schema: ServiceSchemaProperties = await loadSchemaPropertiesFile(
-      filePath, ServiceSchema.isServiceSchemaProperties, "ServiceSchema class",
+      filePath, ServiceSchema.ensureServiceSchemaProperties,
     );
 
     return new ServiceSchemaFile(new ServiceSchema(frameworkSchemaFile.schema, schema), filePath);

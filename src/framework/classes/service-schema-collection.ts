@@ -1,6 +1,6 @@
 import * as graphlib from "graphlib";
 import { ServiceSchema } from "./service-schema";
-import { ProcessedImportMap, ProcessedImportValue } from "./common-schema";
+import { ProcessedImportMap, ProcessedImportValue } from "./types/common-schema.types";
 import { fromEntries, mapObject } from "../../common/utility";
 
 export class ServiceSchemaCollection {

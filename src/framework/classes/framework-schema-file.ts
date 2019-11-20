@@ -13,8 +13,6 @@ import { loadSchemaPropertiesFile } from "../schema-file-handling";
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
 export class FrameworkSchemaFile {
-  private readonly __isFrameworkSchemaFile = true;
-
   public readonly filePath: string;
 
   public readonly schema: FrameworkSchema;
@@ -74,7 +72,7 @@ export class FrameworkSchemaFile {
 
   public static async loadFrameworkSchemaFile(filePath: string): Promise<FrameworkSchemaFile> {
     const schema = await loadSchemaPropertiesFile(
-      filePath, FrameworkSchema.isFrameworkSchemaProperties, "Framework Schema",
+      filePath, FrameworkSchema.ensureFrameworkSchemaProperties,
     );
     return new FrameworkSchemaFile(new FrameworkSchema(schema), filePath);
   }

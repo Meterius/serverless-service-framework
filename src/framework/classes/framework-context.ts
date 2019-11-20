@@ -2,7 +2,7 @@ import { FrameworkSchemaFile } from "./framework-schema-file";
 import { ServiceSchemaFile } from "./service-schema-file";
 // eslint-disable-next-line import/no-cycle
 import { ServiceContext } from "./service-context";
-import { ServerlessProviderName } from "../templates";
+import { ServerlessProviderName } from "../templates.types";
 import { AwsProvider } from "./provider/aws";
 import { ServiceSchema } from "./service-schema";
 import { ServiceSchemaCollection } from "./service-schema-collection";

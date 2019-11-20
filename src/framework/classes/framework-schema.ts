@@ -1,28 +1,13 @@
-import { InlineFrameworkTemplate, ServerlessProviderName } from "../templates";
-import { CommonSchema, CommonSchemaProperties } from "./common-schema";
-
-interface InlineFrameworkTemplateProperties {
-  templateType?: "inline";
-  template: InlineFrameworkTemplate;
-}
-
-type TemplateProperties = InlineFrameworkTemplateProperties;
-
-interface BaseProperties {
-  name: string;
-  shortName: string;
-
-  serviceRootDir: string;
-}
-
-export type FrameworkSchemaProperties =
-  BaseProperties & TemplateProperties & CommonSchemaProperties;
+import { InlineFrameworkTemplate, ServerlessProviderName } from "../templates.types";
+import { CommonSchema } from "./common-schema";
+import { FrameworkSchemaProperties } from "./types/framework-schema.types";
+import {
+  FrameworkSchemaProperties as RuntypesFrameworkSchemaProperties,
+} from "./types/framework-schema.runtypes";
 
 /* eslint-disable no-dupe-class-members */
 
 export class FrameworkSchema extends CommonSchema {
-  private readonly __isFrameworkSchema = true;
-
   public readonly name: string;
 
   public readonly shortName: string;
@@ -48,8 +33,7 @@ export class FrameworkSchema extends CommonSchema {
     return this.template.provider.region;
   }
 
-  // TODO: proper type guard implementation for framework schema properties
-  public static isFrameworkSchemaProperties(value: unknown): value is FrameworkSchemaProperties {
-    return true;
+  public static ensureFrameworkSchemaProperties(value: unknown): FrameworkSchemaProperties {
+    return RuntypesFrameworkSchemaProperties.check(value);
   }
 }

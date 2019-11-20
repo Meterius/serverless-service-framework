@@ -1,4 +1,4 @@
-import { FrameworkSchemaProperties, ImportType } from "serverless-service-framework";
+import { FrameworkSchemaProperties } from "serverless-service-framework";
 
 export const schema: FrameworkSchemaProperties = {
   name: "Test Backend",
@@ -7,7 +7,7 @@ export const schema: FrameworkSchemaProperties = {
   serviceRootDir: "services",
 
   importSettings: {
-    defaultImportType: ImportType.Direct,
+    defaultImportType: "direct",
   },
 
   template: {

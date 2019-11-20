@@ -1,11 +1,11 @@
 import * as Aws from "aws-sdk";
 import { ProviderImplementation } from "./provider";
 import { ServiceContext } from "../service-context";
-import { ExportValue, ImportType, ProcessedImportValue } from "../common-schema";
+import { ExportValue, ProcessedImportValue } from "../types/common-schema.types";
 import {
   ServerlessTemplatePostExports,
   ServerlessTemplatePreExports,
-} from "../../templates";
+} from "../../templates.types";
 import { isObject } from "../../../common/type-guards";
 
 /* eslint-disable @typescript-eslint/no-unused-vars, class-methods-use-this */
@@ -68,7 +68,7 @@ TemplateExportValue, Stack, undefined, Stack> {
   async retrieveTemplateProviderBasedImportValue(
     service: ServiceContext,
     importedService: ServiceContext,
-    importValue: Omit<ProcessedImportValue, "type"> & { type: ImportType.ProviderBased },
+    importValue: ProcessedImportValue<"provider-based">,
     importData: undefined,
   ): Promise<unknown> {
     return {
@@ -79,7 +79,7 @@ TemplateExportValue, Stack, undefined, Stack> {
   async retrieveTemplateDirectImportValue(
     service: ServiceContext,
     importedService: ServiceContext,
-    importValue: Omit<ProcessedImportValue, "type"> & { type: ImportType.Direct },
+    importValue: ProcessedImportValue<"direct">,
     importData: Stack,
   ): Promise<unknown> {
     const output = (importData.Outputs || []).find(

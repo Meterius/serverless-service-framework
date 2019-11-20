@@ -1,42 +1,22 @@
-import { InlineServiceTemplate } from "../templates";
+import { InlineServiceTemplate } from "../templates.types";
 import {
-  CommonSchema,
-  CommonSchemaProperties,
   ExportMap,
   ImportMap,
-  ImportSettings,
-  ImportType, ImportValue,
+  ImportSettings, ImportType,
+  ImportValue,
   ProcessedImportMap, ProcessedImportValue,
-} from "./common-schema";
+} from "./types/common-schema.types";
 import { FrameworkSchema } from "./framework-schema";
 import { merge } from "../../common/utility";
-
-interface InlineServiceTemplateProperties {
-  templateType?: "inline";
-  template: InlineServiceTemplate;
-}
-
-type TemplateProperties = InlineServiceTemplateProperties;
-
-export interface DependencyProperties {
-  importMap?: ImportMap;
-  exportMap?: ExportMap;
-}
-
-interface BaseProperties {
-  name: string; // the name is used as the default service identifier
-  shortName: string;
-}
-
-type ServiceSchemaSpecificProperties = BaseProperties & TemplateProperties & DependencyProperties;
-
-export type ServiceSchemaProperties = ServiceSchemaSpecificProperties & CommonSchemaProperties;
+import { CommonSchema } from "./common-schema";
+import { ServiceSchemaProperties } from "./types/service-schema.types";
+import {
+  ServiceSchemaProperties as RuntypesServiceSchemaProperties,
+} from "./types/service-schema.runtypes";
 
 /* eslint-disable no-dupe-class-members */
 
 export class ServiceSchema extends CommonSchema {
-  private readonly __isServiceSchema = true;
-
   public readonly name: string;
 
   public readonly shortName: string;
@@ -53,7 +33,7 @@ export class ServiceSchema extends CommonSchema {
   private readonly serviceSchema: ServiceSchemaProperties;
 
   constructor(frameworkSchema: FrameworkSchema, schema: ServiceSchemaProperties) {
-    super(CommonSchema.merge(frameworkSchema, schema));
+    super(frameworkSchema, schema);
 
     this.name = schema.name;
     this.shortName = schema.shortName;
@@ -87,10 +67,6 @@ export class ServiceSchema extends CommonSchema {
     return [this.name, this.shortName];
   }
 
-  private extractServiceSchemaProperties(): ServiceSchemaProperties {
-    return this.serviceSchema;
-  }
-
   /**
    * Returns whether the identifier is an identifier of this schema.
    */
@@ -122,7 +98,7 @@ export class ServiceSchema extends CommonSchema {
   }
 
   private static readonly defaultImportSettings: Required<ImportSettings> = {
-    defaultImportType: ImportType.ProviderBased,
+    defaultImportType: "provider-based",
   };
 
   private static processImportMap(
@@ -160,8 +136,15 @@ export class ServiceSchema extends CommonSchema {
     return Object.keys(importMap);
   }
 
-  // TODO: proper type guard implementation for service schema properties
-  public static isServiceSchemaProperties(value: unknown): value is ServiceSchemaProperties {
-    return true;
+  public static filterImportValuesByType<T extends ImportType>(
+    importValues: ProcessedImportValue[], importType: T,
+  ): ProcessedImportValue<T>[] {
+    return importValues.filter(
+      (value: ProcessedImportValue): value is ProcessedImportValue<T> => value.type === importType,
+    );
+  }
+
+  public static ensureServiceSchemaProperties(value: unknown): ServiceSchemaProperties {
+    return RuntypesServiceSchemaProperties.check(value);
   }
 }

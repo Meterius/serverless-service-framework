@@ -1,9 +1,9 @@
 import {
   ServerlessProviderName, ServerlessTemplatePostExports, ServerlessTemplatePreExports,
-} from "../../templates";
+} from "../../templates.types";
 import { FrameworkContext } from "../framework-context";
 import { ServiceContext } from "../service-context";
-import { ExportValue, ImportType, ProcessedImportValue } from "../common-schema";
+import { ExportValue, ProcessedImportValue } from "../types/common-schema.types";
 
 export abstract class ProviderImplementation<
   TemplateExportValue = any, Stack = any, ProviderBasedImportData = any, DirectImportData = any,
@@ -31,14 +31,14 @@ export abstract class ProviderImplementation<
   public abstract retrieveTemplateProviderBasedImportValue(
     service: ServiceContext,
     importedService: ServiceContext,
-    importValue: ProcessedImportValue<ImportType.ProviderBased>,
+    importValue: ProcessedImportValue<"provider-based">,
     importData: ProviderBasedImportData,
   ): unknown;
 
   public abstract retrieveTemplateDirectImportValue(
     service: ServiceContext,
     importedService: ServiceContext,
-    importValue: ProcessedImportValue<ImportType.Direct>,
+    importValue: ProcessedImportValue<"direct">,
     importData: DirectImportData,
   ): unknown;
 
