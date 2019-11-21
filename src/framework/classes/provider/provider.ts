@@ -18,6 +18,10 @@ export abstract class ProviderImplementation<
 
   protected abstract retrieveServiceStack(service: ServiceContext): Promise<Stack | undefined>;
 
+  public async isServiceDeployed(service: ServiceContext): Promise<boolean> {
+    return (await this.retrieveServiceStack(service)) !== undefined;
+  }
+
   public abstract retrieveStackExports(
     stack: Stack,
   ): Record<string, string | undefined>;

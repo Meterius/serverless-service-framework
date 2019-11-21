@@ -18,6 +18,7 @@ interface PerformEnvironment {
   actionDependenciesReversed: boolean;
   actPres: string;
   actPast: string;
+  skipServiceIfNotDeployed: boolean;
 }
 
 function cap(str: string): string {
@@ -50,12 +51,21 @@ async function performService(
   service: ServiceContext, env: PerformEnvironment, print?: (msg: string) => void,
 ): Promise<void> {
   const {
-    actPres, actPast, actionServerlessCommand, tb,
+    actPres, actPast, actionServerlessCommand, tb, skipServiceIfNotDeployed,
   } = env;
 
   const log = createLog(env, service, print);
 
   log(chalk`${cap(actPres)} "{blue ${service.name}}" in region "{blue ${service.region}}"`);
+
+  if (skipServiceIfNotDeployed) {
+    const exists = await service.context.provider.isServiceDeployed(service);
+
+    if (!exists) {
+      log(chalk`{green Skipped "{blue ${service.name}}" (since it is not deployed)}`);
+      return;
+    }
+  }
 
   const startTime = hrtime();
 
@@ -230,12 +240,21 @@ async function performSequential(env: PerformEnvironment): Promise<void> {
   }
 }
 
-export function createMultiServiceCommandRun(
-  actionTitle: string,
-  actionPhrases: { presentContinuous: string; pastSimple: string },
-  actionServerlessCommand: string | undefined,
+interface MultiServiceCommandOptions {
+  actionTitle: string;
+  actionPhrases: { presentContinuous: string; pastSimple: string };
+  actionServerlessCommand: string | undefined;
+  actionDependenciesReversed?: boolean;
+  skipServiceIfNotDeployed?: boolean;
+}
+
+export function createMultiServiceCommandRun({
+  actionTitle,
+  actionPhrases,
+  actionServerlessCommand,
   actionDependenciesReversed = false,
-): (tb: TB) => Promise<void> {
+  skipServiceIfNotDeployed = false,
+}: MultiServiceCommandOptions): (tb: TB) => Promise<void> {
   return async function cmd(tb: TB): Promise<void> {
     // ENVIRONMENT SETUP
 
@@ -260,6 +279,7 @@ export function createMultiServiceCommandRun(
       actionServerlessCommand,
       actionTitle,
       actionDependenciesReversed,
+      skipServiceIfNotDeployed,
     };
 
     // EXECUTION

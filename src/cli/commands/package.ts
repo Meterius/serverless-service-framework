@@ -4,13 +4,14 @@ import { createMultiServiceCommandRun } from "../utility/multi-service-command";
 const packageCommand: GC = {
   name: "package",
   description: "Packages serverless services",
-  run: createMultiServiceCommandRun(
-    "Package",
-    {
-      pastSimple: "packaged", presentContinuous: "packaging",
+  run: createMultiServiceCommandRun({
+    actionTitle: "Package",
+    actionPhrases: {
+      pastSimple: "packaged",
+      presentContinuous: "packaging",
     },
-    "package",
-  ),
+    actionServerlessCommand: "package",
+  }),
 };
 
 export default packageCommand;
