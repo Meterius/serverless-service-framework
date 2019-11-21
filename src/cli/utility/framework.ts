@@ -74,6 +74,7 @@ export async function execServerlessCommand(
     ...serverlessOptions,
     "--config": templatePath,
     "--stage": service.context.stage,
+    "--verbose": true,
   };
 
   const serverlessOptionList = Object.entries(extendedServerlessOptions).map(
