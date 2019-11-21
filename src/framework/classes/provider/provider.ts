@@ -5,14 +5,40 @@ import { FrameworkContext } from "../framework-context";
 import { ServiceContext } from "../service-context";
 import { ExportValue, ProcessedImportValue } from "../types/common-schema.types";
 
-export type Stack<D = any> = {
-  service: ServiceContext;
-  stackData: D;
-};
+export abstract class ProviderStack<
+  StackData = any,
+> {
+  protected readonly data: StackData;
+
+  public readonly service: ServiceContext;
+
+  public constructor(service: ServiceContext, stackData: StackData) {
+    this.service = service;
+    this.data = stackData;
+  }
+
+  public abstract getStackExports(): Record<string, string | undefined>;
+
+  public getStackExport(
+    exportName: string,
+  ): string {
+    const exportValue = this.getStackExports()[exportName];
+
+    if (exportValue === undefined) {
+      throw new Error(`Export "${exportName}" of Service Stack "${this.service.name}" not found`);
+    } else {
+      return exportValue;
+    }
+  }
+}
 
 export abstract class ProviderImplementation<
   TemplateExportValue = any, StackData = any, ProviderBasedImportData = any, DirectImportData = any,
 > {
+  protected abstract readonly Stack: new (
+    service: ServiceContext, stackData: StackData,
+  ) => ProviderStack<StackData>;
+
   public abstract readonly name: ServerlessProviderName;
 
   private readonly context: FrameworkContext;
@@ -27,21 +53,21 @@ export abstract class ProviderImplementation<
 
   public async retrieveServiceStack(
     service: ServiceContext,
-  ): Promise<Stack<StackData> | undefined> {
+  ): Promise<ProviderStack<StackData> | undefined> {
     const stackData = await this.retrieveServiceStackData(service);
 
     if (stackData === undefined) {
       return undefined;
     } else {
-      return {
+      return new this.Stack(
         service, stackData,
-      };
+      );
     }
   }
 
   public async getServiceStack(
     service: ServiceContext,
-  ): Promise<Stack<StackData>> {
+  ): Promise<ProviderStack<StackData>> {
     const stack = await this.retrieveServiceStack(service);
 
     if (stack === undefined) {
@@ -53,22 +79,6 @@ export abstract class ProviderImplementation<
 
   public async isServiceDeployed(service: ServiceContext): Promise<boolean> {
     return (await this.retrieveServiceStack(service)) !== undefined;
-  }
-
-  public abstract getStackExports(
-    stack: Stack,
-  ): Record<string, string | undefined>;
-
-  public getStackExport(
-    stack: Stack, exportName: string,
-  ): string {
-    const exportValue = this.getStackExports(stack)[exportName];
-
-    if (exportValue === undefined) {
-      throw new Error(`Export "${exportName}" of Service Stack "${stack.service.name}" not found`);
-    } else {
-      return exportValue;
-    }
   }
 
   public abstract prepareTemplateProviderBasedImports(

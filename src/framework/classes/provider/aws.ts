@@ -1,5 +1,5 @@
 import * as Aws from "aws-sdk";
-import { ProviderImplementation, Stack } from "./provider";
+import { ProviderImplementation, ProviderStack } from "./provider";
 import { ServiceContext } from "../service-context";
 import { ExportValue, ProcessedImportValue } from "../types/common-schema.types";
 import {
@@ -16,8 +16,24 @@ type TemplateExportValue = { Value: string };
 
 export type StackData = Aws.CloudFormation.Stack;
 
+export class AwsStack extends ProviderStack<StackData> {
+  getStackExports(): Record<string, string | undefined> {
+    const exportMap: Record<string, string | undefined> = {};
+
+    (this.data.Outputs || []).forEach((output) => {
+      if (output.OutputKey !== undefined) {
+        exportMap[output.OutputKey] = output.OutputValue;
+      }
+    });
+
+    return exportMap;
+  }
+}
+
 export class AwsProvider extends ProviderImplementation<
-TemplateExportValue, StackData, undefined, Stack<StackData>> {
+TemplateExportValue, StackData, undefined, AwsStack> {
+  protected Stack = AwsStack;
+
   public readonly name = "aws";
 
   protected async retrieveServiceStackData(
@@ -44,18 +60,6 @@ TemplateExportValue, StackData, undefined, Stack<StackData>> {
     );
   }
 
-  getStackExports(stack: Stack<StackData>): Record<string, string | undefined> {
-    const exportMap: Record<string, string | undefined> = {};
-
-    (stack.stackData.Outputs || []).forEach((output) => {
-      if (output.OutputKey !== undefined) {
-        exportMap[output.OutputKey] = output.OutputValue;
-      }
-    });
-
-    return exportMap;
-  }
-
   async prepareTemplateProviderBasedImports(
     service: ServiceContext,
     importedService: ServiceContext,
@@ -66,7 +70,7 @@ TemplateExportValue, StackData, undefined, Stack<StackData>> {
   async prepareTemplateDirectImports(
     service: ServiceContext,
     importedService: ServiceContext,
-  ): Promise<Stack> {
+  ): Promise<AwsStack> {
     const stack = await this.retrieveServiceStack(importedService);
 
     if (stack === undefined) {
@@ -94,11 +98,9 @@ TemplateExportValue, StackData, undefined, Stack<StackData>> {
     service: ServiceContext,
     importedService: ServiceContext,
     importValue: ProcessedImportValue<"direct">,
-    importData: Stack<StackData>,
+    importData: AwsStack,
   ): unknown {
-    const output: string | undefined = ((importData.stackData.Outputs || []).find(
-      (item) => item.OutputKey === importValue.name,
-    ) || {}).OutputValue;
+    const output: string | undefined = importData.getStackExports()[importValue.name];
 
     if (output === undefined) {
       throw new Error(
