@@ -5,8 +5,13 @@ import { FrameworkContext } from "../framework-context";
 import { ServiceContext } from "../service-context";
 import { ExportValue, ProcessedImportValue } from "../types/common-schema.types";
 
+export type Stack<D = any> = {
+  service: ServiceContext;
+  stackData: D;
+};
+
 export abstract class ProviderImplementation<
-  TemplateExportValue = any, Stack = any, ProviderBasedImportData = any, DirectImportData = any,
+  TemplateExportValue = any, StackData = any, ProviderBasedImportData = any, DirectImportData = any,
 > {
   public abstract readonly name: ServerlessProviderName;
 
@@ -16,15 +21,55 @@ export abstract class ProviderImplementation<
     this.context = context;
   }
 
-  protected abstract retrieveServiceStack(service: ServiceContext): Promise<Stack | undefined>;
+  protected abstract retrieveServiceStackData(
+    service: ServiceContext,
+  ): Promise<StackData | undefined>;
+
+  public async retrieveServiceStack(
+    service: ServiceContext,
+  ): Promise<Stack<StackData> | undefined> {
+    const stackData = await this.retrieveServiceStackData(service);
+
+    if (stackData === undefined) {
+      return undefined;
+    } else {
+      return {
+        service, stackData,
+      };
+    }
+  }
+
+  public async getServiceStack(
+    service: ServiceContext,
+  ): Promise<Stack<StackData>> {
+    const stack = await this.retrieveServiceStack(service);
+
+    if (stack === undefined) {
+      throw new Error(`Service Stack "${service.name}" not found`);
+    } else {
+      return stack;
+    }
+  }
 
   public async isServiceDeployed(service: ServiceContext): Promise<boolean> {
     return (await this.retrieveServiceStack(service)) !== undefined;
   }
 
-  public abstract retrieveStackExports(
+  public abstract getStackExports(
     stack: Stack,
   ): Record<string, string | undefined>;
+
+  public getStackExport(
+    stack: Stack, exportName: string,
+  ): string {
+    const exportValue = this.getStackExports(stack)[exportName];
+
+    if (exportValue === undefined) {
+      throw new Error(`Export "${exportName}" of Service Stack "${stack.service.name}" not found`);
+    } else {
+      return exportValue;
+    }
+  }
 
   public abstract prepareTemplateProviderBasedImports(
     service: ServiceContext,

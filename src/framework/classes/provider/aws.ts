@@ -1,5 +1,5 @@
 import * as Aws from "aws-sdk";
-import { ProviderImplementation } from "./provider";
+import { ProviderImplementation, Stack } from "./provider";
 import { ServiceContext } from "../service-context";
 import { ExportValue, ProcessedImportValue } from "../types/common-schema.types";
 import {
@@ -14,13 +14,15 @@ const deletedStackStates = ["DELETE_IN_PROGRESS", "DELETE_COMPLETE"];
 
 type TemplateExportValue = { Value: string };
 
-export type Stack = Aws.CloudFormation.Stack & { Service: ServiceContext };
+export type StackData = Aws.CloudFormation.Stack;
 
 export class AwsProvider extends ProviderImplementation<
-TemplateExportValue, Stack, undefined, Stack> {
+TemplateExportValue, StackData, undefined, Stack<StackData>> {
   public readonly name = "aws";
 
-  async retrieveServiceStack(service: ServiceContext): Promise<Stack | undefined> {
+  protected async retrieveServiceStackData(
+    service: ServiceContext,
+  ): Promise<StackData | undefined> {
     const cf = AwsProvider.getCloudFormation(service);
 
     let response: Aws.CloudFormation.DescribeStacksOutput;
@@ -37,24 +39,15 @@ TemplateExportValue, Stack, undefined, Stack> {
       }
     }
 
-    const stack = (response.Stacks || []).find(
+    return (response.Stacks || []).find(
       (foundStack) => !deletedStackStates.includes(foundStack.StackStatus),
     );
-
-    if (stack !== undefined) {
-      return {
-        ...stack,
-        Service: service,
-      };
-    } else {
-      return stack;
-    }
   }
 
-  retrieveStackExports(stack: Stack): Record<string, string | undefined> {
+  getStackExports(stack: Stack<StackData>): Record<string, string | undefined> {
     const exportMap: Record<string, string | undefined> = {};
 
-    (stack.Outputs || []).forEach((output) => {
+    (stack.stackData.Outputs || []).forEach((output) => {
       if (output.OutputKey !== undefined) {
         exportMap[output.OutputKey] = output.OutputValue;
       }
@@ -101,9 +94,9 @@ TemplateExportValue, Stack, undefined, Stack> {
     service: ServiceContext,
     importedService: ServiceContext,
     importValue: ProcessedImportValue<"direct">,
-    importData: Stack,
+    importData: Stack<StackData>,
   ): unknown {
-    const output: string | undefined = ((importData.Outputs || []).find(
+    const output: string | undefined = ((importData.stackData.Outputs || []).find(
       (item) => item.OutputKey === importValue.name,
     ) || {}).OutputValue;
 
