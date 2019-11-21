@@ -86,26 +86,26 @@ TemplateExportValue, Stack, undefined, Stack> {
     return stack;
   }
 
-  async retrieveTemplateProviderBasedImportValue(
+  retrieveTemplateProviderBasedImportValue(
     service: ServiceContext,
     importedService: ServiceContext,
     importValue: ProcessedImportValue<"provider-based">,
     importData: undefined,
-  ): Promise<unknown> {
+  ): unknown {
     return {
       "Fn::ImportValue": `${importedService.stackName}-${importValue.name}`,
     };
   }
 
-  async retrieveTemplateDirectImportValue(
+  retrieveTemplateDirectImportValue(
     service: ServiceContext,
     importedService: ServiceContext,
     importValue: ProcessedImportValue<"direct">,
     importData: Stack,
-  ): Promise<unknown> {
-    const output = (importData.Outputs || []).find(
+  ): unknown {
+    const output: string | undefined = ((importData.Outputs || []).find(
       (item) => item.OutputKey === importValue.name,
-    );
+    ) || {}).OutputValue;
 
     if (output === undefined) {
       throw new Error(
@@ -114,7 +114,7 @@ TemplateExportValue, Stack, undefined, Stack> {
       );
     }
 
-    return output.OutputValue;
+    return output;
   }
 
   retrieveTemplateExportValue(
