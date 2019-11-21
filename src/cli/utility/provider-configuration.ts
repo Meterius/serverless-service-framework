@@ -1,3 +1,5 @@
+import aws from "aws-sdk";
+
 import { TB } from "../cli-types";
 import { CliError } from "./exceptions";
 import { FrameworkContext } from "../../framework/classes/framework-context";
@@ -13,6 +15,15 @@ function setupAwsProviderConfig(profile?: string, region?: string): void {
   if (region) {
     process.env.AWS_REGION = region;
   }
+
+  const credentials = new aws.SharedIniFileCredentials({
+    profile: process.env.AWS_PROFILE,
+  });
+
+  aws.config.update({
+    credentials,
+    region: process.env.AWS_REGION,
+  });
 }
 
 export async function setupAwsProvider(tb: TB): Promise<void> {
