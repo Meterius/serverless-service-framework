@@ -5,7 +5,7 @@ export const schema: ServiceSchemaProperties = {
   shortName: "0b",
 
   importMap: {
-    "0a": [],
+    "0a": ["0a"],
   },
 
   exportMap: {

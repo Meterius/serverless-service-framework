@@ -8,6 +8,7 @@ export const schema: ServiceSchemaProperties = {
   },
 
   exportMap: {
+    "0a": "output-0a",
   },
 
   template: {
