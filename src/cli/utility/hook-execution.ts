@@ -5,6 +5,11 @@ import { requireModule } from "../../common/require";
 import { isObject } from "../../common/type-guards";
 import { findMatchingFile } from "../../common/filesystem";
 import { serviceHookExtensions, serviceHookNames } from "../../common/constants";
+import { GC, TB } from "../cli-types";
+import { setupFrameworkContextFunction } from "./command-setup";
+import { requireVariadicParameters } from "./options-handling";
+import { filterDuplicates } from "../../common/utility";
+import { getService } from "./framework";
 
 function loadHookFile(
   absoluteHookFilePath: string, hookName: string,
@@ -62,4 +67,29 @@ export function runPostDeploy(
   return runHook(
     service, "postDeploy", log,
   );
+}
+
+type HookFunc = (service: ServiceContext, log: (msg: string) => void) => Promise<void>;
+
+export function createHookCommand(hookName: string, hookFunc: HookFunc): GC {
+  return {
+    name: hookName,
+    description: `Executes "${hookName}" hook`,
+    run: async (tb: TB) => {
+      const { context } = await setupFrameworkContextFunction(tb);
+
+      const [...serviceIds] = requireVariadicParameters(tb, "service-name");
+
+      const services = serviceIds.length === 0 ? context.services
+        : filterDuplicates(serviceIds.map((id) => getService(context, id)));
+
+      for (let i = 0; i < services.length; i += 1) {
+        const service = services[i];
+
+        await hookFunc(service, (msg: string) => {
+          tb.log(msg, `${hookName} ${service.name}`);
+        });
+      }
+    },
+  };
 }
