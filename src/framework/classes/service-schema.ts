@@ -10,9 +10,6 @@ import { FrameworkSchema } from "./framework-schema";
 import { merge } from "../../common/utility";
 import { CommonSchema } from "./common-schema";
 import { ServiceSchemaProperties } from "./types/service-schema.types";
-import {
-  ServiceSchemaProperties as RuntypesServiceSchemaProperties,
-} from "./types/service-schema.runtypes";
 
 /* eslint-disable no-dupe-class-members */
 
@@ -145,6 +142,6 @@ export class ServiceSchema extends CommonSchema {
   }
 
   public static ensureServiceSchemaProperties(value: unknown): ServiceSchemaProperties {
-    return RuntypesServiceSchemaProperties.check(value);
+    return value as ServiceSchemaProperties;
   }
 }

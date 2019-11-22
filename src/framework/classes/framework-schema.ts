@@ -1,9 +1,6 @@
 import { InlineFrameworkTemplate, ServerlessProviderName } from "../templates.types";
 import { CommonSchema } from "./common-schema";
 import { FrameworkSchemaProperties } from "./types/framework-schema.types";
-import {
-  FrameworkSchemaProperties as RuntypesFrameworkSchemaProperties,
-} from "./types/framework-schema.runtypes";
 
 /* eslint-disable no-dupe-class-members */
 
@@ -34,6 +31,6 @@ export class FrameworkSchema extends CommonSchema {
   }
 
   public static ensureFrameworkSchemaProperties(value: unknown): FrameworkSchemaProperties {
-    return RuntypesFrameworkSchemaProperties.check(value);
+    return value as FrameworkSchemaProperties;
   }
 }

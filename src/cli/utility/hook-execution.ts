@@ -75,7 +75,7 @@ export function createHookCommand(hookName: string, hookFunc: HookFunc): GC {
   return {
     name: hookName,
     description: `Executes "${hookName}" hook`,
-    run: async (tb: TB) => {
+    run: async (tb: TB): Promise<void> => {
       const { context } = await setupFrameworkContextFunction(tb);
 
       const [...serviceIds] = requireVariadicParameters(tb, "service-name");
