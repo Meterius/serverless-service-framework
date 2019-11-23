@@ -25,6 +25,7 @@
     "no-underscore-dangle": "off",
     "no-await-in-loop": "off",
     "default-case": "off",
-    "no-else-return": "off"
+    "no-else-return": "off",
+    "linebreak-style": ["error", "windows"]
   }
 }
