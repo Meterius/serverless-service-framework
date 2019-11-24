@@ -1,7 +1,5 @@
-import { pathExists } from "fs-extra";
 import { titleCase } from "change-case";
 import { ServiceContext } from "../../framework/classes/service-context";
-import { requireModule } from "../../common/require";
 import { isObject } from "../../common/type-guards";
 import { findMatchingFile } from "../../common/filesystem";
 import { serviceHookExtensions, serviceHookNames } from "../../common/constants";
@@ -10,11 +8,17 @@ import { setupFrameworkContextFunction } from "./command-setup";
 import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
 import { getService } from "./framework";
+import { loadTypescriptModule } from "../../common/module-loading";
+import { FrameworkContext } from "../../framework/classes";
 
-function loadHookFile(
-  absoluteHookFilePath: string, hookName: string,
-): ((service: ServiceContext) => Promise<void>) | undefined {
-  const file = requireModule(absoluteHookFilePath);
+async function loadHookFile(
+  absoluteHookFilePath: string,
+  hookName: string,
+  context: FrameworkContext,
+): Promise<((service: ServiceContext) => Promise<void>) | undefined> {
+  const file = await loadTypescriptModule(
+    absoluteHookFilePath, context,
+  );
   const fileExport = isObject(file) && file[hookName];
 
   if (fileExport instanceof Function || fileExport === undefined) {
@@ -40,8 +44,7 @@ async function runHook(
 ): Promise<void> {
   const hookPath = await findMatchingFile(service.dirPath, serviceHookNames, serviceHookExtensions);
   const hookFunc = hookPath !== undefined
-    && (await pathExists(hookPath))
-    && loadHookFile(hookPath, hookName);
+    && await loadHookFile(hookPath, hookName, service.context);
 
   if (hookFunc === undefined || hookFunc === false || hookPath === undefined) {
     log(`${titleCase(hookName)} Hook not found, skipping execution...`);

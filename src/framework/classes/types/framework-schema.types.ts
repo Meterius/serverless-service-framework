@@ -17,6 +17,7 @@ interface BaseProperties {
   shortName: string;
 
   serviceRootDir: string;
+  tsconfigPath?: string;
 }
 
 export type FrameworkSchemaProperties =

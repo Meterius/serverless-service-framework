@@ -8,7 +8,7 @@ import {
   serviceSchemaNames,
 } from "../../common/constants";
 import { ServiceSchemaFile } from "./service-schema-file";
-import { loadSchemaPropertiesFile } from "../schema-file-handling";
+import { loadSchemaPropertiesFiles } from "../schema-file-handling";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
@@ -61,20 +61,19 @@ export class FrameworkSchemaFile {
   }
 
   public async loadServiceSchemaFiles(): Promise<ServiceSchemaFile[]> {
-    const serviceSchemaFiles = await this.getServiceSchemaFilePaths();
+    const serviceSchemaFilePaths = await this.getServiceSchemaFilePaths();
 
-    return Promise.all(
-      serviceSchemaFiles.map(
-        (filePath) => ServiceSchemaFile.loadServiceSchemaFile(filePath, this),
-      ),
+    return ServiceSchemaFile.loadServiceSchemaFiles(
+      serviceSchemaFilePaths, this,
     );
   }
 
   public static async loadFrameworkSchemaFile(filePath: string): Promise<FrameworkSchemaFile> {
-    const schema = await loadSchemaPropertiesFile(
-      filePath, FrameworkSchema.ensureFrameworkSchemaProperties,
+    const schemas = await loadSchemaPropertiesFiles(
+      [filePath], FrameworkSchema.ensureFrameworkSchemaProperties,
     );
-    return new FrameworkSchemaFile(new FrameworkSchema(schema), filePath);
+
+    return new FrameworkSchemaFile(new FrameworkSchema(schemas[0]), filePath);
   }
 
   public static getFrameworkSchemaFilePath(dirPath: string): Promise<string | undefined> {

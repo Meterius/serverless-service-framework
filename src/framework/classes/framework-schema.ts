@@ -11,6 +11,8 @@ export class FrameworkSchema extends CommonSchema {
 
   public readonly serviceRootDir: string;
 
+  public readonly tsconfigPath: string | undefined;
+
   public readonly template: InlineFrameworkTemplate;
 
   constructor(schema: FrameworkSchemaProperties) {
@@ -19,6 +21,7 @@ export class FrameworkSchema extends CommonSchema {
     this.name = schema.name;
     this.shortName = schema.shortName;
     this.serviceRootDir = schema.serviceRootDir;
+    this.tsconfigPath = schema.tsconfigPath;
     this.template = schema.template;
   }
 

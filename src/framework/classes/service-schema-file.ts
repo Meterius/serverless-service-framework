@@ -1,6 +1,6 @@
 import path from "path";
 import { ServiceSchema } from "./service-schema";
-import { loadSchemaPropertiesFile } from "../schema-file-handling";
+import { loadSchemaPropertiesFiles } from "../schema-file-handling";
 import { serviceBuildDir } from "../../common/constants";
 import { FrameworkSchemaFile } from "./framework-schema-file";
 import { ServiceSchemaProperties } from "./types/service-schema.types";
@@ -47,13 +47,19 @@ export class ServiceSchemaFile {
     return path.join(this.getServiceBuildDir(), relPath);
   }
 
-  public static async loadServiceSchemaFile(
-    filePath: string, frameworkSchemaFile: FrameworkSchemaFile,
-  ): Promise<ServiceSchemaFile> {
-    const schema: ServiceSchemaProperties = await loadSchemaPropertiesFile(
-      filePath, ServiceSchema.ensureServiceSchemaProperties,
+  public static async loadServiceSchemaFiles(
+    filePaths: string[], frameworkSchemaFile: FrameworkSchemaFile,
+  ): Promise<ServiceSchemaFile[]> {
+    const schemas: ServiceSchemaProperties[] = await loadSchemaPropertiesFiles(
+      filePaths,
+      ServiceSchema.ensureServiceSchemaProperties,
+      frameworkSchemaFile,
     );
 
-    return new ServiceSchemaFile(new ServiceSchema(frameworkSchemaFile.schema, schema), filePath);
+    return schemas.map(
+      (schema, index) => new ServiceSchemaFile(
+        new ServiceSchema(frameworkSchemaFile.schema, schema), filePaths[index],
+      ),
+    );
   }
 }
