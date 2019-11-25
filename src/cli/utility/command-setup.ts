@@ -1,5 +1,7 @@
 import { TB } from "../cli-types";
-import { getFrameworkSchemaOption, requireStageOption } from "./common-options";
+import {
+  getFrameworkOptionsOption, getFrameworkSchemaOption, requireStageOption,
+} from "./common-options";
 import { setupProvider } from "./provider-configuration";
 import { FrameworkContext } from "../../framework/classes/framework-context";
 import { loadFrameworkContext } from "./framework";
@@ -18,8 +20,9 @@ export async function setupFrameworkContextFunction(
 ): Promise<FrameworkContextSetup> {
   const stage = requireStageOption(tb);
   const filePath = getFrameworkSchemaOption(tb);
+  const optsFilePath = getFrameworkOptionsOption(tb);
 
-  const context = await loadFrameworkContext(filePath, stage);
+  const context = await loadFrameworkContext(filePath, optsFilePath, stage);
   await setupProvider(tb, context);
 
   return {

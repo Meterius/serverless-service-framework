@@ -2,13 +2,15 @@ import path from "path";
 import { FrameworkSchema } from "./framework-schema";
 import { findMatchingFile, getSubDirectories } from "../../common/filesystem";
 import {
+  frameworkOptionsExtensions,
+  frameworkOptionsNames,
   frameworkSchemaExtensions,
   frameworkSchemaNames,
   serviceSchemaExtensions,
   serviceSchemaNames,
 } from "../../common/constants";
 import { ServiceSchemaFile } from "./service-schema-file";
-import { loadSchemaPropertiesFiles } from "../schema-file-handling";
+import { loadFrameworkOptionsFile, loadSchemaPropertiesFiles } from "../file-handling";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
@@ -68,15 +70,24 @@ export class FrameworkSchemaFile {
     );
   }
 
-  public static async loadFrameworkSchemaFile(filePath: string): Promise<FrameworkSchemaFile> {
-    const schemas = await loadSchemaPropertiesFiles(
-      [filePath], FrameworkSchema.ensureFrameworkSchemaProperties,
-    );
+  public static async loadFrameworkSchemaFile(
+    filePath: string,
+    optionsFilePath: string,
+  ): Promise<FrameworkSchemaFile> {
+    const options = await loadFrameworkOptionsFile(optionsFilePath);
 
-    return new FrameworkSchemaFile(new FrameworkSchema(schemas[0]), filePath);
+    const schema = (await loadSchemaPropertiesFiles(
+      [filePath], FrameworkSchema.ensureFrameworkSchemaProperties, options,
+    ))[0];
+
+    return new FrameworkSchemaFile(new FrameworkSchema(schema, options), filePath);
   }
 
   public static getFrameworkSchemaFilePath(dirPath: string): Promise<string | undefined> {
     return findMatchingFile(dirPath, frameworkSchemaNames, frameworkSchemaExtensions);
+  }
+
+  public static getFrameworkOptionsFilePath(dirPath: string): Promise<string | undefined> {
+    return findMatchingFile(dirPath, frameworkOptionsNames, frameworkOptionsExtensions);
   }
 }

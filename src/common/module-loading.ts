@@ -1,23 +1,22 @@
 import { register } from "ts-node";
-import { FrameworkSchemaFile } from "../framework/classes";
+import { FrameworkOptions } from "../framework/classes/types/framework-options.types";
 
 export async function loadTypescriptModules(
   filePaths: string[],
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  frameworkSchemaFile?: FrameworkSchemaFile,
+  frameworkOptions: FrameworkOptions,
 ): Promise<unknown[]> {
   register({
-    transpileOnly: true,
-    skipProject: true,
+    transpileOnly: frameworkOptions.transpileOnly,
+    project: frameworkOptions.tsconfigPath,
   });
 
   // eslint-disable-next-line global-require,import/no-dynamic-require
   return filePaths.map((filePath) => require(filePath));
 }
 
-export async function loadTypescriptModule(
+export function loadJavascriptModule(
   filePath: string,
-  frameworkSchemaFile?: FrameworkSchemaFile,
-): Promise<unknown> {
-  return (await loadTypescriptModules([filePath], frameworkSchemaFile))[0];
+): unknown {
+  // eslint-disable-next-line global-require,import/no-dynamic-require
+  return require(filePath);
 }

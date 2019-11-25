@@ -1,6 +1,7 @@
 import { InlineFrameworkTemplate, ServerlessProviderName } from "../templates.types";
 import { CommonSchema } from "./common-schema";
 import { FrameworkSchemaProperties } from "./types/framework-schema.types";
+import { FrameworkOptions } from "./types/framework-options.types";
 
 /* eslint-disable no-dupe-class-members */
 
@@ -13,13 +14,19 @@ export class FrameworkSchema extends CommonSchema {
 
   public readonly template: InlineFrameworkTemplate;
 
-  constructor(schema: FrameworkSchemaProperties) {
+  public readonly options: FrameworkOptions;
+
+  constructor(
+    schema: FrameworkSchemaProperties,
+    options: FrameworkOptions,
+  ) {
     super(schema);
 
     this.name = schema.name;
     this.shortName = schema.shortName;
     this.serviceRootDir = schema.serviceRootDir;
     this.template = schema.template;
+    this.options = options;
   }
 
   get provider(): ServerlessProviderName {

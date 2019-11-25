@@ -10,6 +10,7 @@ import { runPostDeploy, runPrePackage } from "./hook-execution";
 
 export async function loadFrameworkContext(
   frameworkSchemaFilePath: string | undefined,
+  frameworkOptionsFilePath: string | undefined,
   stage: string,
 ): Promise<FrameworkContext> {
   const frSchemaPath = frameworkSchemaFilePath
@@ -25,7 +26,20 @@ export async function loadFrameworkContext(
     );
   }
 
-  const frFile = await FrameworkSchemaFile.loadFrameworkSchemaFile(frSchemaPath);
+  const frOptionsPath = frameworkOptionsFilePath
+    || (await FrameworkSchemaFile.getFrameworkOptionsFilePath(process.cwd()));
+
+  if (frOptionsPath === undefined) {
+    throw new CliError("No framework options file exists in current directory");
+  } else if (
+    frameworkOptionsFilePath !== undefined && !(await pathExists(frOptionsPath))
+  ) {
+    throw new CliError(
+      `Specified framework options file "${frOptionsPath}" does not exist`,
+    );
+  }
+
+  const frFile = await FrameworkSchemaFile.loadFrameworkSchemaFile(frSchemaPath, frOptionsPath);
 
   return FrameworkContext.loadFrameworkContext(frFile, stage);
 }

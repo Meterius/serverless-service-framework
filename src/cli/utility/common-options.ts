@@ -9,6 +9,10 @@ export function getFrameworkSchemaOption(tb: TB): string | undefined {
   return getOption(tb, "schema");
 }
 
+export function getFrameworkOptionsOption(tb: TB): string | undefined {
+  return getOption(tb, "options");
+}
+
 export function getProfileOption(tb: TB): string | undefined {
   return getOption(tb, "profile", "p");
 }

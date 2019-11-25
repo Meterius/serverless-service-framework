@@ -6,6 +6,10 @@ export const serviceSchemaExtensions = ["ts"];
 export const frameworkSchemaNames = ["framework"];
 export const frameworkSchemaExtensions = ["ts"];
 
+// framework options names and extensions searched for in framework directory
+export const frameworkOptionsNames = ["framework-options"];
+export const frameworkOptionsExtensions = ["js"];
+
 // where locally build service files are put in service directories
 export const serviceBuildDir = ".serverless-service";
 

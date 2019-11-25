@@ -1,6 +1,6 @@
 import path from "path";
 import { ServiceSchema } from "./service-schema";
-import { loadSchemaPropertiesFiles } from "../schema-file-handling";
+import { loadSchemaPropertiesFiles } from "../file-handling";
 import { serviceBuildDir } from "../../common/constants";
 import { FrameworkSchemaFile } from "./framework-schema-file";
 import { ServiceSchemaProperties } from "./types/service-schema.types";
@@ -53,7 +53,7 @@ export class ServiceSchemaFile {
     const schemas: ServiceSchemaProperties[] = await loadSchemaPropertiesFiles(
       filePaths,
       ServiceSchema.ensureServiceSchemaProperties,
-      frameworkSchemaFile,
+      frameworkSchemaFile.schema.options,
     );
 
     return schemas.map(

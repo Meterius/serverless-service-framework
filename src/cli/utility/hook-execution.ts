@@ -8,7 +8,7 @@ import { setupFrameworkContextFunction } from "./command-setup";
 import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
 import { getService } from "./framework";
-import { loadTypescriptModule } from "../../common/module-loading";
+import { loadTypescriptModules } from "../../common/module-loading";
 import { FrameworkContext } from "../../framework/classes";
 
 async function loadHookFile(
@@ -16,9 +16,10 @@ async function loadHookFile(
   hookName: string,
   context: FrameworkContext,
 ): Promise<((service: ServiceContext) => Promise<void>) | undefined> {
-  const file = await loadTypescriptModule(
-    absoluteHookFilePath, context,
-  );
+  const file = (await loadTypescriptModules(
+    [absoluteHookFilePath], context.schema.options,
+  ))[0];
+
   const fileExport = isObject(file) && file[hookName];
 
   if (fileExport instanceof Function || fileExport === undefined) {
