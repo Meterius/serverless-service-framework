@@ -1,6 +1,4 @@
-import { create } from "ts-node";
-import { readFile } from "fs-extra";
-import requireFromString from "require-from-string";
+import { register } from "ts-node";
 import { FrameworkSchemaFile } from "../framework/classes";
 
 export async function loadTypescriptModules(
@@ -8,26 +6,13 @@ export async function loadTypescriptModules(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   frameworkSchemaFile?: FrameworkSchemaFile,
 ): Promise<unknown[]> {
-  const tsRegister = create({
-    skipProject: true,
+  register({
     transpileOnly: true,
+    skipProject: true,
   });
 
-  type FilePath = string;
-  type FileTsCode = string;
-  type FileJsCode = string;
-
-  const files: [FilePath, FileTsCode][] = (await Promise.all(
-    filePaths.map((filePath) => readFile(filePath)),
-  )).map((fileContent, index) => [filePaths[index], fileContent.toString()]);
-
-  const fileModules: [FilePath, FileJsCode][] = files.map(
-    ([filePath, fileTsCode]) => [filePath, tsRegister.compile(fileTsCode, filePath)],
-  );
-
-  return fileModules.map(
-    ([filePath, fileJsCode]) => requireFromString(fileJsCode, filePath, {}),
-  );
+  // eslint-disable-next-line global-require,import/no-dynamic-require
+  return filePaths.map((filePath) => require(filePath));
 }
 
 export async function loadTypescriptModule(
