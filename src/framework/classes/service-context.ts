@@ -1,6 +1,5 @@
-import mkdirp from "mkdirp";
 import path from "path";
-import fs from "fs";
+import { mkdirp, writeFile } from "fs-extra";
 import { merge } from "../../common/utility";
 // eslint-disable-next-line import/no-cycle
 import { FrameworkContext } from "./framework-context";
@@ -97,25 +96,8 @@ export class ServiceContext extends ServiceSchemaFile {
   ): Promise<string> {
     const filePath = this.resolveServiceBuildPath(relPath);
 
-    await new Promise((resolve, reject) => {
-      mkdirp(path.dirname(filePath), (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-
-    await new Promise((resolve, reject) => {
-      fs.writeFile(filePath, fileData, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
+    await mkdirp(path.dirname(filePath));
+    await writeFile(filePath, fileData);
 
     return filePath;
   }
