@@ -1,3 +1,3 @@
 module.exports = {
-
+	transpileOnly: true,
 };
