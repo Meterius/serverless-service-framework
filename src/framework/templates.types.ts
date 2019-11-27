@@ -13,7 +13,7 @@ export type InlineFrameworkTemplate = {
   provider: {
     // framework requires a provider and region used for all services by default
     // note that provider name cannot be overwritten by service templates
-    name: "aws"; // currently only aws is supported
+    name: ServerlessProviderName; // currently only aws is supported
     region: string;
 
     stage?: undefined; // cannot set stage in template
