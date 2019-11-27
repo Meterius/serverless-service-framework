@@ -32,4 +32,5 @@ async function main(): Promise<void> {
   await hookFunc(service);
 }
 
+// eslint-disable-next-line no-console
 main().then(() => {}, (err) => { console.error(err); process.exit(1); });

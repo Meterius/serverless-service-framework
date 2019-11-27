@@ -4,7 +4,7 @@ import { loadSchemaPropertiesFiles } from "../file-handling";
 import { serviceBuildDir } from "../../common/constants";
 import { FrameworkSchemaFile } from "./framework-schema-file";
 import { ServiceSchemaProperties } from "./types/service-schema.types";
-import {FrameworkSchema} from "./framework-schema";
+import { FrameworkSchema } from "./framework-schema";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
