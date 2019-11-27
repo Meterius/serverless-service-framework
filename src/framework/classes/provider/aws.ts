@@ -12,7 +12,7 @@ import { isObject } from "../../../common/type-guards";
 
 const deletedStackStates = ["DELETE_IN_PROGRESS", "DELETE_COMPLETE"];
 
-type TemplateExportValue = { Value: string };
+type TemplateExportValue = { Value: unknown };
 
 export type StackData = Aws.CloudFormation.Stack;
 
