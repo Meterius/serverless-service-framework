@@ -173,7 +173,7 @@ export class ServiceContext extends ServiceSchemaFile {
   private async processServiceServerlessTemplateImports(
     template: ServerlessTemplatePreImports,
   ): Promise<ServerlessTemplatePostImports> {
-    const { provider } = this.context;
+    const { provider, schema: { options } } = this.context;
 
     const { importMap } = this.schema;
     const importedServices = Object.keys(importMap);
@@ -197,15 +197,23 @@ export class ServiceContext extends ServiceSchemaFile {
       );
 
       if (directImportedValues.length > 0) {
-        const directImportData = await provider.prepareTemplateDirectImports(
-          this, importedService,
-        );
+        const stubValue = options.stubDirectImports;
 
-        directImportedValues.forEach((importValue) => {
-          importValueMap[importValue.name] = provider.retrieveTemplateDirectImportValue(
-            this, importedService, importValue, directImportData,
+        if (stubValue === undefined) {
+          const directImportData = await provider.prepareTemplateDirectImports(
+            this, importedService,
           );
-        });
+
+          directImportedValues.forEach((importValue) => {
+            importValueMap[importValue.name] = provider.retrieveTemplateDirectImportValue(
+              this, importedService, importValue, directImportData,
+            );
+          });
+        } else {
+          directImportedValues.forEach((importValue) => {
+            importValueMap[importValue.name] = stubValue;
+          });
+        }
       }
 
       const providerBasedImportedValues = ServiceSchema.filterImportValuesByType(

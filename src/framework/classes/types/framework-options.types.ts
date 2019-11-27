@@ -3,6 +3,7 @@ import path from "path";
 export interface NativeFrameworkOptions {
   tsconfigPath?: string; // defaults to tsconfig.json
   transpileOnly?: boolean; // defaults to false
+  stubDirectImports?: unknown; // defaults to undefined
 
   usernameStageMap?: Record<string, string>; // defaults to {}
   usernameProfileMap?: Record<string, string>; // defaults to {}
@@ -19,5 +20,6 @@ export function getFrameworkOptions(
     transpileOnly: nativeOptions.transpileOnly || false,
     usernameStageMap: nativeOptions.usernameStageMap || {},
     usernameProfileMap: nativeOptions.usernameProfileMap || {},
+    stubDirectImports: nativeOptions.stubDirectImports,
   };
 }
