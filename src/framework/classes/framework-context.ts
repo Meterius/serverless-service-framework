@@ -25,12 +25,16 @@ export class FrameworkContext extends FrameworkSchemaFile {
 
   public readonly actionLogic: FrameworkContextActionLogic;
 
+  private readonly serviceSchemaFiles: ServiceSchemaFile[];
+
   constructor(
     frameworkSchemaFile: FrameworkSchemaFile,
     serviceSchemaFiles: ServiceSchemaFile[],
     stage: string,
   ) {
     super(frameworkSchemaFile);
+
+    this.serviceSchemaFiles = serviceSchemaFiles;
 
     this.stage = stage;
 
@@ -200,6 +204,33 @@ export class FrameworkContext extends FrameworkSchemaFile {
     stage: string,
   ): Promise<FrameworkContext> {
     const serviceSchemaFiles = await frameworkSchemaFile.loadServiceSchemaFiles();
+
+    return new FrameworkContext(frameworkSchemaFile, serviceSchemaFiles, stage);
+  }
+
+  public static serialize(frameworkContext: FrameworkContext): string {
+    return JSON.stringify({
+      encodedFrameworkSchemaFile: FrameworkSchemaFile.serialize(frameworkContext),
+      encodedServiceSchemaFiles: frameworkContext.serviceSchemaFiles.map(
+        (schemaFile) => ServiceSchemaFile.serializePartial(schemaFile),
+      ),
+      stage: frameworkContext.stage,
+    });
+  }
+
+  public static deserialize(encodedFrameworkContext: string): FrameworkContext {
+    const {
+      stage,
+      encodedServiceSchemaFiles,
+      encodedFrameworkSchemaFile,
+    } = JSON.parse(encodedFrameworkContext);
+
+    const frameworkSchemaFile = FrameworkSchemaFile.deserialize(encodedFrameworkSchemaFile);
+    const serviceSchemaFiles = encodedServiceSchemaFiles.map(
+      (encodedSchemaFile: string) => ServiceSchemaFile.deserializePartial(
+        encodedSchemaFile, frameworkSchemaFile.schema,
+      ),
+    );
 
     return new FrameworkContext(frameworkSchemaFile, serviceSchemaFiles, stage);
   }

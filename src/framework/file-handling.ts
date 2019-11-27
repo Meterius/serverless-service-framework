@@ -18,10 +18,12 @@ export async function loadSchemaPropertiesFiles<T>(
 
 export async function loadFrameworkOptionsFile(
   filePath: string,
+  frameworkDirPath: string,
 ): Promise<FrameworkOptions> {
   return getFrameworkOptions(
     isNativeFrameworkOptions(
       loadJavascriptModule(filePath),
     ),
+    frameworkDirPath,
   );
 }

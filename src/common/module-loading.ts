@@ -1,9 +1,21 @@
 import { Register, register } from "ts-node";
 import { FrameworkOptions } from "../framework/classes/types/framework-options.types";
+import { ServiceContext } from "../framework/classes";
 
 let tsNodeSetup: { register: Register; frameworkOptions: FrameworkOptions };
 
-function setupTsNode(
+export function setupServiceTsNodeViaEnv(
+  service: ServiceContext,
+): Record<string, string> {
+  const frameworkOptions = service.context.schema.options;
+
+  return {
+    TS_NODE_TRANSPILE_ONLY: frameworkOptions.transpileOnly ? "true" : "false",
+    TS_NODE_PROJECT: frameworkOptions.tsconfigPath,
+  };
+}
+
+export function setupTsNode(
   frameworkOptions: FrameworkOptions,
 ): void {
   if (tsNodeSetup === undefined) {

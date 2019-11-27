@@ -3,71 +3,87 @@ import { ServiceContext } from "../../framework/classes/service-context";
 import { isObject } from "../../common/type-guards";
 import { findMatchingFile } from "../../common/filesystem";
 import { serviceHookExtensions, serviceHookNames } from "../../common/constants";
-import { loadTypescriptModules } from "../../common/module-loading";
+import { loadTypescriptModules, setupServiceTsNodeViaEnv } from "../../common/module-loading";
 import { FrameworkContext } from "../../framework/classes";
-import { ProviderContext } from "./provider-configuration";
+import { getProviderEnv, ProviderContext } from "./provider-configuration";
+import { bufferedExec } from "./buffered-exec";
 
-async function loadHookFile(
+export interface HookEnv {
+  SSF_HOOK_FRAMEWORK_CONTEXT: string;
+  SSF_HOOK_SERVICE_ID: string;
+  SSF_HOOK_NAME: string;
+  SSF_HOOK_PATH: string;
+}
+
+async function existsHook(
   absoluteHookFilePath: string,
   hookName: string,
   context: FrameworkContext,
-): Promise<((service: ServiceContext) => Promise<void>) | undefined> {
+): Promise<boolean> {
   const file = (await loadTypescriptModules(
     [absoluteHookFilePath], context.schema.options,
   ))[0];
 
-  const fileExport = isObject(file) && file[hookName];
+  return isObject(file) && file[hookName] !== undefined;
+}
 
-  if (fileExport instanceof Function || fileExport === undefined) {
-    // @ts-ignore
-    return fileExport;
-  } else {
-    throw new Error(
-      `In hook module "${absoluteHookFilePath}" the hook "${hookName}" is not a function`,
-    );
-  }
+export enum HookName {
+  Setup = "setup",
+  PostDeploy = "postDeploy",
+}
+
+export interface RunHookParams {
+  hookName: HookName;
+  service: ServiceContext;
+  providerContext: ProviderContext;
+
+  log: (data: string, raw: boolean) => void;
+  async: boolean;
 }
 
 /**
  * Runs a service hook.
- * @param service - the service the hook is run on
- * @param hookName - the name of the hook
- * @param log - optionally prints out whether hook is being executed or not
  */
-async function runHook(
-  service: ServiceContext,
-  providerContext: ProviderContext,
-  hookName: string,
-  log: (msg: string) => void = (): void => {},
-): Promise<void> {
+export async function runHook(params: RunHookParams): Promise<void> {
+  const {
+    service, providerContext, hookName, log, async,
+  } = params;
+
   const hookPath = await findMatchingFile(service.dirPath, serviceHookNames, serviceHookExtensions);
-  const hookFunc = hookPath !== undefined
-    && await loadHookFile(hookPath, hookName, service.context);
 
-  if (hookFunc === undefined || hookFunc === false || hookPath === undefined) {
-    log(`${titleCase(hookName)} Hook not found, skipping execution...`);
+  if (hookPath === undefined || !(await existsHook(hookPath, hookName, service.context))) {
+    log(`${titleCase(hookName)} Hook not found, skipping execution...`, false);
   } else {
-    log(`Executing ${titleCase(hookName)} Hook...`);
-    await hookFunc(service);
+    const command = "node -e "
+    + "\"require('serverless-service-framework/dist/cli/utility/hook-execution-bootstrap');\"";
+
+    const hookEnv: HookEnv = {
+      SSF_HOOK_FRAMEWORK_CONTEXT: FrameworkContext.serialize(service.context),
+      SSF_HOOK_NAME: hookName,
+      SSF_HOOK_SERVICE_ID: service.schema.identifier,
+      SSF_HOOK_PATH: hookPath,
+    };
+
+    log(`Executing ${titleCase(hookName)} Hook...`, false);
+
+    try {
+      await bufferedExec({
+        command,
+        cwd: service.dirPath,
+        env: {
+          ...process.env,
+          ...getProviderEnv(providerContext, service),
+          ...setupServiceTsNodeViaEnv(service),
+          TS_NODE_TRANSPILE_ONLY: "true", // since exists hook already type checks
+          ...hookEnv,
+        },
+        async,
+        log: (data: string) => {
+          log(data, true);
+        },
+      });
+    } catch (err) {
+      throw new Error(`Executing Hook "${hookName}" on Service "${service.name}" failed`);
+    }
   }
-}
-
-export function runPrePackage(
-  service: ServiceContext,
-  providerContext: ProviderContext,
-  log?: (msg: string) => void,
-): Promise<void> {
-  return runHook(
-    service, providerContext, "prePackage", log,
-  );
-}
-
-export function runPostDeploy(
-  service: ServiceContext,
-  providerContext: ProviderContext,
-  log?: (msg: string) => void,
-): Promise<void> {
-  return runHook(
-    service, providerContext, "postDeploy", log,
-  );
 }

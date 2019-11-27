@@ -1,3 +1,5 @@
+import path from "path";
+
 export interface NativeFrameworkOptions {
   tsconfigPath?: string; // defaults to tsconfig.json
   transpileOnly?: boolean; // defaults to false
@@ -10,9 +12,10 @@ export type FrameworkOptions = Required<NativeFrameworkOptions>;
 
 export function getFrameworkOptions(
   nativeOptions: NativeFrameworkOptions,
+  frameworkDirPath: string,
 ): FrameworkOptions {
   return {
-    tsconfigPath: nativeOptions.tsconfigPath || "tsconfig.json",
+    tsconfigPath: path.join(frameworkDirPath, nativeOptions.tsconfigPath || "tsconfig.json"),
     transpileOnly: nativeOptions.transpileOnly || false,
     usernameStageMap: nativeOptions.usernameStageMap || {},
     usernameProfileMap: nativeOptions.usernameProfileMap || {},

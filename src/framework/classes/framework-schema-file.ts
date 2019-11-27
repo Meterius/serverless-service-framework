@@ -47,7 +47,7 @@ export class FrameworkSchemaFile {
     return this.resolveFrameworkPath(this.schema.serviceRootDir);
   }
 
-  private resolveFrameworkPath(relPath: string): string {
+  public resolveFrameworkPath(relPath: string): string {
     return path.join(this.dirPath, relPath);
   }
 
@@ -72,20 +72,23 @@ export class FrameworkSchemaFile {
   }
 
   public static loadFrameworkOptionsFile(
-    filePath: string,
+    optionsFilePath: string,
+    frameworkFilePath: string,
   ): Promise<FrameworkOptions> {
-    return loadFrameworkOptionsFile(filePath);
+    return loadFrameworkOptionsFile(optionsFilePath, path.dirname(frameworkFilePath));
   }
 
   public static async loadFrameworkSchemaFile(
-    filePath: string,
+    frameworkFilePath: string,
     frameworkOptions: FrameworkOptions,
   ): Promise<FrameworkSchemaFile> {
     const schema = (await loadSchemaPropertiesFiles(
-      [filePath], FrameworkSchema.ensureFrameworkSchemaProperties, frameworkOptions,
+      [frameworkFilePath], FrameworkSchema.ensureFrameworkSchemaProperties, frameworkOptions,
     ))[0];
 
-    return new FrameworkSchemaFile(new FrameworkSchema(schema, frameworkOptions), filePath);
+    return new FrameworkSchemaFile(
+      new FrameworkSchema(schema, frameworkOptions), frameworkFilePath,
+    );
   }
 
   public static getFrameworkSchemaFilePath(dirPath: string): Promise<string | undefined> {
@@ -94,5 +97,21 @@ export class FrameworkSchemaFile {
 
   public static getFrameworkOptionsFilePath(dirPath: string): Promise<string | undefined> {
     return findMatchingFile(dirPath, frameworkOptionsNames, frameworkOptionsExtensions);
+  }
+
+  public static serialize(schemaFile: FrameworkSchemaFile): string {
+    return JSON.stringify({
+      filePath: schemaFile.filePath,
+      encodedSchema: FrameworkSchema.serialize(schemaFile.schema),
+    });
+  }
+
+  public static deserialize(encodedSchemaFile: string): FrameworkSchemaFile {
+    const decoded = JSON.parse(encodedSchemaFile);
+
+    return new FrameworkSchemaFile(
+      FrameworkSchema.deserialize(decoded.encodedSchema),
+      decoded.filePath,
+    );
   }
 }

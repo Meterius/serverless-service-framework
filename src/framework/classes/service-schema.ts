@@ -144,4 +144,19 @@ export class ServiceSchema extends CommonSchema {
   public static ensureServiceSchemaProperties(value: unknown): ServiceSchemaProperties {
     return value as ServiceSchemaProperties;
   }
+
+  public static serializePartial(schema: ServiceSchema): string {
+    return JSON.stringify(schema.serviceSchema);
+  }
+
+  public static deserializePartial(
+    encodedSchema: string,
+    frameworkSchema: FrameworkSchema,
+  ): ServiceSchema {
+    const decoded = JSON.parse(encodedSchema);
+
+    return new ServiceSchema(
+      frameworkSchema, decoded,
+    );
+  }
 }

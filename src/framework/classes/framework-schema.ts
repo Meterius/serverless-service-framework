@@ -16,6 +16,8 @@ export class FrameworkSchema extends CommonSchema {
 
   public readonly options: FrameworkOptions;
 
+  private readonly frameworkSchema: FrameworkSchemaProperties;
+
   constructor(
     schema: FrameworkSchemaProperties,
     options: FrameworkOptions,
@@ -26,6 +28,8 @@ export class FrameworkSchema extends CommonSchema {
     this.shortName = schema.shortName;
     this.serviceRootDir = schema.serviceRootDir;
     this.template = schema.template;
+
+    this.frameworkSchema = schema;
     this.options = options;
   }
 
@@ -39,5 +43,21 @@ export class FrameworkSchema extends CommonSchema {
 
   public static ensureFrameworkSchemaProperties(value: unknown): FrameworkSchemaProperties {
     return value as FrameworkSchemaProperties;
+  }
+
+  public static serialize(schema: FrameworkSchema): string {
+    return JSON.stringify({
+      schemaProperties: schema.frameworkSchema,
+      options: schema.options,
+    });
+  }
+
+  public static deserialize(serializedSchema: string): FrameworkSchema {
+    const decoded = JSON.parse(serializedSchema);
+
+    return new FrameworkSchema(
+      decoded.schemaProperties,
+      decoded.options,
+    );
   }
 }

@@ -4,6 +4,7 @@ import { loadSchemaPropertiesFiles } from "../file-handling";
 import { serviceBuildDir } from "../../common/constants";
 import { FrameworkSchemaFile } from "./framework-schema-file";
 import { ServiceSchemaProperties } from "./types/service-schema.types";
+import {FrameworkSchema} from "./framework-schema";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
@@ -60,6 +61,25 @@ export class ServiceSchemaFile {
       (schema, index) => new ServiceSchemaFile(
         new ServiceSchema(frameworkSchemaFile.schema, schema), filePaths[index],
       ),
+    );
+  }
+
+  public static serializePartial(schemaFile: ServiceSchemaFile): string {
+    return JSON.stringify({
+      filePath: schemaFile.filePath,
+      encodedSchema: ServiceSchema.serializePartial(schemaFile.schema),
+    });
+  }
+
+  public static deserializePartial(
+    encodedSchemaFile: string,
+    frameworkSchema: FrameworkSchema,
+  ): ServiceSchemaFile {
+    const decoded = JSON.parse(encodedSchemaFile);
+
+    return new ServiceSchemaFile(
+      ServiceSchema.deserializePartial(decoded.encodedSchema, frameworkSchema),
+      decoded.filePath,
     );
   }
 }

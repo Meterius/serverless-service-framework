@@ -1,14 +1,13 @@
 import { pathExists } from "fs-extra";
 import chalk from "chalk";
-import { execSync } from "child_process";
 import path from "path";
 import { FrameworkContext, FrameworkSchemaFile, ServiceContext } from "../../framework/classes";
 import { CliError } from "./exceptions";
-import { execAsync } from "../../common/os";
 import { TB } from "../cli-types";
-import { runPostDeploy, runPrePackage } from "./hook-execution";
 import { requireStageOption } from "./common-options";
 import { getProviderEnv, ProviderContext } from "./provider-configuration";
+import { bufferedExec } from "./buffered-exec";
+import { HookName, runHook } from "./hook-execution";
 
 export async function loadFrameworkContext(
   tb: TB,
@@ -41,7 +40,7 @@ export async function loadFrameworkContext(
     );
   }
 
-  const frOpts = await FrameworkSchemaFile.loadFrameworkOptionsFile(frOptionsPath);
+  const frOpts = await FrameworkSchemaFile.loadFrameworkOptionsFile(frOptionsPath, frSchemaPath);
 
   const stage = requireStageOption(tb, frOpts);
 
@@ -121,7 +120,13 @@ export async function execServerlessCommand(params: ExecServerlessCommandParams)
     tb.log(msg, logTitle, raw, print);
   }
 
-  await runPrePackage(service, providerContext, log);
+  await runHook({
+    hookName: HookName.Setup,
+    service,
+    providerContext,
+    log,
+    async: print !== undefined,
+  });
 
   log(chalk`Running Serverless Command: "{blue ${slsCmd}}"`);
   log(chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), serviceDir)}}"`);
@@ -130,31 +135,21 @@ export async function execServerlessCommand(params: ExecServerlessCommandParams)
 
   const providerEnv = getProviderEnv(providerContext, service);
 
-  if (print) {
-    const [err, stdout, stderr] = await execAsync(command, {
-      cwd: service.dirPath,
-      env: { ...process.env, ...providerEnv },
-    });
-
-    log(stdout, true);
-    log(chalk`{red ${stderr}}`, true);
-
-    if (err) {
-      throw err;
-    }
-  } else {
-    tb.log.divider(print);
-
-    execSync(command, {
-      cwd: service.dirPath,
-      env: { ...process.env, ...providerEnv },
-      stdio: "inherit",
-    });
-
-    tb.log.divider(print);
-  }
+  await bufferedExec({
+    cwd: service.dirPath,
+    env: { ...process.env, ...providerEnv },
+    command,
+    async: print !== undefined,
+    log: (data: string) => { log(data, true); },
+  });
 
   if (isDeploying) {
-    await runPostDeploy(service, providerContext, log);
+    await runHook({
+      hookName: HookName.PostDeploy,
+      service,
+      providerContext,
+      log,
+      async: print !== undefined,
+    });
   }
 }
