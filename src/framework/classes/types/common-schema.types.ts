@@ -19,7 +19,7 @@ export interface ProcessedImportMap {
   [serviceDefaultIdentifier: string]: ProcessedImportValue[];
 }
 
-export type ExportValue = string;
+export type ExportValue = unknown;
 
 export interface ExportMap {
   [exportName: string]: ExportValue;
