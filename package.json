@@ -55,6 +55,7 @@
     "graphlib": "^2.1.7",
     "require-from-string": "^2.0.2",
     "runtypes": "^4.0.3",
-    "ts-node": "^8.5.0"
+    "ts-node": "^8.5.0",
+    "serverless": "^1.58.0"
   }
 }
