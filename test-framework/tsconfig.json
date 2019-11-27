@@ -5,6 +5,10 @@
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
-    "lib": ["es6"]
+    "lib": ["es6"],
+    "baseUrl": ".",
+    "paths": {
+      "@r/*": ["/*"]
+    }
   }
 }

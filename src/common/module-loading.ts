@@ -1,17 +1,25 @@
-import { Register, register } from "ts-node";
+import { Register, register as tsRegister, RegisterOptions } from "ts-node";
 import { FrameworkOptions } from "../framework/classes/types/framework-options.types";
-import { ServiceContext } from "../framework/classes";
+
+function tsPathRegister(): void {
+  // eslint-disable-next-line global-require
+  require("tsconfig-paths/register");
+}
 
 let tsNodeSetup: { register: Register; frameworkOptions: FrameworkOptions };
 
-export function setupServiceTsNodeViaEnv(
-  service: ServiceContext,
-): Record<string, string> {
-  const frameworkOptions = service.context.schema.options;
-
+export function getTsNodeOptions(
+  frameworkOptions: FrameworkOptions,
+): { asProcessEnvironment: Record<string, string>; asRegisterOptions: RegisterOptions } {
   return {
-    TS_NODE_TRANSPILE_ONLY: frameworkOptions.transpileOnly ? "true" : "false",
-    TS_NODE_PROJECT: frameworkOptions.tsconfigPath,
+    asProcessEnvironment: {
+      TS_NODE_TRANSPILE_ONLY: frameworkOptions.transpileOnly ? "true" : "false",
+      TS_NODE_PROJECT: frameworkOptions.tsconfigPath,
+    },
+    asRegisterOptions: {
+      transpileOnly: frameworkOptions.transpileOnly,
+      project: frameworkOptions.tsconfigPath,
+    },
   };
 }
 
@@ -20,12 +28,13 @@ export function setupTsNode(
 ): void {
   if (tsNodeSetup === undefined) {
     tsNodeSetup = {
-      register: register({
-        project: frameworkOptions.tsconfigPath,
-        transpileOnly: frameworkOptions.transpileOnly,
-      }),
+      register: tsRegister(
+        getTsNodeOptions(frameworkOptions).asRegisterOptions,
+      ),
       frameworkOptions,
     };
+
+    tsPathRegister();
   } else if (tsNodeSetup.frameworkOptions !== frameworkOptions) {
     throw new Error("Cannot reconfigure TsNode with different framework options at the moment");
   }

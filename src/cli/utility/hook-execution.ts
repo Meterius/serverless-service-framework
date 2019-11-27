@@ -3,7 +3,7 @@ import { ServiceContext } from "../../framework/classes/service-context";
 import { isObject } from "../../common/type-guards";
 import { findMatchingFile } from "../../common/filesystem";
 import { serviceHookExtensions, serviceHookNames } from "../../common/constants";
-import { loadTypescriptModules, setupServiceTsNodeViaEnv } from "../../common/module-loading";
+import { loadTypescriptModules, getTsNodeOptions } from "../../common/module-loading";
 import { FrameworkContext } from "../../framework/classes";
 import { getProviderEnv, ProviderContext } from "./provider-configuration";
 import { bufferedExec } from "./buffered-exec";
@@ -76,7 +76,7 @@ export async function runHook(params: RunHookParams): Promise<void> {
         env: {
           ...process.env,
           ...getProviderEnv(providerContext, service),
-          ...setupServiceTsNodeViaEnv(service),
+          ...getTsNodeOptions(service.context.schema.options).asProcessEnvironment,
           TS_NODE_TRANSPILE_ONLY: "true", // since exists hook already type checks
           ...hookEnv,
         },
