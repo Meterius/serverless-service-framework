@@ -1,34 +1,34 @@
-import requireFromString from "require-from-string";
-import { create } from "ts-node";
-import { readFile } from "fs-extra";
+import { Register, register } from "ts-node";
 import { FrameworkOptions } from "../framework/classes/types/framework-options.types";
+
+let tsNodeSetup: { register: Register; frameworkOptions: FrameworkOptions };
+
+function setupTsNode(
+  frameworkOptions: FrameworkOptions,
+): void {
+  if (tsNodeSetup === undefined) {
+    tsNodeSetup = {
+      register: register({
+        project: frameworkOptions.tsconfigPath,
+        transpileOnly: frameworkOptions.transpileOnly,
+      }),
+      frameworkOptions,
+    };
+  } else if (tsNodeSetup.frameworkOptions !== frameworkOptions) {
+    throw new Error("Cannot reconfigure TsNode with different framework options at the moment");
+  }
+}
 
 export async function loadTypescriptModules(
   filePaths: string[],
   frameworkOptions: FrameworkOptions,
 ): Promise<unknown[]> {
-  const tsRegister = create({
-    project: frameworkOptions.tsconfigPath,
-    transpileOnly: frameworkOptions.transpileOnly,
-  });
+  setupTsNode(frameworkOptions);
 
-  type FilePath = string;
-  type FileTsCode = string;
-  type FileJsCode = string;
-
-  const files: [FilePath, FileTsCode][] = (await Promise.all(
-    filePaths.map((filePath) => readFile(filePath)),
-  )).map((fileContent, index) => [filePaths[index], fileContent.toString()]);
-
-  const fileModules: [FilePath, FileJsCode][] = files.map(
-    ([filePath, fileTsCode]) => [filePath, tsRegister.compile(fileTsCode, filePath)],
+  return filePaths.map(
+    // eslint-disable-next-line global-require,import/no-dynamic-require
+    (filePath) => require(filePath),
   );
-
-  const fileExports = fileModules.map(
-    ([filePath, fileJsCode]) => requireFromString(fileJsCode, filePath, {}),
-  );
-
-  return fileExports;
 }
 
 export function loadJavascriptModule(
