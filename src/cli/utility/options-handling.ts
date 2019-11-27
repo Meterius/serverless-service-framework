@@ -84,8 +84,10 @@ export function requireOption(
   tb: TB,
   name: string,
   shortName?: string,
+  defaultValue?: string,
 ): string {
-  const option = getOption(tb, name, shortName);
+  const option = defaultValue
+    ? getOption(tb, name, shortName, defaultValue) : getOption(tb, name, shortName);
 
   if (option === undefined) {
     throw new CliError(`Missing required option "${name}"`);

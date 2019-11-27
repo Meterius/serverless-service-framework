@@ -4,16 +4,29 @@ import { TB } from "../cli-types";
 import { CliError } from "./exceptions";
 import { FrameworkContext } from "../../framework/classes/framework-context";
 import { getProfileOption } from "./common-options";
+import { ServerlessProviderName, ServiceContext } from "../../framework";
 
-function setupAwsProviderConfig(profile?: string, region?: string): void {
+export interface ProviderContext {
+  tb: TB;
+  ctx: FrameworkContext;
+  profile?: string;
+  provider: ServerlessProviderName;
+}
+
+export type ProviderEnvironment = Record<string, string | undefined>;
+
+function getAwsProviderEnvironment(context: ProviderContext, region: string): ProviderEnvironment {
+  return {
+    AWS_REGION: region,
+    AWS_PROFILE: context.profile,
+  };
+}
+
+function setupAwsProvider(profile?: string): void {
   process.env.AWS_SDK_LOAD_CONFIG = "true";
 
   if (profile) {
     process.env.AWS_PROFILE = profile;
-  }
-
-  if (region) {
-    process.env.AWS_REGION = region;
   }
 
   const credentials = new aws.SharedIniFileCredentials({
@@ -26,20 +39,35 @@ function setupAwsProviderConfig(profile?: string, region?: string): void {
   });
 }
 
-export async function setupAwsProvider(tb: TB): Promise<void> {
-  const profile = getProfileOption(tb);
-  setupAwsProviderConfig(profile);
-}
-
-export async function setupProvider(tb: TB, ctx: FrameworkContext): Promise<void> {
+export async function setupProvider(tb: TB, ctx: FrameworkContext): Promise<ProviderContext> {
   const { provider } = ctx.schema;
+
+  const profile = getProfileOption(tb, ctx.schema.options);
 
   switch (provider) {
     default:
       throw new CliError(`Unknown Provider "${provider}"`);
 
     case "aws":
-      await setupAwsProvider(tb);
+      setupAwsProvider(profile);
       break;
+  }
+
+  return {
+    profile, provider, tb, ctx,
+  };
+}
+
+export function getProviderEnv(
+  context: ProviderContext, service: ServiceContext,
+): ProviderEnvironment {
+  const { region } = service;
+
+  switch (context.provider) {
+    default:
+      throw new CliError(`Unknown Provider "${context.provider}"`);
+
+    case "aws":
+      return getAwsProviderEnvironment(context, region);
   }
 }

@@ -6,12 +6,14 @@ import { getParallelFlag } from "./common-options";
 import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
 import { execServerlessCommand, getService } from "./framework";
+import { ProviderContext } from "./provider-configuration";
 
 const { hrtime } = process;
 
 interface PerformEnvironment {
   tb: TB;
   context: FrameworkContext;
+  providerContext: ProviderContext;
   performingServices: ServiceContext[];
   actionTitle: string;
   actionServerlessCommand: string | undefined;
@@ -51,7 +53,7 @@ async function performService(
   service: ServiceContext, env: PerformEnvironment, print?: (msg: string) => void,
 ): Promise<void> {
   const {
-    actPres, actPast, actionServerlessCommand, tb, skipServiceIfNotDeployed,
+    actPres, actPast, actionServerlessCommand, tb, skipServiceIfNotDeployed, providerContext,
   } = env;
 
   const log = createLog(env, service, print);
@@ -70,14 +72,15 @@ async function performService(
   const startTime = hrtime();
 
   if (actionServerlessCommand) {
-    await execServerlessCommand(
+    await execServerlessCommand({
       tb,
       service,
-      actionServerlessCommand,
-      {},
+      providerContext,
+      serverlessCommand: actionServerlessCommand,
+      serverlessOptions: {},
       print,
-      createLogTitle(env, service),
-    );
+      logTitle: createLogTitle(env, service),
+    });
   }
 
   const endTimeInSec = hrtime(startTime)[0].toString(10);
@@ -258,7 +261,7 @@ export function createMultiServiceCommandRun({
   return async function cmd(tb: TB): Promise<void> {
     // ENVIRONMENT SETUP
 
-    const { context } = await setupFrameworkContextFunction(tb);
+    const { context, providerContext } = await setupFrameworkContextFunction(tb);
 
     const [...serviceIds] = requireVariadicParameters(tb, "service-name");
 
@@ -276,6 +279,7 @@ export function createMultiServiceCommandRun({
       actPast,
       actPres,
       context,
+      providerContext,
       actionServerlessCommand,
       actionTitle,
       actionDependenciesReversed,

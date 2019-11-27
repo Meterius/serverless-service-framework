@@ -7,11 +7,13 @@ import { CliError } from "./exceptions";
 import { execAsync } from "../../common/os";
 import { TB } from "../cli-types";
 import { runPostDeploy, runPrePackage } from "./hook-execution";
+import { requireStageOption } from "./common-options";
+import { getProviderEnv, ProviderContext } from "./provider-configuration";
 
 export async function loadFrameworkContext(
+  tb: TB,
   frameworkSchemaFilePath: string | undefined,
   frameworkOptionsFilePath: string | undefined,
-  stage: string,
 ): Promise<FrameworkContext> {
   const frSchemaPath = frameworkSchemaFilePath
     || (await FrameworkSchemaFile.getFrameworkSchemaFilePath(process.cwd()));
@@ -39,7 +41,11 @@ export async function loadFrameworkContext(
     );
   }
 
-  const frFile = await FrameworkSchemaFile.loadFrameworkSchemaFile(frSchemaPath, frOptionsPath);
+  const frOpts = await FrameworkSchemaFile.loadFrameworkOptionsFile(frOptionsPath);
+
+  const stage = requireStageOption(tb, frOpts);
+
+  const frFile = await FrameworkSchemaFile.loadFrameworkSchemaFile(frSchemaPath, frOpts);
 
   return FrameworkContext.loadFrameworkContext(frFile, stage);
 }
@@ -72,14 +78,21 @@ export async function buildService(
   };
 }
 
-export async function execServerlessCommand(
-  tb: TB,
-  service: ServiceContext,
-  serverlessCommand: string,
-  serverlessOptions: Record<string, string | boolean>,
-  print?: (data: string) => void,
-  logTitle?: string,
-): Promise<void> {
+export interface ExecServerlessCommandParams {
+  tb: TB;
+  service: ServiceContext;
+  providerContext: ProviderContext;
+  serverlessCommand: string;
+  serverlessOptions: Record<string, string | boolean>;
+  print?: (data: string) => void;
+  logTitle?: string;
+}
+
+export async function execServerlessCommand(params: ExecServerlessCommandParams): Promise<void> {
+  const {
+    tb, service, providerContext, serverlessCommand, serverlessOptions, print, logTitle,
+  } = params;
+
   const serviceDir = service.dirPath;
 
   const templatePath = path.relative(serviceDir, await service.getServerlessTemplateFilePath());
@@ -108,17 +121,19 @@ export async function execServerlessCommand(
     tb.log(msg, logTitle, raw, print);
   }
 
-  await runPrePackage(service, log);
+  await runPrePackage(service, providerContext, log);
 
   log(chalk`Running Serverless Command: "{blue ${slsCmd}}"`);
   log(chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), serviceDir)}}"`);
 
   const command = `npx --no-install ${slsCmd}`;
 
+  const providerEnv = getProviderEnv(providerContext, service);
+
   if (print) {
     const [err, stdout, stderr] = await execAsync(command, {
       cwd: service.dirPath,
-      env: { ...process.env, AWS_REGION: service.region },
+      env: { ...process.env, ...providerEnv },
     });
 
     log(stdout, true);
@@ -132,7 +147,7 @@ export async function execServerlessCommand(
 
     execSync(command, {
       cwd: service.dirPath,
-      env: { ...process.env, AWS_REGION: service.region },
+      env: { ...process.env, ...providerEnv },
       stdio: "inherit",
     });
 
@@ -140,6 +155,6 @@ export async function execServerlessCommand(
   }
 
   if (isDeploying) {
-    await runPostDeploy(service, log);
+    await runPostDeploy(service, providerContext, log);
   }
 }

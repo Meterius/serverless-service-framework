@@ -11,6 +11,7 @@ import {
 } from "../../common/constants";
 import { ServiceSchemaFile } from "./service-schema-file";
 import { loadFrameworkOptionsFile, loadSchemaPropertiesFiles } from "../file-handling";
+import { FrameworkOptions } from "./types/framework-options.types";
 
 /* eslint-disable no-dupe-class-members, @typescript-eslint/unbound-method */
 
@@ -70,17 +71,21 @@ export class FrameworkSchemaFile {
     );
   }
 
+  public static loadFrameworkOptionsFile(
+    filePath: string,
+  ): Promise<FrameworkOptions> {
+    return loadFrameworkOptionsFile(filePath);
+  }
+
   public static async loadFrameworkSchemaFile(
     filePath: string,
-    optionsFilePath: string,
+    frameworkOptions: FrameworkOptions,
   ): Promise<FrameworkSchemaFile> {
-    const options = await loadFrameworkOptionsFile(optionsFilePath);
-
     const schema = (await loadSchemaPropertiesFiles(
-      [filePath], FrameworkSchema.ensureFrameworkSchemaProperties, options,
+      [filePath], FrameworkSchema.ensureFrameworkSchemaProperties, frameworkOptions,
     ))[0];
 
-    return new FrameworkSchemaFile(new FrameworkSchema(schema, options), filePath);
+    return new FrameworkSchemaFile(new FrameworkSchema(schema, frameworkOptions), filePath);
   }
 
   public static getFrameworkSchemaFilePath(dirPath: string): Promise<string | undefined> {

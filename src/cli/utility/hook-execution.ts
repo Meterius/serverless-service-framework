@@ -3,13 +3,9 @@ import { ServiceContext } from "../../framework/classes/service-context";
 import { isObject } from "../../common/type-guards";
 import { findMatchingFile } from "../../common/filesystem";
 import { serviceHookExtensions, serviceHookNames } from "../../common/constants";
-import { GC, TB } from "../cli-types";
-import { setupFrameworkContextFunction } from "./command-setup";
-import { requireVariadicParameters } from "./options-handling";
-import { filterDuplicates } from "../../common/utility";
-import { getService } from "./framework";
 import { loadTypescriptModules } from "../../common/module-loading";
 import { FrameworkContext } from "../../framework/classes";
+import { ProviderContext } from "./provider-configuration";
 
 async function loadHookFile(
   absoluteHookFilePath: string,
@@ -40,6 +36,7 @@ async function loadHookFile(
  */
 async function runHook(
   service: ServiceContext,
+  providerContext: ProviderContext,
   hookName: string,
   log: (msg: string) => void = (): void => {},
 ): Promise<void> {
@@ -57,43 +54,20 @@ async function runHook(
 
 export function runPrePackage(
   service: ServiceContext,
+  providerContext: ProviderContext,
   log?: (msg: string) => void,
 ): Promise<void> {
   return runHook(
-    service, "prePackage", log,
+    service, providerContext, "prePackage", log,
   );
 }
 
 export function runPostDeploy(
   service: ServiceContext,
+  providerContext: ProviderContext,
   log?: (msg: string) => void,
 ): Promise<void> {
   return runHook(
-    service, "postDeploy", log,
+    service, providerContext, "postDeploy", log,
   );
-}
-
-type HookFunc = (service: ServiceContext, log: (msg: string) => void) => Promise<void>;
-
-export function createHookCommand(hookName: string, hookFunc: HookFunc): GC {
-  return {
-    name: hookName,
-    description: `Executes "${hookName}" hook`,
-    run: async (tb: TB): Promise<void> => {
-      const { context } = await setupFrameworkContextFunction(tb);
-
-      const [...serviceIds] = requireVariadicParameters(tb, "service-name");
-
-      const services = serviceIds.length === 0 ? context.services
-        : filterDuplicates(serviceIds.map((id) => getService(context, id)));
-
-      for (let i = 0; i < services.length; i += 1) {
-        const service = services[i];
-
-        await hookFunc(service, (msg: string) => {
-          tb.log(msg, `${hookName} ${service.name}`);
-        });
-      }
-    },
-  };
 }

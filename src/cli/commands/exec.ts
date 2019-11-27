@@ -15,13 +15,17 @@ const exec: GC = {
       tb, ["service-name", "serverless-cmd"],
     );
 
-    const { context } = await setupFrameworkContextFunction(tb);
+    const { context, providerContext } = await setupFrameworkContextFunction(tb);
 
     const service = getService(context, serviceName);
 
-    await execServerlessCommand(
-      tb, service, slsCmdBase, {},
-    );
+    await execServerlessCommand({
+      providerContext,
+      tb,
+      service,
+      serverlessCommand: slsCmdBase,
+      serverlessOptions: {},
+    });
   },
 };
 
