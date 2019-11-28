@@ -5,6 +5,14 @@ import { FrameworkOptions } from "../../framework/classes";
 
 const { username } = userInfo();
 
+export function getTranspileOnlyFlag(tb: TB): boolean {
+  return getFlag(tb, "transpileOnly");
+}
+
+export function getStubDirectImportsFlag(tb: TB): boolean {
+  return getFlag(tb, "stubDirectImports");
+}
+
 export function getParallelFlag(tb: TB): boolean {
   return getFlag(tb, "parallel");
 }
@@ -31,4 +39,12 @@ function requireDirectStageOption(tb: TB, fallback?: string): string {
 
 export function requireStageOption(tb: TB, options: FrameworkOptions): string {
   return requireDirectStageOption(tb, options.usernameStageMap[username]);
+}
+
+export function applyFrameworkOptionOptions(tb: TB, options: FrameworkOptions): FrameworkOptions {
+  return {
+    ...options,
+    transpileOnly: getTranspileOnlyFlag(tb) || options.transpileOnly,
+    stubDirectImports: getStubDirectImportsFlag(tb) ? "" : options.stubDirectImports,
+  };
 }
