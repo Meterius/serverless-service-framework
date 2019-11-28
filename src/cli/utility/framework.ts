@@ -4,7 +4,7 @@ import path from "path";
 import { FrameworkContext, FrameworkSchemaFile, ServiceContext } from "../../framework/classes";
 import { CliError } from "./exceptions";
 import { TB } from "../cli-types";
-import { requireStageOption } from "./common-options";
+import { applyFrameworkOptionOptions, requireStageOption } from "./common-options";
 import { getProviderEnv, ProviderContext } from "./provider-configuration";
 import { bufferedExec } from "./buffered-exec";
 import { HookName, runHook } from "./hook-execution";
@@ -40,7 +40,9 @@ export async function loadFrameworkContext(
     );
   }
 
-  const frOpts = await FrameworkSchemaFile.loadFrameworkOptionsFile(frOptionsPath, frSchemaPath);
+  const frOpts = applyFrameworkOptionOptions(
+    tb, await FrameworkSchemaFile.loadFrameworkOptionsFile(frOptionsPath, frSchemaPath),
+  );
 
   const stage = requireStageOption(tb, frOpts);
 
