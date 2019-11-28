@@ -1,4 +1,6 @@
 import path from "path";
+import { isNativeFrameworkOptions } from "./framework-options.runtypes";
+import { loadJavascriptModule } from "../common/module-loading";
 
 export interface NativeFrameworkOptions {
   tsconfigPath?: string; // defaults to tsconfig.json
@@ -13,13 +15,26 @@ export type FrameworkOptions = Required<NativeFrameworkOptions>;
 
 export function getFrameworkOptions(
   nativeOptions: NativeFrameworkOptions,
-  frameworkDirPath: string,
+  optionFilePath: string,
 ): FrameworkOptions {
+  const dir = path.dirname(optionFilePath);
+
   return {
-    tsconfigPath: path.join(frameworkDirPath, nativeOptions.tsconfigPath || "tsconfig.json"),
+    tsconfigPath: path.join(dir, nativeOptions.tsconfigPath || "tsconfig.json"),
     transpileOnly: nativeOptions.transpileOnly || false,
     usernameStageMap: nativeOptions.usernameStageMap || {},
     usernameProfileMap: nativeOptions.usernameProfileMap || {},
     stubDirectImports: nativeOptions.stubDirectImports,
   };
+}
+
+export async function loadFrameworkOptionsFile(
+  filePath: string,
+): Promise<FrameworkOptions> {
+  return getFrameworkOptions(
+    isNativeFrameworkOptions(
+      loadJavascriptModule(filePath),
+    ),
+    filePath,
+  );
 }

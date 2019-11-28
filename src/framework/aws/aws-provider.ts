@@ -1,44 +1,28 @@
 import * as Aws from "aws-sdk";
-import { ProviderImplementation, ProviderStack } from "./provider";
-import { ServiceContext } from "../service-context";
-import { ExportValue, ProcessedImportValue } from "../types/common-schema.types";
-import {
-  ServerlessTemplatePostExports,
-  ServerlessTemplatePreExports,
-} from "../../templates.types";
-import { isObject } from "../../../common/type-guards";
-
-/* eslint-disable @typescript-eslint/no-unused-vars, class-methods-use-this */
+import { AbstractProvider } from "../abstract-provider";
+import { AwsProviderDefinition } from "./aws-provider-definition";
+import { AwsStack } from "./aws-stack";
+import { AwsService } from "./aws-service";
+import { ProcessedImportValue } from "../abstract-service-schema-properties";
+import { ExportValue } from "../abstract-common-schema-properties";
+import { ServerlessTemplatePostExports, ServerlessTemplatePreExports } from "../templates";
+import { isObject } from "../../common/type-guards";
 
 const deletedStackStates = ["DELETE_IN_PROGRESS", "DELETE_COMPLETE"];
 
 type TemplateExportValue = { Value: unknown };
 
-export type StackData = Aws.CloudFormation.Stack;
-
-export class AwsStack extends ProviderStack<StackData> {
-  getStackExports(): Record<string, string | undefined> {
-    const exportMap: Record<string, string | undefined> = {};
-
-    (this.data.Outputs || []).forEach((output) => {
-      if (output.OutputKey !== undefined) {
-        exportMap[output.OutputKey] = output.OutputValue;
-      }
-    });
-
-    return exportMap;
-  }
-}
-
-export class AwsProvider extends ProviderImplementation<
-TemplateExportValue, StackData, undefined, AwsStack> {
-  protected Stack = AwsStack;
-
+export class AwsProvider extends AbstractProvider<
+AwsProviderDefinition,
+{ "provider-based": undefined; "direct-import": AwsStack },
+TemplateExportValue
+> {
   public readonly name = "aws";
 
-  protected async retrieveServiceStackData(
-    service: ServiceContext,
-  ): Promise<StackData | undefined> {
+  // eslint-disable-next-line class-methods-use-this
+  public async retrieveServiceStack(
+    service: AwsService,
+  ): Promise<AwsStack | undefined> {
     const cf = AwsProvider.getCloudFormation(service);
 
     let response: Aws.CloudFormation.DescribeStacksOutput;
@@ -55,21 +39,30 @@ TemplateExportValue, StackData, undefined, AwsStack> {
       }
     }
 
-    return (response.Stacks || []).find(
+    const stackData = (response.Stacks || []).find(
       (foundStack) => !deletedStackStates.includes(foundStack.StackStatus),
     );
+
+    if (stackData === undefined) {
+      return undefined;
+    }
+
+    return new AwsStack(service, stackData);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   async prepareTemplateProviderBasedImports(
-    service: ServiceContext,
-    importedService: ServiceContext,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    service: AwsService,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    importedService: AwsService,
   ): Promise<undefined> {
     return undefined;
   }
 
   async prepareTemplateDirectImports(
-    service: ServiceContext,
-    importedService: ServiceContext,
+    service: AwsService,
+    importedService: AwsService,
   ): Promise<AwsStack> {
     const stack = await this.retrieveServiceStack(importedService);
 
@@ -83,10 +76,12 @@ TemplateExportValue, StackData, undefined, AwsStack> {
     return stack;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   retrieveTemplateProviderBasedImportValue(
-    service: ServiceContext,
-    importedService: ServiceContext,
+    service: AwsService,
+    importedService: AwsService,
     importValue: ProcessedImportValue<"provider-based">,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     importData: undefined,
   ): unknown {
     return {
@@ -94,13 +89,14 @@ TemplateExportValue, StackData, undefined, AwsStack> {
     };
   }
 
+  // eslint-disable-next-line class-methods-use-this
   retrieveTemplateDirectImportValue(
-    service: ServiceContext,
-    importedService: ServiceContext,
+    service: AwsService,
+    importedService: AwsService,
     importValue: ProcessedImportValue<"direct">,
     importData: AwsStack,
   ): unknown {
-    const output: string | undefined = importData.getStackExports()[importValue.name];
+    const output: string | undefined = importData.stackExports[importValue.name];
 
     if (output === undefined) {
       throw new Error(
@@ -112,8 +108,9 @@ TemplateExportValue, StackData, undefined, AwsStack> {
     return output;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   retrieveTemplateExportValue(
-    service: ServiceContext,
+    service: AwsService,
     exportName: string,
     exportValue: ExportValue,
   ): TemplateExportValue {
@@ -122,8 +119,9 @@ TemplateExportValue, StackData, undefined, AwsStack> {
     };
   }
 
+  // eslint-disable-next-line class-methods-use-this
   insertTemplateExportValues(
-    service: ServiceContext,
+    service: AwsService,
     exportValueMap: Record<string, TemplateExportValue>,
     template: ServerlessTemplatePreExports,
   ): ServerlessTemplatePostExports {
@@ -140,7 +138,7 @@ TemplateExportValue, StackData, undefined, AwsStack> {
     return template;
   }
 
-  private static getCloudFormation(service: ServiceContext): Aws.CloudFormation {
+  private static getCloudFormation(service: AwsService): Aws.CloudFormation {
     return new Aws.CloudFormation({
       region: service.region,
     });

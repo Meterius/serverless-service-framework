@@ -1,5 +1,5 @@
 import { Register, register as tsRegister, RegisterOptions } from "ts-node";
-import { FrameworkOptions } from "../framework/classes/types/framework-options.types";
+import { FrameworkOptions } from "../framework/framework-options";
 
 function tsPathRegister(): void {
   // eslint-disable-next-line global-require
@@ -40,16 +40,14 @@ export function setupTsNode(
   }
 }
 
-export async function loadTypescriptModules(
-  filePaths: string[],
+export async function loadTypescriptModule(
+  filePath: string,
   frameworkOptions: FrameworkOptions,
-): Promise<unknown[]> {
+): Promise<unknown> {
   setupTsNode(frameworkOptions);
 
-  return filePaths.map(
-    // eslint-disable-next-line global-require,import/no-dynamic-require
-    (filePath) => require(filePath),
-  );
+  // eslint-disable-next-line global-require,import/no-dynamic-require
+  return require(filePath);
 }
 
 export function loadJavascriptModule(

@@ -1,10 +1,6 @@
-// service schema names and extensions searched for in service directories
-export const serviceSchemaNames = ["service"];
-export const serviceSchemaExtensions = ["ts"];
-
 // framework schema names and extensions searched for in framework directory
-export const frameworkSchemaNames = ["framework"];
-export const frameworkSchemaExtensions = ["ts"];
+export const frameworkNames = ["framework"];
+export const frameworkExtensions = ["ts"];
 
 // framework options names and extensions searched for in framework directory
 export const frameworkOptionsNames = ["framework-options"];

@@ -1,28 +1,26 @@
-import path from "path";
 import { mkdirp, writeFile } from "fs-extra";
-import { merge } from "../../common/utility";
-// eslint-disable-next-line import/no-cycle
-import { FrameworkContext } from "./framework-context";
-import { ServiceSchemaFile } from "./service-schema-file";
+import path from "path";
+import {
+  APD,
+  CommonSchemaClass,
+  Framework, Service, ServiceSchema,
+  ServiceSchemaClass, ServiceSchemaProperties,
+} from "./abstract-provider-definition";
 import {
   PostCompilationServerlessTemplate,
   PreCompilationServerlessTemplate,
-  ServerlessTemplate,
-  ServerlessTemplatePostExports,
-  ServerlessTemplatePostImports,
+  ServerlessTemplate, ServerlessTemplatePostExports, ServerlessTemplatePostImports,
   ServerlessTemplatePostMerging,
   ServerlessTemplatePostNaming,
-  ServerlessTemplatePostPreparation,
-  ServerlessTemplatePreExports,
+  ServerlessTemplatePostPreparation, ServerlessTemplatePreExports,
   ServerlessTemplatePreImports,
   ServerlessTemplatePreMerging,
   ServerlessTemplatePreNaming,
   ServerlessTemplatePrePreparation,
-} from "../templates.types";
-import { serviceBuild } from "../../common/constants";
-import { ServiceSchema } from "./service-schema";
-
-/* eslint-disable class-methods-use-this */
+} from "./templates";
+import { serviceBuild, serviceBuildDir } from "../common/constants";
+import { merge } from "../common/utility";
+import { AbstractServiceSchema } from "./abstract-service-schema";
 
 export enum ServerlessTemplateFormat {
   JavaScript = "js"
@@ -33,32 +31,43 @@ export interface SerializedServerlessTemplate {
   format: ServerlessTemplateFormat;
 }
 
-export class ServiceContext extends ServiceSchemaFile {
-  public readonly context: FrameworkContext;
+export abstract class AbstractService<
+  D extends APD, // AbstractProviderDefinition
+> {
+  public readonly dirPath: string;
 
-  private readonly __importedServices: ServiceSchema[];
+  public readonly framework: Framework<D>;
 
-  private readonly __exportedToServices: ServiceSchema[];
+  private readonly __importedServices: ServiceSchema<D>[];
+
+  private readonly __exportedToServices: ServiceSchema<D>[];
 
   private __serverlessTemplate: ServerlessTemplate | null = null;
 
+  public readonly schema: ServiceSchema<D>;
+
+  private readonly props: ServiceSchemaProperties<D>;
+
   constructor(
-    frameworkContext: FrameworkContext,
-    originalSchemaFile: ServiceSchemaFile,
+    commonSchemaClass: CommonSchemaClass<D>,
+    serviceSchemaClass: ServiceSchemaClass<D>,
+    framework: Framework<D>,
+    props: ServiceSchemaProperties<D>,
+    dirPath: string,
   ) {
-    super(originalSchemaFile);
+    this.dirPath = dirPath;
+    this.props = props;
+    // eslint-disable-next-line new-cap
+    this.schema = new serviceSchemaClass(
+      commonSchemaClass, framework.schema, props,
+    );
 
-    // note that the framework context calls this constructor
-    // and that it will not have initialized the services attribute yet
-    // i.e. only references to service schemas can be used here and no properties
-    // that use service contexts
-
-    this.context = frameworkContext;
+    this.framework = framework;
 
     const {
       importedServices, exportedToServices,
-    } = ServiceContext.computeLocalizedServicesDependencies(
-      this.schema, frameworkContext.serviceSchemas,
+    } = this.computeLocalizedServicesDependencies(
+      this.props, framework.serviceSchemas,
     );
 
     this.__exportedToServices = exportedToServices;
@@ -70,20 +79,24 @@ export class ServiceContext extends ServiceSchemaFile {
   }
 
   get stackName(): string {
-    return `${this.context.schema.shortName}-${this.schema.shortName}-${this.context.stage}`;
+    return `${this.framework.schema.shortName}-${this.schema.shortName}-${this.framework.stage}`;
   }
 
   get region(): string {
     return (this.schema.template.provider || {}).region
-      || this.context.schema.template.provider.region;
+      || this.framework.schema.template.provider.region;
   }
 
-  get importedServices(): ServiceContext[] {
-    return this.__importedServices.map((schema) => this.context.referenceService(schema));
+  get importedServices(): Service<D>[] {
+    return this.__importedServices.map(
+      (schema) => this.framework.referenceService(schema.identifier),
+    );
   }
 
-  get exportedToServices(): ServiceContext[] {
-    return this.__exportedToServices.map((schema) => this.context.referenceService(schema));
+  get exportedToServices(): Service<D>[] {
+    return this.__exportedToServices.map(
+      (schema) => this.framework.referenceService(schema.identifier),
+    );
   }
 
   /**
@@ -116,7 +129,7 @@ export class ServiceContext extends ServiceSchemaFile {
   }
 
   private getTemplateServiceName(): string {
-    return `${this.context.schema.shortName}-${this.schema.shortName}`;
+    return `${this.framework.schema.shortName}-${this.schema.shortName}`;
   }
 
   private getTemplateProviderStackName(): string {
@@ -124,7 +137,7 @@ export class ServiceContext extends ServiceSchemaFile {
   }
 
   private getTemplateProviderStage(): string {
-    return this.context.stage;
+    return this.framework.stage;
   }
 
   private async processServiceServerlessTemplateMerging(
@@ -132,7 +145,7 @@ export class ServiceContext extends ServiceSchemaFile {
   ): Promise<ServerlessTemplatePostMerging> {
     const templateWithFramework = merge(
       template,
-      this.context.schema.template,
+      this.framework.schema.template,
     );
 
     return merge(
@@ -141,6 +154,7 @@ export class ServiceContext extends ServiceSchemaFile {
     );
   }
 
+  // eslint-disable-next-line class-methods-use-this
   private async processServiceServerlessTemplatePreparation(
     template: ServerlessTemplatePrePreparation,
   ): Promise<ServerlessTemplatePostPreparation> {
@@ -173,7 +187,7 @@ export class ServiceContext extends ServiceSchemaFile {
   private async processServiceServerlessTemplateImports(
     template: ServerlessTemplatePreImports,
   ): Promise<ServerlessTemplatePostImports> {
-    const { provider, schema: { options } } = this.context;
+    const { provider, schema: { options } } = this.framework;
 
     const { importMap } = this.schema;
     const importedServices = Object.keys(importMap);
@@ -182,7 +196,7 @@ export class ServiceContext extends ServiceSchemaFile {
 
     for (let i = 0; i < importedServices.length; i += 1) {
       const importedServiceName = importedServices[i];
-      const importedService = this.context.getService(importedServiceName);
+      const importedService = this.framework.getService(importedServiceName);
 
       if (importedService === undefined) {
         throw new Error(
@@ -192,7 +206,7 @@ export class ServiceContext extends ServiceSchemaFile {
 
       const importedValues = importMap[importedServiceName];
 
-      const directImportedValues = ServiceSchema.filterImportValuesByType(
+      const directImportedValues = AbstractServiceSchema.filterImportValuesByType(
         importedValues, "direct",
       );
 
@@ -216,7 +230,7 @@ export class ServiceContext extends ServiceSchemaFile {
         }
       }
 
-      const providerBasedImportedValues = ServiceSchema.filterImportValuesByType(
+      const providerBasedImportedValues = AbstractServiceSchema.filterImportValuesByType(
         importedValues, "provider-based",
       );
 
@@ -251,21 +265,21 @@ export class ServiceContext extends ServiceSchemaFile {
     for (let i = 0; i < entries.length; i += 1) {
       const [exportName, exportValue] = entries[i];
 
-      exportTemplateValueMap[exportName] = this.context.provider.retrieveTemplateExportValue(
+      exportTemplateValueMap[exportName] = this.framework.provider.retrieveTemplateExportValue(
         this, exportName, exportValue,
       );
     }
 
-    return this.context.provider.insertTemplateExportValues(
+    return this.framework.provider.insertTemplateExportValues(
       this, exportTemplateValueMap, template,
     );
   }
 
-  importsService(otherService: ServiceContext): boolean {
+  importsService(otherService: Service<D>): boolean {
     return this.importedServices.includes(otherService);
   }
 
-  exportedToService(otherService: ServiceContext): boolean {
+  exportedToService(otherService: Service<D>): boolean {
     return this.exportedToServices.includes(otherService);
   }
 
@@ -304,7 +318,7 @@ export class ServiceContext extends ServiceSchemaFile {
    */
   async getServerlessTemplateFilePath(): Promise<string> {
     const template = await this.getServerlessTemplate();
-    const serializedTemplate = await ServiceContext.serializeServiceServerlessTemplate(
+    const serializedTemplate = await AbstractService.serializeServiceServerlessTemplate(
       template, ServerlessTemplateFormat.JavaScript,
     );
 
@@ -329,9 +343,10 @@ export class ServiceContext extends ServiceSchemaFile {
     }
   }
 
-  private static computeLocalizedServicesDependencies(
-    serviceSchema: ServiceSchema, serviceSchemas: ServiceSchema[],
-  ): { importedServices: ServiceSchema[]; exportedToServices: ServiceSchema[] } {
+  // eslint-disable-next-line class-methods-use-this
+  private computeLocalizedServicesDependencies(
+    serviceSchema: ServiceSchema<D>, serviceSchemas: ServiceSchema<D>[],
+  ): { importedServices: ServiceSchema<D>[]; exportedToServices: ServiceSchema<D>[] } {
     const importedServices = serviceSchemas.filter(
       (otherService) => serviceSchema.isImporting(otherService),
     );
@@ -343,5 +358,17 @@ export class ServiceContext extends ServiceSchemaFile {
     return {
       importedServices, exportedToServices,
     };
+  }
+
+  resolveServicePath(relPath: string): string {
+    return path.join(this.dirPath, relPath);
+  }
+
+  getServiceBuildDir(): string {
+    return this.resolveServicePath(serviceBuildDir);
+  }
+
+  protected resolveServiceBuildPath(relPath: string): string {
+    return path.join(this.getServiceBuildDir(), relPath);
   }
 }

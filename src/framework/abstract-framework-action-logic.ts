@@ -1,29 +1,34 @@
-import { FrameworkContext } from "./framework-context";
-import { ServiceContext } from "./service-context";
+import { APD, Framework, Service } from "./abstract-provider-definition";
 
 /**
  * Class to define how dependent actions can be performed on services.
  */
-export class FrameworkContextActionLogic {
-  public readonly context: FrameworkContext;
+export class AbstractFrameworkActionLogic<
+  D extends APD, // AbstractProviderDefinition
+> {
+  public readonly framework: Framework<D>;
 
-  constructor(context: FrameworkContext) {
-    this.context = context;
+  constructor(framework: Framework<D>) {
+    this.framework = framework;
   }
 
   /**
    * Returns all services not in the performed services array.
    */
-  getNotPerformedServices(performedServices: ServiceContext[]): ServiceContext[] {
-    return this.context.services.filter((service) => !performedServices.includes(service));
+  getNotPerformedServices(performedServices: Service<D>[]): Service<D>[] {
+    return this.framework.services.filter(
+      (service: Service<D>) => !performedServices.includes(service),
+    );
   }
 
   /**
    * Returns all services that are regarded as performed
    * when only performing on a subset of all services.
    */
-  getPerformedServices(toBePerformedServices: ServiceContext[]): ServiceContext[] {
-    return this.context.services.filter((service) => !toBePerformedServices.includes(service));
+  getPerformedServices(toBePerformedServices: Service<D>[]): Service<D>[] {
+    return this.framework.services.filter(
+      (service: Service<D>) => !toBePerformedServices.includes(service),
+    );
   }
 
   /**
@@ -42,9 +47,9 @@ export class FrameworkContextActionLogic {
    * Will return an empty array
    */
   getAllPerformable(
-    performedServices: ServiceContext[],
+    performedServices: Service<D>[],
     reverseDependencies = false,
-  ): ServiceContext[] {
+  ): Service<D>[] {
     return this.getNotPerformedServices(performedServices).filter(
       (service) => (
         reverseDependencies ? service.exportedToServices : service.importedServices
@@ -59,9 +64,9 @@ export class FrameworkContextActionLogic {
    * Or none if all services are already performed.
    */
   getNextPerformable(
-    performedServices: ServiceContext[],
+    performedServices: Service<D>[],
     reverseDependencies = false,
-  ): ServiceContext | undefined {
+  ): Service<D> | undefined {
     return this.getAllPerformable(performedServices, reverseDependencies)[0];
   }
 
@@ -69,8 +74,8 @@ export class FrameworkContextActionLogic {
    * Returns sequential order of services in which each service can be have the action performed
    * on them if previous entries have already had the action performed on them.
    */
-  getTotalSequentialOrder(reversedDependencies = false): ServiceContext[] {
-    const order: ServiceContext[] = [];
+  getTotalSequentialOrder(reversedDependencies = false): Service<D>[] {
+    const order: Service<D>[] = [];
 
     for (
       let nextService = this.getNextPerformable(order, reversedDependencies);

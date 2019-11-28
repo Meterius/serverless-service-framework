@@ -1,19 +1,22 @@
-import { InlineServiceTemplate } from "../templates.types";
 import {
-  ExportMap,
-  ImportMap,
-  ImportSettings, ImportType,
-  ImportValue,
-  ProcessedImportMap, ProcessedImportValue,
-} from "./types/common-schema.types";
-import { FrameworkSchema } from "./framework-schema";
-import { merge } from "../../common/utility";
-import { CommonSchema } from "./common-schema";
-import { ServiceSchemaProperties } from "./types/service-schema.types";
+  APD, CommonSchema, CommonSchemaClass, FrameworkSchema,
+  ServiceSchema, ServiceSchemaProperties,
+} from "./abstract-provider-definition";
+import { ServiceTemplate } from "./templates";
+import {
+  ExportMap, ImportMap, ImportValue,
+  ProcessedImportMap,
+  ProcessedImportValue,
+} from "./abstract-service-schema-properties";
+import {
+  ImportSettings,
+  ImportType,
+  ProcessedImportSettings,
+} from "./abstract-common-schema-properties";
 
-/* eslint-disable no-dupe-class-members */
-
-export class ServiceSchema extends CommonSchema {
+export abstract class AbstractServiceSchema<
+  D extends APD,
+> {
   public readonly name: string;
 
   public readonly shortName: string;
@@ -25,26 +28,32 @@ export class ServiceSchema extends CommonSchema {
 
   public readonly exportMap: ExportMap;
 
-  public readonly template: InlineServiceTemplate;
+  public readonly template: ServiceTemplate;
 
-  private readonly serviceSchema: ServiceSchemaProperties;
+  public readonly commonSchema: CommonSchema<D>;
 
-  constructor(frameworkSchema: FrameworkSchema, schema: ServiceSchemaProperties) {
-    super(frameworkSchema, schema);
+  private readonly props: ServiceSchemaProperties<D>;
 
-    this.name = schema.name;
-    this.shortName = schema.shortName;
+  constructor(
+    commonSchemaClass: CommonSchemaClass<D>,
+    frameworkSchema: FrameworkSchema<D>,
+    props: ServiceSchemaProperties<D>,
+  ) {
+    this.props = props;
+    // eslint-disable-next-line new-cap
+    this.commonSchema = new commonSchemaClass(frameworkSchema.commonSchema, props);
 
-    this.importMap = ServiceSchema.processImportMap(
-      schema.importMap || {}, this.importSettings,
+    this.name = props.name;
+    this.shortName = props.shortName;
+
+    this.importMap = AbstractServiceSchema.processImportMap(
+      props.importMap || {}, this.commonSchema.importSettings,
     );
 
-    this.importedServices = ServiceSchema.getImportedServices(this.importMap);
+    this.importedServices = AbstractServiceSchema.getImportedServices(this.importMap);
 
-    this.exportMap = schema.exportMap || {};
-    this.template = schema.template;
-
-    this.serviceSchema = schema;
+    this.exportMap = props.exportMap || {};
+    this.template = props.template;
   }
 
   /**
@@ -74,7 +83,7 @@ export class ServiceSchema extends CommonSchema {
   /**
    * Whether this service imports the other service.
    */
-  isImporting(otherServiceSchema: ServiceSchema): boolean {
+  isImporting(otherServiceSchema: ServiceSchema<D>): boolean {
     return this.importedServices.some(
       (importedServiceIdentifier) => otherServiceSchema.isReferredToBy(importedServiceIdentifier),
     );
@@ -83,7 +92,7 @@ export class ServiceSchema extends CommonSchema {
   /**
    * Whether the other service imports this service.
    */
-  isExportedTo(otherServiceSchema: ServiceSchema): boolean {
+  isExportedTo(otherServiceSchema: ServiceSchema<D>): boolean {
     return otherServiceSchema.importedServices.includes(this.identifier);
   }
 
@@ -100,12 +109,8 @@ export class ServiceSchema extends CommonSchema {
 
   private static processImportMap(
     importMap: ImportMap,
-    usedImportSettings: ImportSettings = {},
+    usedImportSettings: ProcessedImportSettings,
   ): ProcessedImportMap {
-    const importSettings = merge(
-      ServiceSchema.defaultImportSettings, usedImportSettings, true,
-    );
-
     const processedImportMap: ProcessedImportMap = {};
 
     Object.entries(importMap).forEach(([serviceName, imports]: [string, ImportValue[]]) => {
@@ -113,12 +118,12 @@ export class ServiceSchema extends CommonSchema {
         if (typeof importValue === "string") {
           return {
             name: importValue,
-            type: importSettings.defaultImportType,
+            type: usedImportSettings.defaultImportType,
           };
         } else {
           return {
             name: importValue.name,
-            type: importValue.type || importSettings.defaultImportType,
+            type: importValue.type || usedImportSettings.defaultImportType,
           };
         }
       });
@@ -138,25 +143,6 @@ export class ServiceSchema extends CommonSchema {
   ): ProcessedImportValue<T>[] {
     return importValues.filter(
       (value: ProcessedImportValue): value is ProcessedImportValue<T> => value.type === importType,
-    );
-  }
-
-  public static ensureServiceSchemaProperties(value: unknown): ServiceSchemaProperties {
-    return value as ServiceSchemaProperties;
-  }
-
-  public static serializePartial(schema: ServiceSchema): string {
-    return JSON.stringify(schema.serviceSchema);
-  }
-
-  public static deserializePartial(
-    encodedSchema: string,
-    frameworkSchema: FrameworkSchema,
-  ): ServiceSchema {
-    const decoded = JSON.parse(encodedSchema);
-
-    return new ServiceSchema(
-      frameworkSchema, decoded,
     );
   }
 }
