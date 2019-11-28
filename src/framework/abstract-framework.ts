@@ -121,6 +121,8 @@ export abstract class AbstractFramework<
     const collection = new this.serviceSchemaCollectionClass(serviceSchemas);
 
     this.ensureValidity(collection);
+
+    this.services.push(...newServices);
   }
 
   // eslint-disable-next-line class-methods-use-this

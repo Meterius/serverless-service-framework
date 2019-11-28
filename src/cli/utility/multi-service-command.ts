@@ -5,7 +5,7 @@ import { getParallelFlag } from "./common-options";
 import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
 import { Framework, Service } from "../../framework/provider-definition";
-import { getService } from "./framework";
+import { executeServerlessCommand, getService } from "./framework";
 
 const { hrtime } = process;
 
@@ -74,7 +74,8 @@ async function performService(
   }
 
   if (actionServerlessCommand) {
-    await service.executeServerlessCommand(
+    await executeServerlessCommand(
+      service,
       actionServerlessCommand,
       {},
       slsLog,

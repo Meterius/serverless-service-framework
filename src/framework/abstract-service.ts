@@ -1,10 +1,8 @@
 import { mkdirp, writeFile } from "fs-extra";
 import path from "path";
-import chalk from "chalk";
-import { titleCase } from "change-case";
 import {
   APD,
-  Framework, Service, ServiceHookMap, ServiceSchema,
+  Framework, Service, ServiceHook, ServiceHookMap, ServiceSchema,
   ServiceSchemaClass, ServiceSchemaProperties,
 } from "./abstract-provider-definition";
 import {
@@ -301,33 +299,19 @@ export abstract class AbstractService<
   }
 
   async executeHook(
-    name: keyof ServiceHookMap<D>,
+    hook: ServiceHook<D>,
     log: (data: string, raw: boolean) => void,
   ): Promise<void> {
-    const hook = this.hookMap[name];
-
-    if (hook === undefined) {
-      log(`${titleCase(name.toString())} hook not set, skipping execution...`, false);
-    } else {
-      log(`Executing ${titleCase(name.toString())} hook...`, false);
-      // @ts-ignore
-      await hook(this, log);
-    }
+    await hook(this, (data: string, raw = false) => log(data, raw));
   }
 
-  async executeServerlessCommand(
+  async createExecutableServerlessCommand(
     command: string,
     options: Record<string, boolean | string>,
-    // eslint-disable-next-line @typescript-eslint/unbound-method,no-console
-    log: (data: string, raw: boolean) => void,
-    async: boolean,
-  ): Promise<void> {
-    const logD = (data: string, raw = false): void => log(data, raw);
-    const logR = (data: string): void => log(data, true);
-
+  ): Promise<string> {
     const serviceDir = this.dirPath;
 
-    const templatePath = path.relative(serviceDir, await this.getServerlessTemplateFilePath());
+    const templatePath = path.relative(serviceDir, await this.createServerlessTemplateFilePath());
 
     const extendedServerlessOptions: Record<string, string | boolean> = {
       ...options,
@@ -351,18 +335,30 @@ export abstract class AbstractService<
       },
     ).join("");
 
-    const isDeploying = command.includes("deploy");
-    const slsCmd = `sls ${command} ${serverlessOptionList}`.trimRight();
+    return `sls ${command} ${serverlessOptionList}`.trimRight();
+  }
 
-    await this.executeHook("setup", log);
+  async executeExecutableServerlessCommand(
+    executableServerlessCommand: string,
+    // eslint-disable-next-line @typescript-eslint/unbound-method,no-console
+    log: (data: string, raw: boolean) => void,
+    async: boolean,
+    hookExecutor: (
+      service: Service<D>,
+      hookName: keyof ServiceHookMap<D>,
+      log: (data: string, raw: boolean) => void
+    ) => Promise<void>,
+  ): Promise<void> {
+    const isDeploying = executableServerlessCommand.startsWith("sls deploy");
 
-    logD(chalk`Running Serverless Command: "{blue ${slsCmd}}"`);
-    logD(chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), serviceDir)}}"`);
+    const logR = (data: string): void => log(data, true);
 
-    const fullCommand = `npx --no-install ${slsCmd}`;
+    await hookExecutor(this, "setup", log);
+
+    const fullCommand = `npx --no-install ${executableServerlessCommand}`;
 
     await bufferedExec({
-      cwd: serviceDir,
+      cwd: this.dirPath,
       env: { ...process.env },
       command: fullCommand,
       log: logR,
@@ -370,7 +366,7 @@ export abstract class AbstractService<
     });
 
     if (isDeploying) {
-      await this.executeHook("postDeploy", log);
+      await hookExecutor(this, "postDeploy", log);
     }
   }
 
@@ -395,7 +391,7 @@ export abstract class AbstractService<
    * Builds serverless template used for service and writes it to disk.
    * Returns the file path of the written template file. (caches built)
    */
-  async getServerlessTemplateFilePath(): Promise<string> {
+  async createServerlessTemplateFilePath(): Promise<string> {
     const template = await this.getServerlessTemplate();
     const serializedTemplate = await AbstractService.serializeServiceServerlessTemplate(
       template, ServerlessTemplateFormat.JavaScript,

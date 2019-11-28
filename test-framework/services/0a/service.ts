@@ -1,4 +1,4 @@
-import { AwsServiceDefinition } from "serverless-service-framework";
+import { AwsServiceDefinition, AwsService } from "serverless-service-framework";
 
 export default new AwsServiceDefinition({
     name: "0a",
@@ -11,6 +11,12 @@ export default new AwsServiceDefinition({
     },
 
     template: {},
-  }, __dirname
+  },
+  __dirname,
+  {
+    setup: async (service: AwsService, log: (data: string) => void) => {
+      log("This is the Service 0A Setup Hook");
+    }
+  }
 );
 

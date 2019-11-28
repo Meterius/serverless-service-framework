@@ -1,4 +1,5 @@
 import {
+  executeServerlessCommand,
   getService,
 } from "../utility/framework";
 import { GC, TB } from "../cli-types";
@@ -22,7 +23,8 @@ const exec: GC = {
       tb.log(msg, undefined, raw);
     }
 
-    await service.executeServerlessCommand(
+    await executeServerlessCommand(
+      service,
       slsCmdBase,
       {},
       slsLog,

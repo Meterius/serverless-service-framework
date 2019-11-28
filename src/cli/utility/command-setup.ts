@@ -14,7 +14,7 @@ import { createFramework } from "../../framework/framework";
 import { Framework, ServiceHookMap } from "../../framework/provider-definition";
 import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
-import { getService } from "./framework";
+import { executeHook, getService } from "./framework";
 
 /**
  * Retrieves framework using common options.
@@ -80,7 +80,7 @@ export function createHookCommand(hookName: keyof ServiceHookMap): GC {
           msg: string, raw: boolean,
         ): void => tb.log(msg, `${hookName} ${service.name}`, raw);
 
-        await service.executeHook(hookName, log);
+        await executeHook(service, hookName, log);
       }
     },
   };
