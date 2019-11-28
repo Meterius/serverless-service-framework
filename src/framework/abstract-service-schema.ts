@@ -34,7 +34,7 @@ export abstract class AbstractServiceSchema<
 
   private readonly props: ServiceSchemaProperties<D>;
 
-  constructor(
+  protected constructor(
     commonSchemaClass: CommonSchemaClass<D>,
     frameworkSchema: FrameworkSchema<D>,
     props: ServiceSchemaProperties<D>,

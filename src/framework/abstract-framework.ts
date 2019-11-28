@@ -1,9 +1,18 @@
 import {
-  APD, CommonSchemaClass, FrameworkActionLogic,
-  FrameworkActionLogicClass, FrameworkSchema, FrameworkSchemaClass, FrameworkSchemaProperties,
+  APD,
+  FrameworkActionLogic,
+  FrameworkActionLogicClass,
+  FrameworkSchema,
+  FrameworkSchemaClass,
+  FrameworkSchemaProperties,
   Provider,
   ProviderClass,
-  Service, ServiceSchema, ServiceSchemaCollection,
+  Service,
+  ServiceClass,
+  ServiceSchema,
+  ServiceSchemaCollection,
+  ServiceSchemaCollectionClass,
+  ServiceSchemaProperties,
 } from "./abstract-provider-definition";
 import { FrameworkOptions } from "./framework-options";
 import { filterObject } from "../common/utility";
@@ -21,20 +30,27 @@ export abstract class AbstractFramework<
 
   public readonly schema: FrameworkSchema<D>;
 
-  constructor(
-    commonSchemaClass: CommonSchemaClass<D>,
+  private readonly serviceClass: ServiceClass<D>;
+
+  private readonly serviceSchemaCollectionClass: ServiceSchemaCollectionClass<D>;
+
+  protected constructor(
     providerClass: ProviderClass<D>,
     frameworkActionLogicClass: FrameworkActionLogicClass<D>,
     frameworkSchemaClass: FrameworkSchemaClass<D>,
+    serviceClass: ServiceClass<D>,
+    serviceSchemaCollectionClass: ServiceSchemaCollectionClass<D>,
     props: FrameworkSchemaProperties<D>,
     options: FrameworkOptions,
     stage: string,
   ) {
+    this.serviceSchemaCollectionClass = serviceSchemaCollectionClass;
+    this.serviceClass = serviceClass;
     this.stage = stage;
 
     // eslint-disable-next-line new-cap
     this.schema = new frameworkSchemaClass(
-      commonSchemaClass, props, options,
+      props, options,
     );
 
     // eslint-disable-next-line new-cap
@@ -74,6 +90,26 @@ export abstract class AbstractFramework<
     } else {
       return service;
     }
+  }
+
+  addServices(
+    serviceDefinitions: ({ props: ServiceSchemaProperties<D>; dirPath: string})[],
+  ): void {
+    const newServices = serviceDefinitions.map(
+      (
+        { dirPath, props },
+        // eslint-disable-next-line new-cap
+      ) => new this.serviceClass(this, props, dirPath),
+    );
+
+    const serviceSchemas = this.serviceSchemas.concat(
+      newServices.map((service) => service.schema),
+    );
+
+    // eslint-disable-next-line new-cap
+    const collection = new this.serviceSchemaCollectionClass(serviceSchemas);
+
+    this.ensureValidity(collection);
   }
 
   // eslint-disable-next-line class-methods-use-this

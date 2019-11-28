@@ -2,7 +2,6 @@ import { mkdirp, writeFile } from "fs-extra";
 import path from "path";
 import {
   APD,
-  CommonSchemaClass,
   Framework, Service, ServiceSchema,
   ServiceSchemaClass, ServiceSchemaProperties,
 } from "./abstract-provider-definition";
@@ -48,8 +47,7 @@ export abstract class AbstractService<
 
   private readonly props: ServiceSchemaProperties<D>;
 
-  constructor(
-    commonSchemaClass: CommonSchemaClass<D>,
+  protected constructor(
     serviceSchemaClass: ServiceSchemaClass<D>,
     framework: Framework<D>,
     props: ServiceSchemaProperties<D>,
@@ -59,7 +57,7 @@ export abstract class AbstractService<
     this.props = props;
     // eslint-disable-next-line new-cap
     this.schema = new serviceSchemaClass(
-      commonSchemaClass, framework.schema, props,
+      framework.schema, props,
     );
 
     this.framework = framework;

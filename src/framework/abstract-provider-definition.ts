@@ -86,13 +86,11 @@ export type CommonSchemaClass<D extends APD> = new (
 ) => CommonSchema<D>;
 
 export type ServiceSchemaClass<D extends APD> = new (
-  commonSchemaClass: CommonSchemaClass<D>,
   frameworkSchema: FrameworkSchema<D>,
   props: ServiceSchemaProperties<D>,
 ) => ServiceSchema<D>;
 
 export type FrameworkSchemaClass<D extends APD> = new (
-  commonSchemaClass: CommonSchemaClass<D>,
   props: FrameworkSchemaProperties<D>,
   options: FrameworkOptions,
 ) => FrameworkSchema<D>;
@@ -104,3 +102,13 @@ export type ProviderClass<D extends APD> = new (
 export type FrameworkActionLogicClass<D extends APD> = new (
   framework: Framework<D>
 ) => FrameworkActionLogic<D>;
+
+export type ServiceClass<D extends APD> = new (
+  framework: Framework<D>,
+  props: ServiceSchemaProperties<D>,
+  dirPath: string,
+) => Service<D>;
+
+export type ServiceSchemaCollectionClass<D extends APD> = new (
+  serviceSchemas: ServiceSchema<D>[],
+) => ServiceSchemaCollection<D>;

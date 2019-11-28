@@ -22,7 +22,7 @@ export abstract class AbstractFrameworkSchema<
 
   private readonly props: FrameworkSchemaProperties<D>;
 
-  constructor(
+  protected constructor(
     commonSchemaClass: CommonSchemaClass<D>,
     props: FrameworkSchemaProperties<D>,
     options: FrameworkOptions,

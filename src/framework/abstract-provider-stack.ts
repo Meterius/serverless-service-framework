@@ -8,7 +8,7 @@ export abstract class AbstractProviderStack<
 
   public readonly service: Service<D>;
 
-  public constructor(service: Service<D>, stackData: SD) {
+  constructor(service: Service<D>, stackData: SD) {
     this.service = service;
     this.data = stackData;
   }
