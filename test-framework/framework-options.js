@@ -1,6 +1,6 @@
 module.exports = {
-	transpileOnly: true,
-	stubDirectImports: 5,
+	transpileOnly: false,
+	stubDirectImports: undefined,
 
 	usernameStageMap: {
 		"jondow8": "hoff",

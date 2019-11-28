@@ -1,6 +1,6 @@
 import { ServiceSchemaProperties } from "serverless-service-framework";
 
-import { dummy } from "@r/dummy";
+import { dummy } from "@services/dummy";
 
 export const schema: ServiceSchemaProperties = {
   name: "0a",
