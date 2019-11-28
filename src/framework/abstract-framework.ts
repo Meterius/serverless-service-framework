@@ -4,7 +4,6 @@ import {
   FrameworkActionLogicClass,
   FrameworkSchema,
   FrameworkSchemaClass,
-  FrameworkSchemaProperties,
   Provider,
   ProviderClass,
   Service,
@@ -12,7 +11,7 @@ import {
   ServiceClass,
   ServiceSchema,
   ServiceSchemaCollection,
-  ServiceSchemaCollectionClass,
+  ServiceSchemaCollectionClass, FrameworkDefinition,
 } from "./abstract-provider-definition";
 import { FrameworkOptions } from "./framework-options";
 import { filterObject } from "../common/utility";
@@ -26,6 +25,8 @@ export abstract class AbstractFramework<
 
   public readonly stage: string;
 
+  public readonly profile: string | undefined;
+
   public readonly actionLogic: FrameworkActionLogic<D>;
 
   public readonly schema: FrameworkSchema<D>;
@@ -34,23 +35,31 @@ export abstract class AbstractFramework<
 
   private readonly serviceSchemaCollectionClass: ServiceSchemaCollectionClass<D>;
 
+  private readonly definition: FrameworkDefinition<D>;
+
+  private readonly options: FrameworkOptions;
+
   protected constructor(
     providerClass: ProviderClass<D>,
     frameworkActionLogicClass: FrameworkActionLogicClass<D>,
     frameworkSchemaClass: FrameworkSchemaClass<D>,
     serviceClass: ServiceClass<D>,
     serviceSchemaCollectionClass: ServiceSchemaCollectionClass<D>,
-    props: FrameworkSchemaProperties<D>,
+    definition: FrameworkDefinition<D>,
     options: FrameworkOptions,
     stage: string,
+    profile?: string,
   ) {
+    this.options = options;
+    this.definition = definition;
+    this.stage = stage;
+    this.profile = profile;
     this.serviceSchemaCollectionClass = serviceSchemaCollectionClass;
     this.serviceClass = serviceClass;
-    this.stage = stage;
 
     // eslint-disable-next-line new-cap
     this.schema = new frameworkSchemaClass(
-      props, options,
+      definition.props, options,
     );
 
     // eslint-disable-next-line new-cap
@@ -58,6 +67,8 @@ export abstract class AbstractFramework<
 
     // eslint-disable-next-line new-cap
     this.provider = new providerClass(this);
+
+    this.addServices(definition.serviceDefinitions);
   }
 
   get serviceSchemas(): ServiceSchema<D>[] {
@@ -97,9 +108,9 @@ export abstract class AbstractFramework<
   ): void {
     const newServices = serviceDefinitions.map(
       (
-        { dirPath, props },
+        { dirPath, props, hookMap },
         // eslint-disable-next-line new-cap
-      ) => new this.serviceClass(this, props, dirPath),
+      ) => new this.serviceClass(this, props, dirPath, hookMap),
     );
 
     const serviceSchemas = this.serviceSchemas.concat(

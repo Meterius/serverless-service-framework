@@ -9,6 +9,8 @@ export * from "./aws-provider";
 export * from "./aws-provider-definition";
 export * from "./aws-service";
 export * from "./aws-service-definition";
+export * from "./aws-service-hook";
+export * from "./aws-service-hook-map";
 export * from "./aws-service-schema";
 export * from "./aws-service-schema-collection";
 export * from "./aws-service-schema-properties";

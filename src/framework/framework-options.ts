@@ -1,6 +1,8 @@
 import path from "path";
 import { isNativeFrameworkOptions } from "./framework-options.runtypes";
 import { loadJavascriptModule } from "../common/module-loading";
+import { findMatchingFile } from "../common/filesystem";
+import { frameworkOptionsExtensions, frameworkOptionsNames } from "../common/constants";
 
 export interface NativeFrameworkOptions {
   tsconfigPath?: string; // defaults to tsconfig.json
@@ -12,6 +14,10 @@ export interface NativeFrameworkOptions {
 }
 
 export type FrameworkOptions = Required<NativeFrameworkOptions>;
+
+export function getFrameworkOptionsFilePath(dirPath: string): Promise<string | undefined> {
+  return findMatchingFile(dirPath, frameworkOptionsNames, frameworkOptionsExtensions);
+}
 
 export function getFrameworkOptions(
   nativeOptions: NativeFrameworkOptions,

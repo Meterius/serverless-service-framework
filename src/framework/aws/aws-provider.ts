@@ -7,6 +7,7 @@ import { ProcessedImportValue } from "../abstract-service-schema-properties";
 import { ExportValue } from "../abstract-common-schema-properties";
 import { ServerlessTemplatePostExports, ServerlessTemplatePreExports } from "../templates";
 import { isObject } from "../../common/type-guards";
+import { AwsFramework } from "./aws-framework";
 
 const deletedStackStates = ["DELETE_IN_PROGRESS", "DELETE_COMPLETE"];
 
@@ -18,6 +19,16 @@ AwsProviderDefinition,
 TemplateExportValue
 > {
   public readonly name = "aws";
+
+  public readonly credentials: Aws.SharedIniFileCredentials;
+
+  constructor(framework: AwsFramework) {
+    super(framework);
+
+    this.credentials = new Aws.SharedIniFileCredentials({
+      profile: framework.profile,
+    });
+  }
 
   // eslint-disable-next-line class-methods-use-this
   public async retrieveServiceStack(

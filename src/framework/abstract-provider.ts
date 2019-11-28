@@ -19,7 +19,7 @@ export abstract class AbstractProvider<
 > {
   public abstract readonly name: ServerlessProviderName;
 
-  private readonly framework: Framework<D>;
+  protected readonly framework: Framework<D>;
 
   public constructor(framework: Framework<D>) {
     this.framework = framework;
@@ -80,4 +80,6 @@ export abstract class AbstractProvider<
     exportTemplateValueMap: Record<string, TEV>,
     template: ServerlessTemplatePreExports,
   ): ServerlessTemplatePostExports;
+
+  public abstract getProviderConfigurationEnvironmentVariables(): Record<string, string>;
 }

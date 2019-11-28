@@ -13,6 +13,8 @@ import { FrameworkOptions } from "./framework-options";
 import { AbstractServiceSchemaCollection } from "./abstract-service-collection";
 import { AbstractServiceDefinition } from "./abstract-service-definition";
 import { AbstractFrameworkDefinition } from "./abstract-framework-definition";
+import { AbstractServiceHook } from "./abstract-service-hook";
+import {AbstractServiceHookMap} from "./abstract-service-hook-map";
 
 export type APD = AbstractProviderDefinition<
 any,
@@ -25,6 +27,8 @@ AbstractServiceSchema<any>,
 AbstractServiceSchemaCollection<any>,
 AbstractService<any>,
 AbstractServiceDefinition<any>,
+  AbstractServiceHook<any>,
+  AbstractServiceHookMap<any>,
 AbstractFrameworkSchemaProperties<any>,
 AbstractFrameworkSchema<any>,
 AbstractFramework<any>,
@@ -43,6 +47,8 @@ export type AbstractProviderDefinition<
   ServiceSchemaCollection extends AbstractServiceSchemaCollection<Definition>,
   Service extends AbstractService<Definition>,
   ServiceDefinition extends AbstractServiceDefinition<Definition>,
+  ServiceHook extends AbstractServiceHook<Definition>,
+  ServiceHookMap extends AbstractServiceHookMap<Definition>,
   FrameworkSchemaProperties extends AbstractFrameworkSchemaProperties<Definition>,
   FrameworkSchema extends AbstractFrameworkSchema<Definition>,
   Framework extends AbstractFramework<Definition>,
@@ -58,6 +64,8 @@ export type AbstractProviderDefinition<
   serviceSchemaCollection: ServiceSchemaCollection;
   service: Service;
   serviceDefinition: ServiceDefinition;
+  serviceHook: ServiceHook;
+  serviceHookMap: ServiceHookMap;
   frameworkSchemaProperties: FrameworkSchemaProperties;
   frameworkSchema: FrameworkSchema;
   framework: Framework;
@@ -82,6 +90,10 @@ export type ServiceSchemaCollection<D extends APD> = D["serviceSchemaCollection"
 export type Service<D extends APD> = D["service"];
 
 export type ServiceDefinition<D extends APD> = D["serviceDefinition"];
+
+export type ServiceHook<D extends APD> = D["serviceHook"];
+
+export type ServiceHookMap<D extends APD> = D["serviceHookMap"];
 
 export type FrameworkSchemaProperties<D extends APD> = D["frameworkSchemaProperties"];
 
@@ -119,6 +131,7 @@ export type ServiceClass<D extends APD> = new (
   framework: Framework<D>,
   props: ServiceSchemaProperties<D>,
   dirPath: string,
+  hookMap: ServiceHookMap<D>,
 ) => Service<D>;
 
 export type ServiceSchemaCollectionClass<D extends APD> = new (

@@ -1,6 +1,6 @@
-// framework schema names and extensions searched for in framework directory
-export const frameworkNames = ["framework"];
-export const frameworkExtensions = ["ts"];
+// framework definition names and extensions searched for in framework directory
+export const frameworkDefinitionNames = ["framework"];
+export const frameworkDefinitionExtensions = ["ts"];
 
 // framework options names and extensions searched for in framework directory
 export const frameworkOptionsNames = ["framework-options"];

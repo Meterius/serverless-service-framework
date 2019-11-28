@@ -13,6 +13,8 @@ import { AwsFramework } from "./aws-framework";
 import { AwsFrameworkActionLogic } from "./aws-framework-action-logic";
 import { AwsServiceDefinition } from "./aws-service-definition";
 import { AwsFrameworkDefinition } from "./aws-framework-definition";
+import { AwsServiceHook } from "./aws-service-hook";
+import { AwsServiceHookMap } from "./aws-service-hook-map";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface AwsProviderDefinition extends AbstractProviderDefinition<
@@ -26,6 +28,8 @@ AwsServiceSchema,
 AwsServiceSchemaCollection,
 AwsService,
 AwsServiceDefinition,
+AwsServiceHook,
+AwsServiceHookMap,
 AwsFrameworkSchemaProperties,
 AwsFrameworkSchema,
 AwsFramework,

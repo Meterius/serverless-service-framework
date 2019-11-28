@@ -1,8 +1,10 @@
 import { mkdirp, writeFile } from "fs-extra";
 import path from "path";
+import chalk from "chalk";
+import { titleCase } from "change-case";
 import {
   APD,
-  Framework, Service, ServiceSchema,
+  Framework, Service, ServiceHookMap, ServiceSchema,
   ServiceSchemaClass, ServiceSchemaProperties,
 } from "./abstract-provider-definition";
 import {
@@ -20,6 +22,7 @@ import {
 import { serviceBuild, serviceBuildDir } from "../common/constants";
 import { merge } from "../common/utility";
 import { AbstractServiceSchema } from "./abstract-service-schema";
+import { bufferedExec } from "../common/buffered-exec";
 
 export enum ServerlessTemplateFormat {
   JavaScript = "js"
@@ -45,6 +48,8 @@ export abstract class AbstractService<
 
   public readonly schema: ServiceSchema<D>;
 
+  public readonly hookMap: ServiceHookMap<D>;
+
   private readonly props: ServiceSchemaProperties<D>;
 
   protected constructor(
@@ -52,9 +57,11 @@ export abstract class AbstractService<
     framework: Framework<D>,
     props: ServiceSchemaProperties<D>,
     dirPath: string,
+    hookMap: ServiceHookMap<D>,
   ) {
     this.dirPath = dirPath;
     this.props = props;
+    this.hookMap = hookMap;
     // eslint-disable-next-line new-cap
     this.schema = new serviceSchemaClass(
       framework.schema, props,
@@ -291,6 +298,80 @@ export abstract class AbstractService<
     }
 
     return this.__serverlessTemplate;
+  }
+
+  async executeHook(
+    name: keyof ServiceHookMap<D>,
+    log: (data: string, raw?: boolean) => void,
+  ): Promise<void> {
+    const hook = this.hookMap[name];
+
+    if (hook === undefined) {
+      log(`${titleCase(name.toString())} hook not set, skipping execution...`, false);
+    } else {
+      log(`Executing ${titleCase(name.toString())} hook...`, false);
+      // @ts-ignore
+      await hook(this, log);
+    }
+  }
+
+  async executeServerlessCommand(
+    command: string,
+    options: Record<string, boolean | string>,
+    // eslint-disable-next-line @typescript-eslint/unbound-method,no-console
+    log: (data: string, raw: boolean) => void,
+    async: boolean,
+  ): Promise<void> {
+    const logD = (data: string, raw = false): void => log(data, raw);
+    const logR = (data: string): void => log(data, true);
+
+    const serviceDir = this.dirPath;
+
+    const templatePath = path.relative(serviceDir, await this.getServerlessTemplateFilePath());
+
+    const extendedServerlessOptions: Record<string, string | boolean> = {
+      ...options,
+      "--verbose": true,
+      "--config": templatePath,
+      "--stage": this.framework.stage,
+      "--region": this.region,
+    };
+
+    if (this.framework.profile) {
+      extendedServerlessOptions["--profile"] = this.framework.profile;
+    }
+
+    const serverlessOptionList = Object.entries(extendedServerlessOptions).map(
+      ([key, value]) => {
+        if (typeof value === "boolean") {
+          return value ? `${key} ` : "";
+        } else {
+          return `${key} "${value}" `;
+        }
+      },
+    ).join("");
+
+    const isDeploying = command.includes("deploy");
+    const slsCmd = `sls ${command} ${serverlessOptionList}`.trimRight();
+
+    await this.executeHook("setup", logD);
+
+    logD(chalk`Running Serverless Command: "{blue ${slsCmd}}"`);
+    logD(chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), serviceDir)}}"`);
+
+    const fullCommand = `npx --no-install ${slsCmd}`;
+
+    await bufferedExec({
+      cwd: serviceDir,
+      env: { ...process.env },
+      command: fullCommand,
+      log: logR,
+      async,
+    });
+
+    if (isDeploying) {
+      await this.executeHook("postDeploy", logD);
+    }
   }
 
   /**
