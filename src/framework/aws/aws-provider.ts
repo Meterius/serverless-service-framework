@@ -1,4 +1,4 @@
-import * as Aws from "aws-sdk";
+import aws from "aws-sdk";
 import { AbstractProvider } from "../abstract-provider";
 import { AwsProviderDefinition } from "./aws-provider-definition";
 import { AwsStack } from "./aws-stack";
@@ -20,12 +20,12 @@ TemplateExportValue
 > {
   public readonly name = "aws";
 
-  public readonly credentials: Aws.SharedIniFileCredentials;
+  public readonly credentials: aws.SharedIniFileCredentials;
 
   constructor(framework: AwsFramework) {
     super(framework);
 
-    this.credentials = new Aws.SharedIniFileCredentials({
+    this.credentials = new aws.SharedIniFileCredentials({
       profile: framework.profile,
     });
   }
@@ -36,7 +36,7 @@ TemplateExportValue
   ): Promise<AwsStack | undefined> {
     const cf = AwsProvider.getCloudFormation(service);
 
-    let response: Aws.CloudFormation.DescribeStacksOutput;
+    let response: aws.CloudFormation.DescribeStacksOutput;
     try {
       response = await cf.describeStacks({
         StackName: service.stackName,
@@ -149,9 +149,9 @@ TemplateExportValue
     return template;
   }
 
-  private static getCloudFormation(service: AwsService): Aws.CloudFormation {
-    return new Aws.CloudFormation({
-      region: service.region,
+  private static getCloudFormation(service: AwsService): aws.CloudFormation {
+    return new aws.CloudFormation({
+      ...service.awsClientConfig,
     });
   }
 }
