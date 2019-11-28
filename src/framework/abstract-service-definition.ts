@@ -1,4 +1,4 @@
-import {APD, ServiceHookMap, ServiceSchemaProperties} from "./abstract-provider-definition";
+import { APD, ServiceHookMap, ServiceSchemaProperties } from "./abstract-provider-definition";
 
 export abstract class AbstractServiceDefinition<
   D extends APD, // AbstractProviderDefinition

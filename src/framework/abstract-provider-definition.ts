@@ -14,7 +14,7 @@ import { AbstractServiceSchemaCollection } from "./abstract-service-collection";
 import { AbstractServiceDefinition } from "./abstract-service-definition";
 import { AbstractFrameworkDefinition } from "./abstract-framework-definition";
 import { AbstractServiceHook } from "./abstract-service-hook";
-import {AbstractServiceHookMap} from "./abstract-service-hook-map";
+import { AbstractServiceHookMap } from "./abstract-service-hook-map";
 
 export type APD = AbstractProviderDefinition<
 any,
@@ -27,8 +27,8 @@ AbstractServiceSchema<any>,
 AbstractServiceSchemaCollection<any>,
 AbstractService<any>,
 AbstractServiceDefinition<any>,
-  AbstractServiceHook<any>,
-  AbstractServiceHookMap<any>,
+AbstractServiceHook<any>,
+AbstractServiceHookMap<any>,
 AbstractFrameworkSchemaProperties<any>,
 AbstractFrameworkSchema<any>,
 AbstractFramework<any>,

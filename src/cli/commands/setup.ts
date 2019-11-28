@@ -1,3 +1,3 @@
-import { createHookCommand, HookName } from "../utility/hook-execution";
+import { createHookCommand } from "../utility/command-setup";
 
-export default createHookCommand(HookName.Setup);
+export default createHookCommand("setup");

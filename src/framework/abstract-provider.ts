@@ -80,6 +80,4 @@ export abstract class AbstractProvider<
     exportTemplateValueMap: Record<string, TEV>,
     template: ServerlessTemplatePreExports,
   ): ServerlessTemplatePostExports;
-
-  public abstract getProviderConfigurationEnvironmentVariables(): Record<string, string>;
 }

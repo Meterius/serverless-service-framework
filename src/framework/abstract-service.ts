@@ -302,7 +302,7 @@ export abstract class AbstractService<
 
   async executeHook(
     name: keyof ServiceHookMap<D>,
-    log: (data: string, raw?: boolean) => void,
+    log: (data: string, raw: boolean) => void,
   ): Promise<void> {
     const hook = this.hookMap[name];
 
@@ -354,7 +354,7 @@ export abstract class AbstractService<
     const isDeploying = command.includes("deploy");
     const slsCmd = `sls ${command} ${serverlessOptionList}`.trimRight();
 
-    await this.executeHook("setup", logD);
+    await this.executeHook("setup", log);
 
     logD(chalk`Running Serverless Command: "{blue ${slsCmd}}"`);
     logD(chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), serviceDir)}}"`);
@@ -370,7 +370,7 @@ export abstract class AbstractService<
     });
 
     if (isDeploying) {
-      await this.executeHook("postDeploy", logD);
+      await this.executeHook("postDeploy", log);
     }
   }
 

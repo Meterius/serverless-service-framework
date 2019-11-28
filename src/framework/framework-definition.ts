@@ -8,8 +8,7 @@ import {
   frameworkDefinitionExtensions,
 } from "../common/constants";
 import { AwsFrameworkDefinition } from "./aws";
-
-export type FrameworkDefinition = AwsFrameworkDefinition;
+import { FrameworkDefinition } from "./provider-definition";
 
 export function isAwsFrameworkDefinition(value: unknown): value is AwsFrameworkDefinition {
   return value instanceof AwsFrameworkDefinition;

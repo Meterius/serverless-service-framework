@@ -1,8 +1,7 @@
 import { FrameworkOptions } from "./framework-options";
 import { AwsFramework } from "./aws";
-import { isAwsFrameworkDefinition, FrameworkDefinition } from "./framework-definition";
-
-export type Framework = AwsFramework;
+import { isAwsFrameworkDefinition } from "./framework-definition";
+import { Framework, FrameworkDefinition } from "./provider-definition";
 
 export function createFramework(
   definition: FrameworkDefinition,

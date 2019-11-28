@@ -1,20 +1,18 @@
 import chalk from "chalk";
 import { setupFrameworkContextFunction } from "./command-setup";
 import { TB } from "../cli-types";
-import { ServiceContext, FrameworkContext } from "../../framework/classes";
 import { getParallelFlag } from "./common-options";
 import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
-import { execServerlessCommand, getService } from "./framework";
-import { ProviderContext } from "./provider-configuration";
+import { Framework, Service } from "../../framework/provider-definition";
+import { getService } from "./framework";
 
 const { hrtime } = process;
 
 interface PerformEnvironment {
   tb: TB;
-  context: FrameworkContext;
-  providerContext: ProviderContext;
-  performingServices: ServiceContext[];
+  framework: Framework;
+  performingServices: Service[];
   actionTitle: string;
   actionServerlessCommand: string | undefined;
   actionDependenciesReversed: boolean;
@@ -35,13 +33,13 @@ function joinCQ(arr: string[], clr: string | undefined = "blue"): string {
   return joinC(arr.map((str) => (clr ? chalk`"{${clr} ${str}}"` : `"${str}"`)));
 }
 
-function createLogTitle(env: PerformEnvironment, service?: ServiceContext): string {
+function createLogTitle(env: PerformEnvironment, service?: Service): string {
   return chalk`{blue ${env.actionTitle}${service ? ` "${service.name}"` : ""}}`;
 }
 
 function createLog(
   env: PerformEnvironment,
-  service?: ServiceContext,
+  service?: Service,
   print?: (msg: string) => void,
 ): (msg: string) => void {
   return (msg: string): void => {
@@ -50,10 +48,10 @@ function createLog(
 }
 
 async function performService(
-  service: ServiceContext, env: PerformEnvironment, print?: (msg: string) => void,
+  service: Service, env: PerformEnvironment, print?: (msg: string) => void,
 ): Promise<void> {
   const {
-    actPres, actPast, actionServerlessCommand, tb, skipServiceIfNotDeployed, providerContext,
+    actPres, actPast, actionServerlessCommand, tb, skipServiceIfNotDeployed,
   } = env;
 
   const log = createLog(env, service, print);
@@ -61,7 +59,7 @@ async function performService(
   log(chalk`${cap(actPres)} "{blue ${service.name}}" in region "{blue ${service.region}}"`);
 
   if (skipServiceIfNotDeployed) {
-    const exists = await service.context.provider.isServiceDeployed(service);
+    const exists = await service.framework.provider.isServiceDeployed(service);
 
     if (!exists) {
       log(chalk`{green Skipped "{blue ${service.name}}" (since it is not deployed)}`);
@@ -71,16 +69,17 @@ async function performService(
 
   const startTime = hrtime();
 
+  function slsLog(msg: string, raw = false): void {
+    tb.log(msg, createLogTitle(env, service), raw, print);
+  }
+
   if (actionServerlessCommand) {
-    await execServerlessCommand({
-      tb,
-      service,
-      providerContext,
-      serverlessCommand: actionServerlessCommand,
-      serverlessOptions: {},
-      print,
-      logTitle: createLogTitle(env, service),
-    });
+    await service.executeServerlessCommand(
+      actionServerlessCommand,
+      {},
+      slsLog,
+      print !== undefined,
+    );
   }
 
   const endTimeInSec = hrtime(startTime)[0].toString(10);
@@ -90,39 +89,39 @@ async function performService(
 
 async function performParallel(env: PerformEnvironment): Promise<void> {
   const {
-    tb, context, performingServices, actPast, actPres, actionDependenciesReversed,
+    tb, framework, performingServices, actPast, actPres, actionDependenciesReversed,
   } = env;
 
   const log = createLog(env);
 
   interface Task {
-    service: ServiceContext;
+    service: Service;
     outputReference: { output: string };
-    promise: Promise<[ServiceContext, undefined | Error]>;
+    promise: Promise<[Service, undefined | Error]>;
   }
 
   const tasks: Task[] = [];
   const failedTasks: Task[] = [];
 
-  const performedServices = context.actionLogic.getPerformedServices(performingServices);
+  const performedServices = framework.actionLogic.getPerformedServices(performingServices);
 
   while (
     (
-      context.actionLogic.getNotPerformedServices(performedServices).length > 0
+      framework.actionLogic.getNotPerformedServices(performedServices).length > 0
       && failedTasks.length === 0
     ) || (
       tasks.length > 0
     )
   ) {
     // get all services that could be performed and are not currently being performed
-    const possible = context.actionLogic.getAllPerformable(
+    const possible = framework.actionLogic.getAllPerformable(
       performedServices, actionDependenciesReversed,
     ).filter((service) => !tasks.map((task) => task.service).includes(service));
 
     // if no service failed and there are services to perform add them
     if (possible.length > 0 && failedTasks.length === 0) {
       tasks.push(
-        ...possible.map((service: ServiceContext): Task => {
+        ...possible.map((service: Service): Task => {
           const outputReference = {
             output: "",
           };
@@ -133,7 +132,7 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
             outputReference,
             // perform service and resolve with the error instead of
             // rejecting to simplify handling with Promise.race
-            promise: new Promise<[ServiceContext, Error | undefined]>((resolve) => {
+            promise: new Promise<[Service, Error | undefined]>((resolve) => {
               performService(
                 service, env, (msg: string) => { outputReference.output += msg; },
               ).then(() => {
@@ -147,7 +146,7 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
       );
     }
 
-    const remaining = context.actionLogic.getNotPerformedServices(performedServices)
+    const remaining = framework.actionLogic.getNotPerformedServices(performedServices)
       .filter((service) => !tasks.some((task) => task.service === service))
       .map((service) => service.name);
 
@@ -199,7 +198,7 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
       tb.log(execLog, undefined, true);
     });
 
-    const notDeployedServices = context.actionLogic.getNotPerformedServices(performedServices)
+    const notDeployedServices = framework.actionLogic.getNotPerformedServices(performedServices)
       .map((service) => service.name);
     const deployedServices = performedServices.filter(
       (service) => performingServices.includes(service),
@@ -216,12 +215,12 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
 
 async function performSequential(env: PerformEnvironment): Promise<void> {
   const {
-    context, actPast, actPres, performingServices, actionDependenciesReversed,
+    framework, actPast, actPres, performingServices, actionDependenciesReversed,
   } = env;
 
   const log = createLog(env);
 
-  const order = context.actionLogic.getTotalSequentialOrder(actionDependenciesReversed)
+  const order = framework.actionLogic.getTotalSequentialOrder(actionDependenciesReversed)
     .filter((service) => performingServices.includes(service));
 
   for (let i = 0; i < order.length; i += 1) {
@@ -261,12 +260,12 @@ export function createMultiServiceCommandRun({
   return async function cmd(tb: TB): Promise<void> {
     // ENVIRONMENT SETUP
 
-    const { context, providerContext } = await setupFrameworkContextFunction(tb);
+    const framework = await setupFrameworkContextFunction(tb);
 
     const [...serviceIds] = requireVariadicParameters(tb, "service-name");
 
-    const performingServices = serviceIds.length === 0 ? context.services
-      : filterDuplicates(serviceIds.map((id) => getService(context, id)));
+    const performingServices = serviceIds.length === 0 ? framework.services
+      : filterDuplicates(serviceIds.map((id) => getService(framework, id)));
 
     const parallel = getParallelFlag(tb);
 
@@ -278,8 +277,7 @@ export function createMultiServiceCommandRun({
       performingServices,
       actPast,
       actPres,
-      context,
-      providerContext,
+      framework,
       actionServerlessCommand,
       actionTitle,
       actionDependenciesReversed,
@@ -291,7 +289,7 @@ export function createMultiServiceCommandRun({
     const log = createLog(env);
 
     log(`${cap(actPres)} Services ${joinCQ(performingServices.map((s) => s.schema.name))}`);
-    log(`Stage: "${context.stage}"`);
+    log(`Stage: "{blue ${framework.stage}}"`);
 
     const startTime = hrtime();
 
