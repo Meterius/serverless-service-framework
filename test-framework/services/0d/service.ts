@@ -1,19 +1,18 @@
-import { ServiceSchemaProperties } from "serverless-service-framework";
+import {AwsServiceDefinition} from "serverless-service-framework";
 
-export const schema: ServiceSchemaProperties = {
-  name: "0d",
-  shortName: "0d",
+export default new AwsServiceDefinition(
+  {
+    name: "0d",
+    shortName: "0d",
 
-  importMap: {
-    "0c": [],
-    "0b": [],
-  },
+    importMap: {
+      "0c": [],
+      "0b": [],
+    },
 
-  exportMap: {
-  },
+    exportMap: {},
 
-  template: {
-
-  },
-};
+    template: {},
+  }, __dirname
+);
 

@@ -11,6 +11,8 @@ import { AbstractFrameworkSchemaProperties } from "./abstract-framework-schema-p
 import { AbstractFrameworkActionLogic } from "./abstract-framework-action-logic";
 import { FrameworkOptions } from "./framework-options";
 import { AbstractServiceSchemaCollection } from "./abstract-service-collection";
+import { AbstractServiceDefinition } from "./abstract-service-definition";
+import { AbstractFrameworkDefinition } from "./abstract-framework-definition";
 
 export type APD = AbstractProviderDefinition<
 any,
@@ -22,9 +24,11 @@ AbstractServiceSchemaProperties<any>,
 AbstractServiceSchema<any>,
 AbstractServiceSchemaCollection<any>,
 AbstractService<any>,
+AbstractServiceDefinition<any>,
 AbstractFrameworkSchemaProperties<any>,
 AbstractFrameworkSchema<any>,
 AbstractFramework<any>,
+AbstractFrameworkDefinition<any>,
 AbstractFrameworkActionLogic<any>
 >;
 
@@ -38,9 +42,11 @@ export type AbstractProviderDefinition<
   ServiceSchema extends AbstractServiceSchema<Definition>,
   ServiceSchemaCollection extends AbstractServiceSchemaCollection<Definition>,
   Service extends AbstractService<Definition>,
+  ServiceDefinition extends AbstractServiceDefinition<Definition>,
   FrameworkSchemaProperties extends AbstractFrameworkSchemaProperties<Definition>,
   FrameworkSchema extends AbstractFrameworkSchema<Definition>,
   Framework extends AbstractFramework<Definition>,
+  FrameworkDefinition extends AbstractFrameworkDefinition<Definition>,
   FrameworkActionLogic extends AbstractFrameworkActionLogic<Definition>,
 > = {
   provider: Provider;
@@ -51,9 +57,11 @@ export type AbstractProviderDefinition<
   serviceSchema: ServiceSchema;
   serviceSchemaCollection: ServiceSchemaCollection;
   service: Service;
+  serviceDefinition: ServiceDefinition;
   frameworkSchemaProperties: FrameworkSchemaProperties;
   frameworkSchema: FrameworkSchema;
   framework: Framework;
+  frameworkDefinition: FrameworkDefinition;
   frameworkActionLogic: FrameworkActionLogic;
 };
 
@@ -73,11 +81,15 @@ export type ServiceSchemaCollection<D extends APD> = D["serviceSchemaCollection"
 
 export type Service<D extends APD> = D["service"];
 
+export type ServiceDefinition<D extends APD> = D["serviceDefinition"];
+
 export type FrameworkSchemaProperties<D extends APD> = D["frameworkSchemaProperties"];
 
 export type FrameworkSchema<D extends APD> = D["frameworkSchema"];
 
 export type Framework<D extends APD> = D["framework"];
+
+export type FrameworkDefinition<D extends APD> = D["frameworkDefinition"];
 
 export type FrameworkActionLogic<D extends APD> = D["frameworkActionLogic"];
 

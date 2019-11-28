@@ -8,11 +8,11 @@ import {
   Provider,
   ProviderClass,
   Service,
+  ServiceDefinition,
   ServiceClass,
   ServiceSchema,
   ServiceSchemaCollection,
   ServiceSchemaCollectionClass,
-  ServiceSchemaProperties,
 } from "./abstract-provider-definition";
 import { FrameworkOptions } from "./framework-options";
 import { filterObject } from "../common/utility";
@@ -93,7 +93,7 @@ export abstract class AbstractFramework<
   }
 
   addServices(
-    serviceDefinitions: ({ props: ServiceSchemaProperties<D>; dirPath: string})[],
+    serviceDefinitions: ServiceDefinition<D>[],
   ): void {
     const newServices = serviceDefinitions.map(
       (

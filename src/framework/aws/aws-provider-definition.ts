@@ -11,6 +11,8 @@ import { AwsFrameworkSchemaProperties } from "./aws-framework-schema-properties"
 import { AwsFrameworkSchema } from "./aws-framework-schema";
 import { AwsFramework } from "./aws-framework";
 import { AwsFrameworkActionLogic } from "./aws-framework-action-logic";
+import { AwsServiceDefinition } from "./aws-service-definition";
+import { AwsFrameworkDefinition } from "./aws-framework-definition";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface AwsProviderDefinition extends AbstractProviderDefinition<
@@ -23,8 +25,10 @@ AwsServiceSchemaProperties,
 AwsServiceSchema,
 AwsServiceSchemaCollection,
 AwsService,
+AwsServiceDefinition,
 AwsFrameworkSchemaProperties,
 AwsFrameworkSchema,
 AwsFramework,
+AwsFrameworkDefinition,
 AwsFrameworkActionLogic
 > {}
