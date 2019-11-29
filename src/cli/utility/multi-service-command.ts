@@ -290,7 +290,13 @@ export function createMultiServiceCommandRun({
     const log = createLog(env);
 
     log(`${cap(actPres)} Services ${joinCQ(performingServices.map((s) => s.schema.name))}`);
-    log(chalk`Stage: "{blue ${framework.stage}}"`);
+    log(
+      chalk`Stage: "{blue ${framework.stage}}" `
+       + (
+         framework.profile !== undefined
+           ? chalk`Profile: "{blue ${framework.profile}}"` : chalk`Profile: {blue default}`
+       ),
+    );
 
     const startTime = hrtime();
 
