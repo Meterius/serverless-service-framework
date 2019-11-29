@@ -2,7 +2,7 @@ import { AwsFrameworkDefinition } from "serverless-service-framework";
 
 export const framework = new AwsFrameworkDefinition(__dirname, {
   name: "Test Backend",
-  shortName: "cqz-be",
+  shortName: "sff-test",
 
   importSettings: {
     defaultImportType: "direct",

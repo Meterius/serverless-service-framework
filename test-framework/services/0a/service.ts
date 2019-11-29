@@ -10,12 +10,34 @@ export const service = new AwsServiceDefinition(__dirname, {
       "0a": "output-0a",
     },
 
-    template: {},
+    template: {
+      resources: {
+        Resources: {
+          TestBucket: {
+            Type: "AWS::S3::Bucket",
+            Properties: {
+              BucketName: "some-test-bucket-0a"
+            }
+          }
+        },
+      }
+    },
   },
 );
 
 service.addHooks( {
   setup: async (service: AwsService, log: (data: string) => void) => {
     log("This is the Service 0A Setup Hook");
-  }
+  },
+  preRemove: async (service: AwsService, log: (data: string) => void) => {
+    const stack = await service.retrieveStack();
+
+    if(stack !== undefined) {
+      const buckets = await stack.emptyAllBuckets();
+
+      buckets.forEach(
+        bucket => log(`Bucket "${bucket}" has been emptied`)
+      );
+    }
+  },
 });
