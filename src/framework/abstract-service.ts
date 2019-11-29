@@ -348,10 +348,19 @@ export abstract class AbstractService<
     preExecutionTrigger: () => void,
   ): Promise<void> {
     const isDeploying = executableServerlessCommand.startsWith("sls deploy");
+    const isRemoving = executableServerlessCommand.startsWith("sls remove");
 
     const logR = (data: string): void => log(data, true);
 
     await hookExecutor(this, "setup", log);
+
+    if (isDeploying) {
+      await hookExecutor(this, "preDeploy", log);
+    }
+
+    if (isRemoving) {
+      await hookExecutor(this, "preRemove", log);
+    }
 
     const fullCommand = `npx --no-install ${executableServerlessCommand}`;
 
@@ -367,6 +376,10 @@ export abstract class AbstractService<
 
     if (isDeploying) {
       await hookExecutor(this, "postDeploy", log);
+    }
+
+    if (isRemoving) {
+      await hookExecutor(this, "postRemove", log);
     }
   }
 
