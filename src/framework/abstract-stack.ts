@@ -1,4 +1,4 @@
-import { APD, BaseCollection, Service } from "./abstract-provider-definition";
+import { APD, BaseParameter, Service } from "./abstract-provider-definition";
 import { AbstractBase } from "./abstract-base";
 
 export abstract class AbstractStack<
@@ -10,7 +10,7 @@ export abstract class AbstractStack<
   public readonly service: Service<D>;
 
   constructor(
-    base: BaseCollection<D>,
+    base: BaseParameter<D>,
     service: Service<D>,
     stackData: SD,
   ) {

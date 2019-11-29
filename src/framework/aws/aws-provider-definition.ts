@@ -1,4 +1,4 @@
-import { AbstractProviderDefinition, BaseCollection } from "../abstract-provider-definition";
+import { AbstractProviderDefinition } from "../abstract-provider-definition";
 import { AwsStack, AwsStackData } from "./aws-stack";
 import { AwsService } from "./aws-service";
 import { AwsProvider } from "./aws-provider";
@@ -42,19 +42,3 @@ AwsFramework,
 AwsFrameworkDefinition,
 AwsFrameworkActionLogic
 > {}
-
-export const awsBaseCollection: () => BaseCollection<AwsProviderDefinition> = () => ({
-  classes: {
-    Provider: AwsProvider,
-    Stack: AwsStack,
-    CommonSchema: AwsCommonSchema,
-    ServiceSchema: AwsServiceSchema,
-    ServiceSchemaCollection: AwsServiceSchemaCollection,
-    Service: AwsService,
-    ServiceDefinition: AwsServiceDefinition,
-    FrameworkSchema: AwsFrameworkSchema,
-    Framework: AwsFramework,
-    FrameworkDefinition: AwsFrameworkDefinition,
-    FrameworkActionLogic: AwsFrameworkActionLogic,
-  },
-});

@@ -2,7 +2,7 @@ import {
   ServerlessProviderName, ServerlessTemplatePostExports, ServerlessTemplatePreExports,
 } from "./templates";
 import {
-  APD, BaseCollection, Framework, Service, Stack,
+  APD, BaseParameter, Framework, Service, Stack,
 } from "./abstract-provider-definition";
 import { ProcessedImportValue } from "./abstract-service-schema-properties";
 import { ExportValue } from "./abstract-common-schema-properties";
@@ -23,7 +23,7 @@ export abstract class AbstractProvider<
   protected readonly framework: Framework<D>;
 
   public constructor(
-    base: BaseCollection<D>,
+    base: BaseParameter<D>,
     framework: Framework<D>,
   ) {
     super(base);

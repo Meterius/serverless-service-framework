@@ -1,6 +1,6 @@
 import aws from "aws-sdk";
 import { AbstractProvider } from "../abstract-provider";
-import { awsBaseCollection, AwsProviderDefinition } from "./aws-provider-definition";
+import { AwsProviderDefinition } from "./aws-provider-definition";
 import { AwsStack } from "./aws-stack";
 import { AwsService } from "./aws-service";
 import { ProcessedImportValue } from "../abstract-service-schema-properties";
@@ -8,6 +8,7 @@ import { ExportValue } from "../abstract-common-schema-properties";
 import { ServerlessTemplatePostExports, ServerlessTemplatePreExports } from "../templates";
 import { isObject } from "../../common/type-guards";
 import { AwsFramework } from "./aws-framework";
+import { awsBaseParameter } from "./aws-base-parameter";
 
 const deletedStackStates = ["DELETE_IN_PROGRESS", "DELETE_COMPLETE"];
 
@@ -23,7 +24,7 @@ TemplateExportValue
   public readonly credentials: aws.SharedIniFileCredentials;
 
   constructor(framework: AwsFramework) {
-    super(awsBaseCollection(), framework);
+    super(awsBaseParameter, framework);
 
     this.credentials = new aws.SharedIniFileCredentials({
       profile: framework.profile,

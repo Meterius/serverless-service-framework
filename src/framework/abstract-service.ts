@@ -1,7 +1,7 @@
 import { mkdirp, writeFile } from "fs-extra";
 import path from "path";
 import {
-  APD, BaseCollection,
+  APD, BaseParameter,
   Framework, Service, ServiceHook, ServiceHookMap, ServiceSchema,
   ServiceSchemaProperties,
 } from "./abstract-provider-definition";
@@ -52,7 +52,7 @@ export abstract class AbstractService<
   private readonly props: ServiceSchemaProperties<D>;
 
   protected constructor(
-    base: BaseCollection<D>,
+    base: BaseParameter<D>,
     framework: Framework<D>,
     props: ServiceSchemaProperties<D>,
     dirPath: string,

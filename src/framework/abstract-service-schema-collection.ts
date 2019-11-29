@@ -1,5 +1,5 @@
 import * as graphlib from "graphlib";
-import { APD, BaseCollection, ServiceSchema } from "./abstract-provider-definition";
+import { APD, BaseParameter, ServiceSchema } from "./abstract-provider-definition";
 import { ProcessedImportMap, ProcessedImportValue } from "./abstract-service-schema-properties";
 import { fromEntries, mapObject } from "../common/utility";
 import { AbstractBase } from "./abstract-base";
@@ -14,7 +14,7 @@ export class AbstractServiceSchemaCollection<
   public readonly usedIdentifiers: string[];
 
   constructor(
-    base: BaseCollection<D>,
+    base: BaseParameter<D>,
     schemas: ServiceSchema<D>[],
   ) {
     super(base);

@@ -1,5 +1,5 @@
 import {
-  APD, ServiceHookMap, ServiceHook, ServiceSchemaProperties, BaseCollection,
+  APD, ServiceHookMap, ServiceHook, ServiceSchemaProperties, BaseParameter,
 } from "./abstract-provider-definition";
 import { AbstractBase } from "./abstract-base";
 
@@ -13,7 +13,7 @@ export abstract class AbstractServiceDefinition<
   public hookMap: ServiceHookMap<D> = {};
 
   constructor(
-    base: BaseCollection<D>,
+    base: BaseParameter<D>,
     dirPath: string,
     props: ServiceSchemaProperties<D>,
   ) {

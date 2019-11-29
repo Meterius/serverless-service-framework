@@ -1,7 +1,8 @@
 import { AbstractServiceSchema } from "../abstract-service-schema";
-import { awsBaseCollection, AwsProviderDefinition } from "./aws-provider-definition";
+import { AwsProviderDefinition } from "./aws-provider-definition";
 import { AwsFrameworkSchema } from "./aws-framework-schema";
 import { AwsServiceSchemaProperties } from "./aws-service-schema-properties";
+import { awsBaseParameter } from "./aws-base-parameter";
 
 export class AwsServiceSchema extends AbstractServiceSchema<
 AwsProviderDefinition
@@ -10,6 +11,6 @@ AwsProviderDefinition
     frameworkSchema: AwsFrameworkSchema,
     props: AwsServiceSchemaProperties,
   ) {
-    super(awsBaseCollection(), frameworkSchema, props);
+    super(awsBaseParameter, frameworkSchema, props);
   }
 }

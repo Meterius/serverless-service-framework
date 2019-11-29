@@ -1,5 +1,5 @@
 import {
-  APD, BaseCollection,
+  APD, BaseParameter,
   FrameworkSchemaProperties, ServiceDefinition,
 } from "./abstract-provider-definition";
 import { loadServiceDefinitionFilesFromRoot } from "./service-definition";
@@ -18,7 +18,7 @@ export abstract class AbstractFrameworkDefinition<
   public readonly dirPath: string;
 
   constructor(
-    base: BaseCollection<D>,
+    base: BaseParameter<D>,
     dirPath: string,
     props: FrameworkSchemaProperties<D>,
   ) {

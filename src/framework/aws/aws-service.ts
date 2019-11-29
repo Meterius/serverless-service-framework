@@ -1,9 +1,10 @@
 import aws from "aws-sdk";
 import { AbstractService } from "../abstract-service";
-import { awsBaseCollection, AwsProviderDefinition } from "./aws-provider-definition";
+import { AwsProviderDefinition } from "./aws-provider-definition";
 import { AwsServiceSchemaProperties } from "./aws-service-schema-properties";
 import { AwsFramework } from "./aws-framework";
 import { AwsServiceHookMap } from "./aws-service-hook-map";
+import { awsBaseParameter } from "./aws-base-parameter";
 
 export class AwsService extends AbstractService<AwsProviderDefinition> {
   constructor(
@@ -13,7 +14,7 @@ export class AwsService extends AbstractService<AwsProviderDefinition> {
     hookMap: AwsServiceHookMap,
   ) {
     super(
-      awsBaseCollection(), framework, props, dirPath, hookMap,
+      awsBaseParameter, framework, props, dirPath, hookMap,
     );
   }
 

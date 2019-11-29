@@ -1,5 +1,5 @@
 import {
-  APD, BaseCollection, CommonSchema, FrameworkSchema,
+  APD, BaseParameter, CommonSchema, FrameworkSchema,
   ServiceSchema, ServiceSchemaProperties,
 } from "./abstract-provider-definition";
 import { ServiceTemplate } from "./templates";
@@ -36,7 +36,7 @@ export abstract class AbstractServiceSchema<
   private readonly props: ServiceSchemaProperties<D>;
 
   protected constructor(
-    base: BaseCollection<D>,
+    base: BaseParameter<D>,
     frameworkSchema: FrameworkSchema<D>,
     props: ServiceSchemaProperties<D>,
   ) {

@@ -1,5 +1,5 @@
 import {
-  APD, BaseCollection, Framework, Service,
+  APD, BaseParameter, Framework, Service,
 } from "./abstract-provider-definition";
 import { AbstractBase } from "./abstract-base";
 
@@ -11,7 +11,7 @@ export class AbstractFrameworkActionLogic<
 > extends AbstractBase<D> {
   public readonly framework: Framework<D>;
 
-  constructor(base: BaseCollection<D>, framework: Framework<D>) {
+  constructor(base: BaseParameter<D>, framework: Framework<D>) {
     super(base);
 
     this.framework = framework;

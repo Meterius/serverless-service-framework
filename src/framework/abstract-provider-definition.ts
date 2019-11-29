@@ -9,7 +9,7 @@ import { AbstractCommonSchemaProperties } from "./abstract-common-schema-propert
 import { AbstractServiceSchemaProperties } from "./abstract-service-schema-properties";
 import { AbstractFrameworkSchemaProperties } from "./abstract-framework-schema-properties";
 import { AbstractFrameworkActionLogic } from "./abstract-framework-action-logic";
-import { AbstractServiceSchemaCollection } from "./abstract-service-collection";
+import { AbstractServiceSchemaCollection } from "./abstract-service-schema-collection";
 import { AbstractServiceDefinition } from "./abstract-service-definition";
 import { AbstractFrameworkDefinition } from "./abstract-framework-definition";
 import { AbstractServiceHook } from "./abstract-service-hook";
@@ -87,6 +87,8 @@ export type AbstractProviderDefinition<
 export type ClassCollection<D extends APD> = D["classCollection"];
 
 export type BaseCollection<D extends APD> = D["baseCollection"];
+
+export type BaseParameter<D extends APD> = () => BaseCollection<D>;
 
 export type Provider<D extends APD> = D["provider"];
 

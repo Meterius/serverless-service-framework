@@ -1,6 +1,6 @@
 import { FrameworkTemplate } from "./templates";
 import {
-  APD, BaseCollection,
+  APD, BaseParameter,
   CommonSchema,
   FrameworkSchemaProperties,
 } from "./abstract-provider-definition";
@@ -23,7 +23,7 @@ export abstract class AbstractFrameworkSchema<
   private readonly props: FrameworkSchemaProperties<D>;
 
   protected constructor(
-    base: BaseCollection<D>,
+    base: BaseParameter<D>,
     props: FrameworkSchemaProperties<D>,
     options: FrameworkOptions,
   ) {

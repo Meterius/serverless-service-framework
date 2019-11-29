@@ -7,8 +7,7 @@ import {
   ServiceDefinition,
   ServiceSchema,
   ServiceSchemaCollection,
-  FrameworkSchemaProperties,
-  BaseCollection,
+  FrameworkSchemaProperties, BaseParameter,
 } from "./abstract-provider-definition";
 import { FrameworkOptions } from "./framework-options";
 import { filterObject } from "../common/utility";
@@ -34,7 +33,7 @@ export abstract class AbstractFramework<
   private readonly options: FrameworkOptions;
 
   protected constructor(
-    base: BaseCollection<D>,
+    base: BaseParameter<D>,
     dirPath: string,
     props: FrameworkSchemaProperties<D>,
     options: FrameworkOptions,

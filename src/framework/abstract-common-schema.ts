@@ -1,5 +1,5 @@
 import {
-  APD, BaseCollection, CommonSchemaProperties,
+  APD, BaseParameter, CommonSchemaProperties,
 } from "./abstract-provider-definition";
 import {
   ProcessedExportSettings,
@@ -18,7 +18,7 @@ export abstract class AbstractCommonSchema<
   private readonly props: CommonSchemaProperties<D>;
 
   public constructor(
-    base: BaseCollection<D>,
+    base: BaseParameter<D>,
     baseProps: CommonSchemaProperties<D>,
     specificProps?: CommonSchemaProperties<D>,
   ) {
