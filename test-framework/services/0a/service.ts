@@ -36,7 +36,7 @@ service.addHooks( {
       const buckets = await stack.emptyAllBuckets();
 
       buckets.forEach(
-        bucket => log(`Bucket "${bucket}" has been emptied`)
+        (bucket: string) => log(`Bucket "${bucket}" has been emptied`)
       );
     }
   },
