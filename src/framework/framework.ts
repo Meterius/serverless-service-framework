@@ -11,13 +11,15 @@ export async function createFramework(
 ): Promise<Framework> {
   let framework: Framework;
 
+  const serviceDefinitions = await definition.getServiceDefinitions(options);
+
   if (isAwsFrameworkDefinition(definition)) {
-    framework = new AwsFramework(definition.dirPath, definition.props, options, stage, profile);
+    framework = new AwsFramework(
+      definition.dirPath, definition.props, options, serviceDefinitions, stage, profile,
+    );
   } else {
     throw new Error("Unknown Framework Definition Provider");
   }
-
-  framework.addServices(await definition.getServiceDefinitions(options));
 
   return framework;
 }

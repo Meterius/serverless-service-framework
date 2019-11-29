@@ -59,6 +59,7 @@ type FrameworkClass<D extends APD> = new (
   dirPath: string,
   props: FrameworkSchemaProperties<D>,
   options: FrameworkOptions,
+  serviceDefinitions: ServiceDefinition<D>[],
   stage: string,
   profile?: string,
 ) => Framework<D>;

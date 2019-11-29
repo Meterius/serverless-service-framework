@@ -2,8 +2,8 @@ import { mkdirp, writeFile } from "fs-extra";
 import path from "path";
 import {
   APD, BaseParameter,
-  Framework, Service, ServiceHook, ServiceHookMap, ServiceSchema,
-  ServiceSchemaProperties, Stack,
+  Framework, Service, ServiceHook, ServiceHookMap, ServiceSchema, ServiceSchemaProperties,
+  Stack,
 } from "./abstract-provider-definition";
 import {
   PostCompilationServerlessTemplate,
@@ -39,17 +39,11 @@ export abstract class AbstractService<
 
   readonly framework: Framework<D>;
 
-  private readonly __importedServices: ServiceSchema<D>[];
-
-  private readonly __exportedToServices: ServiceSchema<D>[];
-
   private __serverlessTemplate: ServerlessTemplate | null = null;
 
   readonly schema: ServiceSchema<D>;
 
   readonly hookMap: ServiceHookMap<D>;
-
-  private readonly props: ServiceSchemaProperties<D>;
 
   protected constructor(
     base: BaseParameter<D>,
@@ -61,23 +55,10 @@ export abstract class AbstractService<
     super(base);
 
     this.dirPath = dirPath;
-    this.props = props;
     this.hookMap = hookMap;
-
-    this.schema = new this.classes.ServiceSchema(
-      framework.schema, props,
-    );
-
     this.framework = framework;
 
-    const {
-      importedServices, exportedToServices,
-    } = this.computeLocalizedServicesDependencies(
-      this.props, framework.serviceSchemas,
-    );
-
-    this.__exportedToServices = exportedToServices;
-    this.__importedServices = importedServices;
+    this.schema = new this.classes.ServiceSchema(this.framework.schema, props);
   }
 
   get name(): string {
@@ -94,14 +75,14 @@ export abstract class AbstractService<
   }
 
   get importedServices(): Service<D>[] {
-    return this.__importedServices.map(
-      (schema) => this.framework.referenceService(schema.identifier),
+    return this.framework.services.filter(
+      (otherService) => this.schema.isImporting(otherService.schema),
     );
   }
 
   get exportedToServices(): Service<D>[] {
-    return this.__exportedToServices.map(
-      (schema) => this.framework.referenceService(schema.identifier),
+    return this.framework.services.filter(
+      (otherService) => this.schema.isExportedTo(otherService.schema),
     );
   }
 
@@ -434,23 +415,6 @@ export abstract class AbstractService<
     } else {
       throw new Error("Invalid Template Format");
     }
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private computeLocalizedServicesDependencies(
-    serviceSchema: ServiceSchema<D>, serviceSchemas: ServiceSchema<D>[],
-  ): { importedServices: ServiceSchema<D>[]; exportedToServices: ServiceSchema<D>[] } {
-    const importedServices = serviceSchemas.filter(
-      (otherService) => serviceSchema.isImporting(otherService),
-    );
-
-    const exportedToServices = serviceSchemas.filter(
-      (otherService) => serviceSchema.isExportedTo(otherService),
-    );
-
-    return {
-      importedServices, exportedToServices,
-    };
   }
 
   resolveServicePath(relPath: string): string {

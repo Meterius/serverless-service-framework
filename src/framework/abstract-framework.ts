@@ -30,20 +30,18 @@ export abstract class AbstractFramework<
 
   readonly schema: FrameworkSchema<D>;
 
-  private readonly options: FrameworkOptions;
-
   protected constructor(
     base: BaseParameter<D>,
     dirPath: string,
     props: FrameworkSchemaProperties<D>,
     options: FrameworkOptions,
+    serviceDefinitions: ServiceDefinition<D>[],
     stage: string,
     profile?: string,
   ) {
     super(base);
 
     this.dirPath = dirPath;
-    this.options = options;
     this.stage = stage;
     this.profile = profile;
 
@@ -52,6 +50,14 @@ export abstract class AbstractFramework<
     );
     this.actionLogic = new this.classes.FrameworkActionLogic(this);
     this.provider = new this.classes.Provider(this);
+
+    this.services = serviceDefinitions.map(
+      (def) => new this.classes.Service(this, def.props, def.dirPath, def.hookMap),
+    );
+
+    const collection = new this.classes.ServiceSchemaCollection(this.serviceSchemas);
+
+    this.ensureValidity(collection);
   }
 
   get serviceSchemas(): ServiceSchema<D>[] {
@@ -84,26 +90,6 @@ export abstract class AbstractFramework<
     } else {
       return service;
     }
-  }
-
-  addServices(
-    serviceDefinitions: ServiceDefinition<D>[],
-  ): void {
-    const newServices = serviceDefinitions.map(
-      (
-        { dirPath, props, hookMap },
-      ) => new this.classes.Service(this, props, dirPath, hookMap),
-    );
-
-    const serviceSchemas = this.serviceSchemas.concat(
-      newServices.map((service) => service.schema),
-    );
-
-    const collection = new this.classes.ServiceSchemaCollection(serviceSchemas);
-
-    this.ensureValidity(collection);
-
-    this.services.push(...newServices);
   }
 
   // eslint-disable-next-line class-methods-use-this
