@@ -1,14 +1,21 @@
-import { APD, Service } from "./abstract-provider-definition";
+import { APD, BaseCollection, Service } from "./abstract-provider-definition";
+import { AbstractBase } from "./abstract-base";
 
-export abstract class AbstractProviderStack<
+export abstract class AbstractStack<
   D extends APD, // AbstractProviderDefinition
   SD, // StackData
-> {
+> extends AbstractBase<D> {
   protected readonly data: SD;
 
   public readonly service: Service<D>;
 
-  constructor(service: Service<D>, stackData: SD) {
+  constructor(
+    base: BaseCollection<D>,
+    service: Service<D>,
+    stackData: SD,
+  ) {
+    super(base);
+
     this.service = service;
     this.data = stackData;
   }

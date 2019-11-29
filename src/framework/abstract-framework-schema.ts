@@ -1,15 +1,15 @@
 import { FrameworkTemplate } from "./templates";
 import {
-  APD,
+  APD, BaseCollection,
   CommonSchema,
-  CommonSchemaClass,
   FrameworkSchemaProperties,
 } from "./abstract-provider-definition";
 import { FrameworkOptions } from "./framework-options";
+import { AbstractBase } from "./abstract-base";
 
 export abstract class AbstractFrameworkSchema<
   D extends APD, // AbstractProviderDefinition
-> {
+> extends AbstractBase<D> {
   public readonly name: string;
 
   public readonly shortName: string;
@@ -23,15 +23,16 @@ export abstract class AbstractFrameworkSchema<
   private readonly props: FrameworkSchemaProperties<D>;
 
   protected constructor(
-    commonSchemaClass: CommonSchemaClass<D>,
+    base: BaseCollection<D>,
     props: FrameworkSchemaProperties<D>,
     options: FrameworkOptions,
   ) {
-    this.options = options;
-    this.props = props;
-    // eslint-disable-next-line new-cap
-    this.commonSchema = new commonSchemaClass(props);
+    super(base);
 
+    this.props = props;
+    this.commonSchema = new this.classes.CommonSchema(props);
+
+    this.options = options;
     this.name = props.name;
     this.shortName = props.shortName;
     this.template = props.template;

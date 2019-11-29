@@ -1,6 +1,6 @@
 import { AbstractProvider } from "./abstract-provider";
 import { AbstractService } from "./abstract-service";
-import { AbstractProviderStack } from "./abstract-provider-stack";
+import { AbstractStack } from "./abstract-stack";
 import { AbstractFramework } from "./abstract-framework";
 import { AbstractCommonSchema } from "./abstract-common-schema";
 import { AbstractServiceSchema } from "./abstract-service-schema";
@@ -9,17 +9,21 @@ import { AbstractCommonSchemaProperties } from "./abstract-common-schema-propert
 import { AbstractServiceSchemaProperties } from "./abstract-service-schema-properties";
 import { AbstractFrameworkSchemaProperties } from "./abstract-framework-schema-properties";
 import { AbstractFrameworkActionLogic } from "./abstract-framework-action-logic";
-import { FrameworkOptions } from "./framework-options";
 import { AbstractServiceSchemaCollection } from "./abstract-service-collection";
 import { AbstractServiceDefinition } from "./abstract-service-definition";
 import { AbstractFrameworkDefinition } from "./abstract-framework-definition";
 import { AbstractServiceHook } from "./abstract-service-hook";
 import { AbstractServiceHookMap } from "./abstract-service-hook-map";
+import { AbstractClassCollection } from "./abstract-class-collection";
+import { AbstractBaseCollection } from "./abstract-base-collection";
 
 export type APD = AbstractProviderDefinition<
 any,
+any,
+AbstractClassCollection<any>,
+AbstractBaseCollection<any>,
 AbstractProvider<any, any, any>,
-AbstractProviderStack<any, any>,
+AbstractStack<any, any>,
 AbstractCommonSchemaProperties<any>,
 AbstractCommonSchema<any>,
 AbstractServiceSchemaProperties<any>,
@@ -37,10 +41,13 @@ AbstractFrameworkActionLogic<any>
 >;
 
 export type AbstractProviderDefinition<
+  InferredStackData extends any,
   Definition extends APD,
+  ClassCollection extends AbstractClassCollection<Definition>,
+  BaseCollection extends AbstractBaseCollection<Definition>,
   Provider extends AbstractProvider<Definition, any, any>,
-  Stack extends AbstractProviderStack<Definition, any>,
-  CommonSchemaProperties extends AbstractCommonSchemaProperties<any>,
+  Stack extends AbstractStack<Definition, InferredStackData>,
+  CommonSchemaProperties extends AbstractCommonSchemaProperties<Definition>,
   CommonSchema extends AbstractCommonSchema<Definition>,
   ServiceSchemaProperties extends AbstractServiceSchemaProperties<Definition>,
   ServiceSchema extends AbstractServiceSchema<Definition>,
@@ -55,6 +62,10 @@ export type AbstractProviderDefinition<
   FrameworkDefinition extends AbstractFrameworkDefinition<Definition>,
   FrameworkActionLogic extends AbstractFrameworkActionLogic<Definition>,
 > = {
+  inferredStackData: InferredStackData;
+
+  classCollection: ClassCollection;
+  baseCollection: BaseCollection;
   provider: Provider;
   stack: Stack;
   commonSchemaProperties: CommonSchemaProperties;
@@ -73,9 +84,15 @@ export type AbstractProviderDefinition<
   frameworkActionLogic: FrameworkActionLogic;
 };
 
+export type ClassCollection<D extends APD> = D["classCollection"];
+
+export type BaseCollection<D extends APD> = D["baseCollection"];
+
 export type Provider<D extends APD> = D["provider"];
 
 export type Stack<D extends APD> = D["stack"];
+
+export type StackData<D extends APD> = D["inferredStackData"];
 
 export type CommonSchemaProperties<D extends APD> = D["commonSchemaProperties"];
 
@@ -104,36 +121,3 @@ export type Framework<D extends APD> = D["framework"];
 export type FrameworkDefinition<D extends APD> = D["frameworkDefinition"];
 
 export type FrameworkActionLogic<D extends APD> = D["frameworkActionLogic"];
-
-export type CommonSchemaClass<D extends APD> = new (
-  baseProps: CommonSchemaProperties<D>, specificProps?: CommonSchemaProperties<D>
-) => CommonSchema<D>;
-
-export type ServiceSchemaClass<D extends APD> = new (
-  frameworkSchema: FrameworkSchema<D>,
-  props: ServiceSchemaProperties<D>,
-) => ServiceSchema<D>;
-
-export type FrameworkSchemaClass<D extends APD> = new (
-  props: FrameworkSchemaProperties<D>,
-  options: FrameworkOptions,
-) => FrameworkSchema<D>;
-
-export type ProviderClass<D extends APD> = new (
-  framework: Framework<D>
-) => Provider<D>;
-
-export type FrameworkActionLogicClass<D extends APD> = new (
-  framework: Framework<D>
-) => FrameworkActionLogic<D>;
-
-export type ServiceClass<D extends APD> = new (
-  framework: Framework<D>,
-  props: ServiceSchemaProperties<D>,
-  dirPath: string,
-  hookMap: ServiceHookMap<D>,
-) => Service<D>;
-
-export type ServiceSchemaCollectionClass<D extends APD> = new (
-  serviceSchemas: ServiceSchema<D>[],
-) => ServiceSchemaCollection<D>;

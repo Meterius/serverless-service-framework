@@ -42,16 +42,19 @@ export async function executeServerlessCommand(
 ): Promise<void> {
   const execCmd = await service.createExecutableServerlessCommand(command, options);
 
-  log(chalk`Running Serverless Command: "{blue ${execCmd}}"`, false);
-  log(
-    chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), service.dirPath)}}"`,
-    false,
-  );
+  const printInfo = (): void => {
+    log(chalk`Running Serverless Command: "{blue ${execCmd}}"`, false);
+    log(
+      chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), service.dirPath)}}"`,
+      false,
+    );
+  };
 
   await service.executeExecutableServerlessCommand(
     execCmd,
     log,
     async,
     executeHook,
+    printInfo,
   );
 }

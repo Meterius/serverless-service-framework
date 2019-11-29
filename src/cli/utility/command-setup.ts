@@ -1,4 +1,3 @@
-import { pathExists } from "fs-extra";
 import { GC, TB } from "../cli-types";
 import {
   applyFrameworkOptionOptions, getFrameworkDefinitionOption,
@@ -22,41 +21,39 @@ import { executeHook, getService } from "./framework";
 export async function setupFrameworkContextFunction(
   tb: TB,
 ): Promise<Framework> {
-  const defFilePath = getFrameworkDefinitionOption(tb);
-  const optFilePath = getFrameworkOptionsOption(tb);
+  const providedDefinitionFilePath = getFrameworkDefinitionOption(tb);
+  const providedOptionsFilePath = getFrameworkOptionsOption(tb);
 
-  const frDefPath = defFilePath || (await getFrameworkDefinitionFilePath(process.cwd()));
+  const definitionFilePath = await getFrameworkDefinitionFilePath(
+    providedDefinitionFilePath, process.cwd(),
+  );
 
-  if (frDefPath === undefined) {
+  if (definitionFilePath === undefined && providedDefinitionFilePath === undefined) {
     throw new CliError("No framework definition file exists in current directory");
-  } else if (
-    defFilePath !== undefined && !(await pathExists(defFilePath))
-  ) {
+  } else if (definitionFilePath === undefined) {
     throw new CliError(
-      `Specified framework definition file "${defFilePath}" does not exist`,
+      `Specified framework definition file "${providedDefinitionFilePath}" does not exist`,
     );
   }
 
-  const frOptPath = optFilePath || (await getFrameworkOptionsFilePath(process.cwd()));
+  const optionFilePath = await getFrameworkOptionsFilePath(providedOptionsFilePath, process.cwd());
 
-  if (frOptPath === undefined) {
-    throw new CliError("No framework options file exists in current directory");
-  } else if (
-    optFilePath !== undefined && !(await pathExists(optFilePath))
-  ) {
+  if (optionFilePath === undefined && providedOptionsFilePath === undefined) {
+    throw new CliError("No Framework Options file exists in current directory");
+  } else if (optionFilePath === undefined) {
     throw new CliError(
-      `Specified framework options file "${optFilePath}" does not exist`,
+      `Specified Framework Options file "${providedOptionsFilePath}" does not exist`,
     );
   }
 
   const frOpts = applyFrameworkOptionOptions(
-    tb, await loadFrameworkOptionsFile(frOptPath),
+    tb, await loadFrameworkOptionsFile(optionFilePath),
   );
 
   const stage = requireStageOption(tb, frOpts);
   const profile = getProfileOption(tb, frOpts);
 
-  const frDef = await loadFrameworkDefinitionFile(frDefPath, frOpts);
+  const frDef = await loadFrameworkDefinitionFile(definitionFilePath, frOpts);
 
   return createFramework(frDef, frOpts, stage, profile);
 }

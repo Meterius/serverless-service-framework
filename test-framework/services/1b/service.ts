@@ -1,6 +1,7 @@
 import {AwsServiceDefinition} from "serverless-service-framework";
 
-export default new AwsServiceDefinition(
+export const service = new AwsServiceDefinition(
+  __dirname,
   {
     name: "1b",
     shortName: "1b",
@@ -12,6 +13,6 @@ export default new AwsServiceDefinition(
     exportMap: {},
 
     template: {},
-  }, __dirname
+  }
 );
 

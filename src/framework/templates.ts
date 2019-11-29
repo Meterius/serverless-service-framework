@@ -86,7 +86,7 @@ export type ServerlessTemplatePostMerging = {
   };
 
   provider: {
-    name: ServerlessProviderName;
+    name?: undefined;
     region: string;
 
     stage?: undefined;

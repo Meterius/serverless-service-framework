@@ -2,10 +2,11 @@ import {
   ServerlessProviderName, ServerlessTemplatePostExports, ServerlessTemplatePreExports,
 } from "./templates";
 import {
-  APD, Framework, Service, Stack,
+  APD, BaseCollection, Framework, Service, Stack,
 } from "./abstract-provider-definition";
 import { ProcessedImportValue } from "./abstract-service-schema-properties";
 import { ExportValue } from "./abstract-common-schema-properties";
+import { AbstractBase } from "./abstract-base";
 
 interface AbstractProviderImportData<ProviderBasedData, DirectImportData> {
   "provider-based": ProviderBasedData;
@@ -16,12 +17,17 @@ export abstract class AbstractProvider<
   D extends APD, // AbstractProviderDefinition
   ID extends AbstractProviderImportData<any, any>, // ProviderImportData
   TEV // TemplateExportValue
-> {
+> extends AbstractBase<D> {
   public abstract readonly name: ServerlessProviderName;
 
   protected readonly framework: Framework<D>;
 
-  public constructor(framework: Framework<D>) {
+  public constructor(
+    base: BaseCollection<D>,
+    framework: Framework<D>,
+  ) {
+    super(base);
+
     this.framework = framework;
   }
 

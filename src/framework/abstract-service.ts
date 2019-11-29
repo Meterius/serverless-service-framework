@@ -1,9 +1,9 @@
 import { mkdirp, writeFile } from "fs-extra";
 import path from "path";
 import {
-  APD,
+  APD, BaseCollection,
   Framework, Service, ServiceHook, ServiceHookMap, ServiceSchema,
-  ServiceSchemaClass, ServiceSchemaProperties,
+  ServiceSchemaProperties,
 } from "./abstract-provider-definition";
 import {
   PostCompilationServerlessTemplate,
@@ -21,6 +21,7 @@ import { serviceBuild, serviceBuildDir } from "../common/constants";
 import { merge } from "../common/utility";
 import { AbstractServiceSchema } from "./abstract-service-schema";
 import { bufferedExec } from "../common/buffered-exec";
+import { AbstractBase } from "./abstract-base";
 
 export enum ServerlessTemplateFormat {
   JavaScript = "js"
@@ -33,7 +34,7 @@ export interface SerializedServerlessTemplate {
 
 export abstract class AbstractService<
   D extends APD, // AbstractProviderDefinition
-> {
+> extends AbstractBase<D> {
   public readonly dirPath: string;
 
   public readonly framework: Framework<D>;
@@ -51,17 +52,19 @@ export abstract class AbstractService<
   private readonly props: ServiceSchemaProperties<D>;
 
   protected constructor(
-    serviceSchemaClass: ServiceSchemaClass<D>,
+    base: BaseCollection<D>,
     framework: Framework<D>,
     props: ServiceSchemaProperties<D>,
     dirPath: string,
     hookMap: ServiceHookMap<D>,
   ) {
+    super(base);
+
     this.dirPath = dirPath;
     this.props = props;
     this.hookMap = hookMap;
-    // eslint-disable-next-line new-cap
-    this.schema = new serviceSchemaClass(
+
+    this.schema = new this.classes.ServiceSchema(
       framework.schema, props,
     );
 
@@ -163,6 +166,10 @@ export abstract class AbstractService<
   ): Promise<ServerlessTemplatePostPreparation> {
     return {
       ...template,
+      provider: {
+        ...template.provider,
+        name: this.framework.provider.name,
+      },
       service: template.service || {},
       custom: template.custom || {},
       resources: template.resources || {},
@@ -348,6 +355,7 @@ export abstract class AbstractService<
       hookName: keyof ServiceHookMap<D>,
       log: (data: string, raw: boolean) => void
     ) => Promise<void>,
+    preExecutionTrigger: () => void,
   ): Promise<void> {
     const isDeploying = executableServerlessCommand.startsWith("sls deploy");
 
@@ -356,6 +364,8 @@ export abstract class AbstractService<
     await hookExecutor(this, "setup", log);
 
     const fullCommand = `npx --no-install ${executableServerlessCommand}`;
+
+    preExecutionTrigger();
 
     await bufferedExec({
       cwd: this.dirPath,

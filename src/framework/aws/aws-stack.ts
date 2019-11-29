@@ -1,9 +1,15 @@
 import * as Aws from "aws-sdk";
-import { AbstractProviderStack } from "../abstract-provider-stack";
+import { AbstractStack } from "../abstract-stack";
+import { awsBaseCollection } from "./aws-provider-definition";
+import { AwsService } from "./aws-service";
 
-export type StackData = Aws.CloudFormation.Stack;
+export type AwsStackData = Aws.CloudFormation.Stack;
 
-export class AwsStack extends AbstractProviderStack<any, StackData> {
+export class AwsStack extends AbstractStack<any, AwsStackData> {
+  constructor(service: AwsService, data: AwsStackData) {
+    super(awsBaseCollection(), service, data);
+  }
+
   get stackExports(): Record<string, string> {
     const exportMap: Record<string, string> = {};
 

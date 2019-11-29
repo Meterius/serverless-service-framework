@@ -1,18 +1,24 @@
 import * as graphlib from "graphlib";
-import { APD, ServiceSchema } from "./abstract-provider-definition";
+import { APD, BaseCollection, ServiceSchema } from "./abstract-provider-definition";
 import { ProcessedImportMap, ProcessedImportValue } from "./abstract-service-schema-properties";
 import { fromEntries, mapObject } from "../common/utility";
+import { AbstractBase } from "./abstract-base";
 
 export class AbstractServiceSchemaCollection<
   D extends APD, // AbstractProviderDefinition
-  > {
+> extends AbstractBase<D> {
   public readonly schemas: ServiceSchema<D>[];
 
   public readonly usedDefaultIdentifiers: string[];
 
   public readonly usedIdentifiers: string[];
 
-  constructor(schemas: ServiceSchema<D>[]) {
+  constructor(
+    base: BaseCollection<D>,
+    schemas: ServiceSchema<D>[],
+  ) {
+    super(base);
+
     this.schemas = schemas;
     this.usedIdentifiers = this.computeIdentifiers(schemas);
     this.usedDefaultIdentifiers = this.computeDefaultIdentifiers(schemas);

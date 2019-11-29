@@ -1,14 +1,19 @@
-import { APD, Framework, Service } from "./abstract-provider-definition";
+import {
+  APD, BaseCollection, Framework, Service,
+} from "./abstract-provider-definition";
+import { AbstractBase } from "./abstract-base";
 
 /**
  * Class to define how dependent actions can be performed on services.
  */
 export class AbstractFrameworkActionLogic<
   D extends APD, // AbstractProviderDefinition
-> {
+> extends AbstractBase<D> {
   public readonly framework: Framework<D>;
 
-  constructor(framework: Framework<D>) {
+  constructor(base: BaseCollection<D>, framework: Framework<D>) {
+    super(base);
+
     this.framework = framework;
   }
 

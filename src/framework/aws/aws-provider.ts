@@ -1,6 +1,6 @@
 import aws from "aws-sdk";
 import { AbstractProvider } from "../abstract-provider";
-import { AwsProviderDefinition } from "./aws-provider-definition";
+import { awsBaseCollection, AwsProviderDefinition } from "./aws-provider-definition";
 import { AwsStack } from "./aws-stack";
 import { AwsService } from "./aws-service";
 import { ProcessedImportValue } from "../abstract-service-schema-properties";
@@ -23,7 +23,7 @@ TemplateExportValue
   public readonly credentials: aws.SharedIniFileCredentials;
 
   constructor(framework: AwsFramework) {
-    super(framework);
+    super(awsBaseCollection(), framework);
 
     this.credentials = new aws.SharedIniFileCredentials({
       profile: framework.profile,

@@ -1,13 +1,16 @@
-import { APD, CommonSchemaProperties } from "./abstract-provider-definition";
+import {
+  APD, BaseCollection, CommonSchemaProperties,
+} from "./abstract-provider-definition";
 import {
   ProcessedExportSettings,
   ProcessedImportSettings,
 } from "./abstract-common-schema-properties";
 import { merge } from "../common/utility";
+import { AbstractBase } from "./abstract-base";
 
 export abstract class AbstractCommonSchema<
   D extends APD,
-> {
+> extends AbstractBase<D> {
   public readonly importSettings: ProcessedImportSettings;
 
   public readonly exportSettings: ProcessedExportSettings;
@@ -15,8 +18,12 @@ export abstract class AbstractCommonSchema<
   private readonly props: CommonSchemaProperties<D>;
 
   public constructor(
-    baseProps: CommonSchemaProperties<D>, specificProps?: CommonSchemaProperties<D>,
+    base: BaseCollection<D>,
+    baseProps: CommonSchemaProperties<D>,
+    specificProps?: CommonSchemaProperties<D>,
   ) {
+    super(base);
+
     const props = merge(baseProps, specificProps || {}, true);
 
     const importSettings = props.importSettings || {};

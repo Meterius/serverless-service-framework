@@ -1,24 +1,24 @@
 import {
   APD,
   FrameworkActionLogic,
-  FrameworkActionLogicClass,
   FrameworkSchema,
-  FrameworkSchemaClass,
   Provider,
-  ProviderClass,
   Service,
   ServiceDefinition,
-  ServiceClass,
   ServiceSchema,
   ServiceSchemaCollection,
-  ServiceSchemaCollectionClass, FrameworkDefinition,
+  FrameworkSchemaProperties,
+  BaseCollection,
 } from "./abstract-provider-definition";
 import { FrameworkOptions } from "./framework-options";
 import { filterObject } from "../common/utility";
+import { AbstractBase } from "./abstract-base";
 
 export abstract class AbstractFramework<
   D extends APD, // AbstractProviderDefinition
-> {
+> extends AbstractBase<D> {
+  public readonly dirPath: string;
+
   public readonly services: Service<D>[] = [];
 
   public readonly provider: Provider<D>;
@@ -31,44 +31,28 @@ export abstract class AbstractFramework<
 
   public readonly schema: FrameworkSchema<D>;
 
-  private readonly serviceClass: ServiceClass<D>;
-
-  private readonly serviceSchemaCollectionClass: ServiceSchemaCollectionClass<D>;
-
-  private readonly definition: FrameworkDefinition<D>;
-
   private readonly options: FrameworkOptions;
 
   protected constructor(
-    providerClass: ProviderClass<D>,
-    frameworkActionLogicClass: FrameworkActionLogicClass<D>,
-    frameworkSchemaClass: FrameworkSchemaClass<D>,
-    serviceClass: ServiceClass<D>,
-    serviceSchemaCollectionClass: ServiceSchemaCollectionClass<D>,
-    definition: FrameworkDefinition<D>,
+    base: BaseCollection<D>,
+    dirPath: string,
+    props: FrameworkSchemaProperties<D>,
     options: FrameworkOptions,
     stage: string,
     profile?: string,
   ) {
+    super(base);
+
+    this.dirPath = dirPath;
     this.options = options;
-    this.definition = definition;
     this.stage = stage;
     this.profile = profile;
-    this.serviceSchemaCollectionClass = serviceSchemaCollectionClass;
-    this.serviceClass = serviceClass;
 
-    // eslint-disable-next-line new-cap
-    this.schema = new frameworkSchemaClass(
-      definition.props, options,
+    this.schema = new this.classes.FrameworkSchema(
+      props, options,
     );
-
-    // eslint-disable-next-line new-cap
-    this.actionLogic = new frameworkActionLogicClass(this);
-
-    // eslint-disable-next-line new-cap
-    this.provider = new providerClass(this);
-
-    this.addServices(definition.serviceDefinitions);
+    this.actionLogic = new this.classes.FrameworkActionLogic(this);
+    this.provider = new this.classes.Provider(this);
   }
 
   get serviceSchemas(): ServiceSchema<D>[] {
@@ -109,16 +93,14 @@ export abstract class AbstractFramework<
     const newServices = serviceDefinitions.map(
       (
         { dirPath, props, hookMap },
-        // eslint-disable-next-line new-cap
-      ) => new this.serviceClass(this, props, dirPath, hookMap),
+      ) => new this.classes.Service(this, props, dirPath, hookMap),
     );
 
     const serviceSchemas = this.serviceSchemas.concat(
       newServices.map((service) => service.schema),
     );
 
-    // eslint-disable-next-line new-cap
-    const collection = new this.serviceSchemaCollectionClass(serviceSchemas);
+    const collection = new this.classes.ServiceSchemaCollection(serviceSchemas);
 
     this.ensureValidity(collection);
 

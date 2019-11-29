@@ -290,7 +290,7 @@ export function createMultiServiceCommandRun({
     const log = createLog(env);
 
     log(`${cap(actPres)} Services ${joinCQ(performingServices.map((s) => s.schema.name))}`);
-    log(`Stage: "{blue ${framework.stage}}"`);
+    log(chalk`Stage: "{blue ${framework.stage}}"`);
 
     const startTime = hrtime();
 

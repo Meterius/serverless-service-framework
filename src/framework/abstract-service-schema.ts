@@ -1,5 +1,5 @@
 import {
-  APD, CommonSchema, CommonSchemaClass, FrameworkSchema,
+  APD, BaseCollection, CommonSchema, FrameworkSchema,
   ServiceSchema, ServiceSchemaProperties,
 } from "./abstract-provider-definition";
 import { ServiceTemplate } from "./templates";
@@ -13,10 +13,11 @@ import {
   ImportType,
   ProcessedImportSettings,
 } from "./abstract-common-schema-properties";
+import { AbstractBase } from "./abstract-base";
 
 export abstract class AbstractServiceSchema<
   D extends APD,
-> {
+> extends AbstractBase<D> {
   public readonly name: string;
 
   public readonly shortName: string;
@@ -35,16 +36,17 @@ export abstract class AbstractServiceSchema<
   private readonly props: ServiceSchemaProperties<D>;
 
   protected constructor(
-    commonSchemaClass: CommonSchemaClass<D>,
+    base: BaseCollection<D>,
     frameworkSchema: FrameworkSchema<D>,
     props: ServiceSchemaProperties<D>,
   ) {
-    this.props = props;
-    // eslint-disable-next-line new-cap
-    this.commonSchema = new commonSchemaClass(frameworkSchema.commonSchema, props);
+    super(base);
+
+    this.commonSchema = new this.classes.CommonSchema(frameworkSchema.commonSchema, props);
 
     this.name = props.name;
     this.shortName = props.shortName;
+    this.props = props;
 
     this.importMap = AbstractServiceSchema.processImportMap(
       props.importMap || {}, this.commonSchema.importSettings,
