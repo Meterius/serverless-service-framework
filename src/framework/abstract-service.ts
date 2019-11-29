@@ -115,11 +115,11 @@ export abstract class AbstractService<
     );
   }
 
-  private retrieveServiceStack(): Promise<Stack<D> | undefined> {
+  private retrieveStack(): Promise<Stack<D> | undefined> {
     return this.framework.provider.retrieveServiceStack(this);
   }
 
-  private getServiceStack(): Promise<Stack<D>> {
+  private getStack(): Promise<Stack<D>> {
     return this.framework.provider.getServiceStack(this);
   }
 
