@@ -7,7 +7,7 @@ import {
 } from "./abstract-provider-definition";
 import {
   PostCompilationServerlessTemplate,
-  PreCompilationServerlessTemplate,
+  PreCompilationServerlessTemplate, ServerlessProviderName,
   ServerlessTemplate, ServerlessTemplatePostExports, ServerlessTemplatePostImports,
   ServerlessTemplatePostMerging,
   ServerlessTemplatePostNaming,
@@ -135,6 +135,14 @@ export abstract class AbstractService<
     return this.framework.stage;
   }
 
+  private getTemplateProviderName(): ServerlessProviderName {
+    return this.framework.provider.name;
+  }
+
+  private getTemplateProviderProfile(): string | undefined {
+    return this.framework.profile;
+  }
+
   private async processServiceServerlessTemplateMerging(
     template: ServerlessTemplatePreMerging,
   ): Promise<ServerlessTemplatePostMerging> {
@@ -155,10 +163,6 @@ export abstract class AbstractService<
   ): Promise<ServerlessTemplatePostPreparation> {
     return {
       ...template,
-      provider: {
-        ...template.provider,
-        name: this.framework.provider.name,
-      },
       service: template.service || {},
       custom: template.custom || {},
       resources: template.resources || {},
@@ -170,6 +174,7 @@ export abstract class AbstractService<
   ): Promise<ServerlessTemplatePostNaming> {
     return {
       ...template,
+
       service: {
         ...template.service,
         name: this.getTemplateServiceName(),
@@ -177,6 +182,9 @@ export abstract class AbstractService<
 
       provider: {
         ...template.provider,
+
+        name: this.getTemplateProviderName(),
+        profile: this.getTemplateProviderProfile(),
         stage: this.getTemplateProviderStage(),
         stackName: this.getTemplateProviderStackName(),
       },
@@ -313,13 +321,7 @@ export abstract class AbstractService<
       ...options,
       "--verbose": true,
       "--config": templatePath,
-      "--stage": this.framework.stage,
-      "--region": this.region,
     };
-
-    if (this.framework.profile) {
-      extendedServerlessOptions["--profile"] = this.framework.profile;
-    }
 
     const serverlessOptionList = Object.entries(extendedServerlessOptions).map(
       ([key, value]) => {

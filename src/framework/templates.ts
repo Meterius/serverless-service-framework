@@ -119,7 +119,6 @@ export type ServerlessTemplatePostPreparation = {
   };
 
   provider: {
-    name: ServerlessProviderName;
     region: string;
 
     stage?: undefined;
@@ -154,6 +153,7 @@ export type ServerlessTemplatePostNaming = {
   provider: {
     name: ServerlessProviderName;
     region: string;
+    profile: string | undefined;
 
     stage: string;
     stackName: string;
@@ -187,6 +187,7 @@ export type ServerlessTemplatePostImports = {
   provider: {
     name: ServerlessProviderName;
     region: string;
+    profile: string | undefined;
 
     stage: string;
     stackName: string;
@@ -220,6 +221,7 @@ export type ServerlessTemplatePostExports = {
   provider: {
     name: ServerlessProviderName;
     region: string;
+    profile: string | undefined;
 
     stage: string;
     stackName: string;
