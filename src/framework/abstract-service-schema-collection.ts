@@ -7,11 +7,11 @@ import { AbstractBase } from "./abstract-base";
 export class AbstractServiceSchemaCollection<
   D extends APD, // AbstractProviderDefinition
 > extends AbstractBase<D> {
-  public readonly schemas: ServiceSchema<D>[];
+  readonly schemas: ServiceSchema<D>[];
 
-  public readonly usedDefaultIdentifiers: string[];
+  readonly usedDefaultIdentifiers: string[];
 
-  public readonly usedIdentifiers: string[];
+  readonly usedIdentifiers: string[];
 
   constructor(
     base: BaseParameter<D>,
@@ -25,7 +25,7 @@ export class AbstractServiceSchemaCollection<
   }
 
   // eslint-disable-next-line class-methods-use-this
-  public isServiceImportExportedByAnotherService(
+  isServiceImportExportedByAnotherService(
     schemas: ServiceSchema<D>[],
     importKey: string, // aka imported service identifier
     importValue: ProcessedImportValue,
@@ -35,19 +35,19 @@ export class AbstractServiceSchemaCollection<
     );
   }
 
-  public doesServiceHaveDuplicateIdentifiers(schema: ServiceSchema<D>): boolean {
+  doesServiceHaveDuplicateIdentifiers(schema: ServiceSchema<D>): boolean {
     return schema.identifiers.some((id: string) => this.schemas.some(
       (otherSchema) => otherSchema !== schema && otherSchema.identifiers.includes(id),
     ));
   }
 
-  public getServicesWithoutUniqueIdentifiers(): ServiceSchema<D>[] {
+  getServicesWithoutUniqueIdentifiers(): ServiceSchema<D>[] {
     return this.schemas.filter(
       (schema) => this.doesServiceHaveDuplicateIdentifiers(schema),
     );
   }
 
-  public getServiceImportsUsingNonExistentIdentifiers(
+  getServiceImportsUsingNonExistentIdentifiers(
   ): ({ schema: ServiceSchema<D>; nonExistentIdentifiersUsed: string[] })[] {
     return this.schemas.map((inspectedSchema) => ({
       schema: inspectedSchema,
@@ -57,7 +57,7 @@ export class AbstractServiceSchemaCollection<
     }));
   }
 
-  public getServiceImportsUsingNonDefaultIdentifier(
+  getServiceImportsUsingNonDefaultIdentifier(
   ): ({ schema: ServiceSchema<D>; nonDefaultIdentifiersUsed: string[] })[] {
     return this.schemas.map((inspectedSchema) => ({
       schema: inspectedSchema,
@@ -67,7 +67,7 @@ export class AbstractServiceSchemaCollection<
     }));
   }
 
-  public getServiceImportsNotExportedByTheOtherServices(
+  getServiceImportsNotExportedByTheOtherServices(
   ): ({ schema: ServiceSchema<D>; notExportedImportsMap: ProcessedImportMap })[] {
     return this.schemas.map((inspectedSchema) => {
       // maps each importMap such that the values are the ones not exported by another service
@@ -87,7 +87,7 @@ export class AbstractServiceSchemaCollection<
     });
   }
 
-  public getCyclicImportChains(): (ServiceSchema<D>[])[] {
+  getCyclicImportChains(): (ServiceSchema<D>[])[] {
     const g = new graphlib.Graph({ directed: true });
 
     const nodeMap = fromEntries(this.schemas.map((schema) => [schema.identifier, schema]));

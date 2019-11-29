@@ -11,13 +11,13 @@ import { AbstractBase } from "./abstract-base";
 export abstract class AbstractCommonSchema<
   D extends APD,
 > extends AbstractBase<D> {
-  public readonly importSettings: ProcessedImportSettings;
+  readonly importSettings: ProcessedImportSettings;
 
-  public readonly exportSettings: ProcessedExportSettings;
+  readonly exportSettings: ProcessedExportSettings;
 
   private readonly props: CommonSchemaProperties<D>;
 
-  public constructor(
+  constructor(
     base: BaseParameter<D>,
     baseProps: CommonSchemaProperties<D>,
     specificProps?: CommonSchemaProperties<D>,

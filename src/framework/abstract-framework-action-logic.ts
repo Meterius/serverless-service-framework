@@ -9,7 +9,7 @@ import { AbstractBase } from "./abstract-base";
 export class AbstractFrameworkActionLogic<
   D extends APD, // AbstractProviderDefinition
 > extends AbstractBase<D> {
-  public readonly framework: Framework<D>;
+  readonly framework: Framework<D>;
 
   constructor(base: BaseParameter<D>, framework: Framework<D>) {
     super(base);

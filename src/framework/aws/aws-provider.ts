@@ -19,9 +19,9 @@ AwsProviderDefinition,
 { "provider-based": undefined; "direct-import": AwsStack },
 TemplateExportValue
 > {
-  public readonly name = "aws";
+  readonly name = "aws";
 
-  public readonly credentials: aws.SharedIniFileCredentials;
+  readonly credentials: aws.SharedIniFileCredentials;
 
   constructor(framework: AwsFramework) {
     super(awsBaseParameter, framework);
@@ -32,7 +32,7 @@ TemplateExportValue
   }
 
   // eslint-disable-next-line class-methods-use-this
-  public async retrieveServiceStack(
+  async retrieveServiceStack(
     service: AwsService,
   ): Promise<AwsStack | undefined> {
     const cf = AwsProvider.getCloudFormation(service);

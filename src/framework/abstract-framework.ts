@@ -16,19 +16,19 @@ import { AbstractBase } from "./abstract-base";
 export abstract class AbstractFramework<
   D extends APD, // AbstractProviderDefinition
 > extends AbstractBase<D> {
-  public readonly dirPath: string;
+  readonly dirPath: string;
 
-  public readonly services: Service<D>[] = [];
+  readonly services: Service<D>[] = [];
 
-  public readonly provider: Provider<D>;
+  readonly provider: Provider<D>;
 
-  public readonly stage: string;
+  readonly stage: string;
 
-  public readonly profile: string | undefined;
+  readonly profile: string | undefined;
 
-  public readonly actionLogic: FrameworkActionLogic<D>;
+  readonly actionLogic: FrameworkActionLogic<D>;
 
-  public readonly schema: FrameworkSchema<D>;
+  readonly schema: FrameworkSchema<D>;
 
   private readonly options: FrameworkOptions;
 

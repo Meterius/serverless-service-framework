@@ -7,7 +7,7 @@ export abstract class AbstractStack<
 > extends AbstractBase<D> {
   protected readonly data: SD;
 
-  public readonly service: Service<D>;
+  readonly service: Service<D>;
 
   constructor(
     base: BaseParameter<D>,
@@ -20,9 +20,9 @@ export abstract class AbstractStack<
     this.data = stackData;
   }
 
-  public abstract get stackExports(): Record<string, string>;
+  abstract get stackExports(): Record<string, string>;
 
-  public getStackExport(
+  getStackExport(
     exportName: string,
   ): string {
     const exportValue = this.stackExports[exportName];

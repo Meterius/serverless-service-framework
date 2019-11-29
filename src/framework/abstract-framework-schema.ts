@@ -10,15 +10,15 @@ import { AbstractBase } from "./abstract-base";
 export abstract class AbstractFrameworkSchema<
   D extends APD, // AbstractProviderDefinition
 > extends AbstractBase<D> {
-  public readonly name: string;
+  readonly name: string;
 
-  public readonly shortName: string;
+  readonly shortName: string;
 
-  public readonly template: FrameworkTemplate;
+  readonly template: FrameworkTemplate;
 
-  public readonly options: FrameworkOptions;
+  readonly options: FrameworkOptions;
 
-  public readonly commonSchema: CommonSchema<D>;
+  readonly commonSchema: CommonSchema<D>;
 
   private readonly props: FrameworkSchemaProperties<D>;
 

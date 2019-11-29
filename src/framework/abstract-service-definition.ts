@@ -6,11 +6,11 @@ import { AbstractBase } from "./abstract-base";
 export abstract class AbstractServiceDefinition<
   D extends APD, // AbstractProviderDefinition
 > extends AbstractBase<D> {
-  public dirPath: string;
+  dirPath: string;
 
-  public props: ServiceSchemaProperties<D>;
+  props: ServiceSchemaProperties<D>;
 
-  public hookMap: ServiceHookMap<D> = {};
+  hookMap: ServiceHookMap<D> = {};
 
   constructor(
     base: BaseParameter<D>,

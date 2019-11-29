@@ -9,13 +9,13 @@ import { AbstractBase } from "./abstract-base";
 export abstract class AbstractFrameworkDefinition<
   D extends APD, // AbstractProviderDefinition
 > extends AbstractBase<D> {
-  public props: FrameworkSchemaProperties<D>;
+  props: FrameworkSchemaProperties<D>;
 
-  public serviceDefinitions: ServiceDefinition<D>[] = [];
+  serviceDefinitions: ServiceDefinition<D>[] = [];
 
-  public serviceDefinitionRoots: [string, boolean][] = [];
+  serviceDefinitionRoots: [string, boolean][] = [];
 
-  public readonly dirPath: string;
+  readonly dirPath: string;
 
   constructor(
     base: BaseParameter<D>,

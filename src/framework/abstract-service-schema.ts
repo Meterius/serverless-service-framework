@@ -18,20 +18,20 @@ import { AbstractBase } from "./abstract-base";
 export abstract class AbstractServiceSchema<
   D extends APD,
 > extends AbstractBase<D> {
-  public readonly name: string;
+  readonly name: string;
 
-  public readonly shortName: string;
+  readonly shortName: string;
 
-  public readonly importMap: ProcessedImportMap;
+  readonly importMap: ProcessedImportMap;
 
   // list of default service identifiers of services that this service imports
-  public readonly importedServices: string[];
+  readonly importedServices: string[];
 
-  public readonly exportMap: ExportMap;
+  readonly exportMap: ExportMap;
 
-  public readonly template: ServiceTemplate;
+  readonly template: ServiceTemplate;
 
-  public readonly commonSchema: CommonSchema<D>;
+  readonly commonSchema: CommonSchema<D>;
 
   private readonly props: ServiceSchemaProperties<D>;
 
@@ -140,7 +140,7 @@ export abstract class AbstractServiceSchema<
     return Object.keys(importMap);
   }
 
-  public static filterImportValuesByType<T extends ImportType>(
+  static filterImportValuesByType<T extends ImportType>(
     importValues: ProcessedImportValue[], importType: T,
   ): ProcessedImportValue<T>[] {
     return importValues.filter(

@@ -3,7 +3,7 @@ import path from "path";
 import {
   APD, BaseParameter,
   Framework, Service, ServiceHook, ServiceHookMap, ServiceSchema,
-  ServiceSchemaProperties,
+  ServiceSchemaProperties, Stack,
 } from "./abstract-provider-definition";
 import {
   PostCompilationServerlessTemplate,
@@ -35,9 +35,9 @@ export interface SerializedServerlessTemplate {
 export abstract class AbstractService<
   D extends APD, // AbstractProviderDefinition
 > extends AbstractBase<D> {
-  public readonly dirPath: string;
+  readonly dirPath: string;
 
-  public readonly framework: Framework<D>;
+  readonly framework: Framework<D>;
 
   private readonly __importedServices: ServiceSchema<D>[];
 
@@ -45,9 +45,9 @@ export abstract class AbstractService<
 
   private __serverlessTemplate: ServerlessTemplate | null = null;
 
-  public readonly schema: ServiceSchema<D>;
+  readonly schema: ServiceSchema<D>;
 
-  public readonly hookMap: ServiceHookMap<D>;
+  readonly hookMap: ServiceHookMap<D>;
 
   private readonly props: ServiceSchemaProperties<D>;
 
@@ -132,6 +132,14 @@ export abstract class AbstractService<
       `${serviceBuild.serverlessTemplate}.${serializedTemplate.format}`,
       serializedTemplate.data,
     );
+  }
+
+  private retrieveServiceStack(): Promise<Stack<D> | undefined> {
+    return this.framework.provider.retrieveServiceStack(this);
+  }
+
+  private getServiceStack(): Promise<Stack<D>> {
+    return this.framework.provider.getServiceStack(this);
   }
 
   private getTemplateServiceName(): string {
