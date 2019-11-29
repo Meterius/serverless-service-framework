@@ -34,18 +34,18 @@ export async function bufferedExec(params: BufferedExecParams): Promise<void> {
 
   const options = { cwd, env };
 
+  let thrownErr: Error | undefined;
+
+  log("-----------------------------------------------------\n");
+
   if (params.async) {
     const [err, stdout, stderr] = await execAsync(command, options);
 
     log(stdout);
     log(chalk`{red ${stderr}}`);
 
-    if (err) {
-      throw err;
-    }
+    thrownErr = err;
   } else {
-    log("-----------------------------------------------------\n");
-
     let err;
     try {
       execSync(command, {
@@ -56,10 +56,12 @@ export async function bufferedExec(params: BufferedExecParams): Promise<void> {
       err = execErr;
     }
 
-    log("-----------------------------------------------------\n");
+    thrownErr = err;
+  }
 
-    if (err) {
-      throw err;
-    }
+  log("-----------------------------------------------------\n");
+
+  if (thrownErr) {
+    throw thrownErr;
   }
 }

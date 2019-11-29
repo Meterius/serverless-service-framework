@@ -336,7 +336,6 @@ export abstract class AbstractService<
 
   async executeExecutableServerlessCommand(
     executableServerlessCommand: string,
-    // eslint-disable-next-line @typescript-eslint/unbound-method,no-console
     log: (data: string, raw: boolean) => void,
     async: boolean,
     hookExecutor: (
