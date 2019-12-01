@@ -13,8 +13,7 @@ import { AwsFramework } from "./aws-framework";
 import { AwsFrameworkActionLogic } from "./aws-framework-action-logic";
 import { AwsServiceDefinition } from "./aws-service-definition";
 import { AwsFrameworkDefinition } from "./aws-framework-definition";
-import { AwsServiceHook } from "./aws-service-hook";
-import { AwsServiceHookMap } from "./aws-service-hook-map";
+import { AwsServiceHook, AwsServiceHookMap } from "./aws-service-hook";
 import { AwsClassCollection } from "./aws-class-collection";
 import { AwsBaseCollection } from "./aws-base-collection";
 
