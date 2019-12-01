@@ -1,4 +1,6 @@
-import { mkdirp, writeFile } from "fs-extra";
+import {
+  mkdirp, writeFile, readFile,
+} from "fs-extra";
 import path from "path";
 import {
   APD, BaseParameter,
@@ -145,8 +147,51 @@ export abstract class AbstractService<
    * Service Directory Management
    */
 
+  // returns absolute file path of file path relative to the service directory
   resolveServicePath(relPath: string): string {
     return path.join(this.dirPath, relPath);
+  }
+
+  /**
+   * Returns data of file at file path relative to the service directory.
+   * Returns undefined if the file does not exist.
+   */
+  async retrieveServiceFile(relPath: string): Promise<string | undefined> {
+    try {
+      return (await readFile(this.resolveServicePath(relPath))).toString();
+    } catch (err) {
+      if (err.code === "ENOENT") {
+        return undefined;
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  /**
+   * Returns data of file at file path relative to the service directory.
+   * Throws if file does not exist.
+   */
+  async getServiceFile(relPath: string): Promise<string> {
+    const data = await this.retrieveServiceFile(relPath);
+
+    if (data === undefined) {
+      throw new Error(`Service File "${relPath}" in Service "${this.name}" not found`);
+    } else {
+      return data;
+    }
+  }
+
+  /**
+   * Writes file at file path relative to the service directory.
+   * Note: It will create necessary sub directories if the file
+   * is contained in one that does not exist yet
+   */
+  async writeServiceFile(relPath: string, data: string | Buffer): Promise<void> {
+    const filePath = this.resolveServicePath(relPath);
+    await mkdirp(path.dirname(filePath));
+
+    await writeFile(relPath, data);
   }
 
   /*
