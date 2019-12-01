@@ -6,7 +6,6 @@ import {
   Stack,
 } from "./abstract-provider-definition";
 import {
-  PostCompilationServerlessTemplate,
   PreCompilationServerlessTemplate, ServerlessProviderName,
   ServerlessTemplate, ServerlessTemplatePostExports, ServerlessTemplatePostImports,
   ServerlessTemplatePostMerging,
@@ -23,15 +22,11 @@ import { AbstractServiceSchema } from "./abstract-service-schema";
 import { bufferedExec } from "../common/buffered-exec";
 import { AbstractBase } from "./abstract-base";
 
-export enum ServerlessTemplateFormat {
-  JavaScript = "js"
-}
-
-export interface SerializedServerlessTemplate {
-  data: string;
-  format: ServerlessTemplateFormat;
-}
-
+/**
+ * Class to define the representation of a loaded Service
+ * It implements the serverless template construction
+ * It provides information about the service and an endpoint to retrieve the associated stack
+ */
 export abstract class AbstractService<
   D extends APD, // AbstractProviderDefinition
 > extends AbstractBase<D> {
@@ -39,11 +34,11 @@ export abstract class AbstractService<
 
   readonly framework: Framework<D>;
 
-  private __serverlessTemplate: ServerlessTemplate | null = null;
-
   readonly schema: ServiceSchema<D>;
 
   readonly hookMap: ServiceHookMap<D>;
+
+  private __cachedServerlessTemplate: ServerlessTemplate | null = null;
 
   protected constructor(
     base: BaseParameter<D>,
@@ -61,67 +56,106 @@ export abstract class AbstractService<
     this.schema = new this.classes.ServiceSchema(this.framework.schema, props);
   }
 
+  // name of the service
   get name(): string {
     return this.schema.name;
   }
 
+  // stack name of the service stack when deployed
   get stackName(): string {
     return `${this.framework.schema.shortName}-${this.schema.shortName}-${this.framework.stage}`;
   }
 
+  // region the service stack will be deployed in
   get region(): string {
     return (this.schema.template.provider || {}).region
       || this.framework.schema.template.provider.region;
   }
 
+  /*
+   * Dependency Data
+   */
+
+  // services that are imported by this service
   get importedServices(): Service<D>[] {
     return this.framework.services.filter(
       (otherService) => this.schema.isImporting(otherService.schema),
     );
   }
 
+  // services that import this service
   get exportedToServices(): Service<D>[] {
     return this.framework.services.filter(
       (otherService) => this.schema.isExportedTo(otherService.schema),
     );
   }
 
-  /**
-   * Writes file into service build directory and creates necessary directories.
-   * Returns absolute file path of written file.
-   */
-  private async writeServiceBuildFile(
-    relPath: string,
-    fileData: string,
-  ): Promise<string> {
-    const filePath = this.resolveServiceBuildPath(relPath);
-
-    await mkdirp(path.dirname(filePath));
-    await writeFile(filePath, fileData);
-
-    return filePath;
+  // whether this service imports the other service
+  importsService(otherService: Service<D>): boolean {
+    return this.importedServices.includes(otherService);
   }
 
-  /**
-   * Writes serialized serverless template to service build directory.
-   * Returns absolute file path of written template file.
-   */
-  private writeSerializedServerlessTemplate(
-    serializedTemplate: SerializedServerlessTemplate,
-  ): Promise<string> {
-    return this.writeServiceBuildFile(
-      `${serviceBuild.serverlessTemplate}.${serializedTemplate.format}`,
-      serializedTemplate.data,
-    );
+  // whether the other service imports this service
+  exportedToService(otherService: Service<D>): boolean {
+    return this.exportedToServices.includes(otherService);
   }
 
+  /*
+   * Service Stack Data
+   */
+
+  // loads the service stack, returns it if deployed, undefined otherwise
   retrieveStack(): Promise<Stack<D> | undefined> {
     return this.framework.provider.retrieveServiceStack(this);
   }
 
+  // loads the service stack, returns it if deployed, throws otherwise
   getStack(): Promise<Stack<D>> {
     return this.framework.provider.getServiceStack(this);
   }
+
+  /*
+   * Serverless Template Methods
+   */
+
+  /**
+   * Builds serverless template and returns it.
+   * Note: it caches if ignoreCache is false
+   */
+  async getServerlessTemplate(ignoreCache = false): Promise<ServerlessTemplate> {
+    if (this.__cachedServerlessTemplate === null || ignoreCache) {
+      this.__cachedServerlessTemplate = await this.buildServiceServerlessTemplateInMemory();
+    }
+
+    return this.__cachedServerlessTemplate;
+  }
+
+  /**
+   * Builds serverless template and writes it to disk.
+   * Returns the file path of the written template file.
+   * Note: caches template built if ignoreCache is false
+   */
+  async createServerlessTemplateFilePath(ignoreCache = false): Promise<string> {
+    const template = await this.getServerlessTemplate(ignoreCache);
+
+    return this.writeSerializedServerlessTemplate(template);
+  }
+
+  /*
+   * Service Directory Management
+   */
+
+  resolveServicePath(relPath: string): string {
+    return path.join(this.dirPath, relPath);
+  }
+
+  /*
+   * PRIVATE
+   */
+
+  /*
+   * Template Specific Data Retrieval
+   */
 
   private getTemplateServiceName(): string {
     return `${this.framework.schema.shortName}-${this.schema.shortName}`;
@@ -142,6 +176,38 @@ export abstract class AbstractService<
   private getTemplateProviderProfile(): string | undefined {
     return this.framework.profile;
   }
+
+  /*
+   * Service Build Directory Management
+   */
+
+  private getServiceBuildDir(): string {
+    return this.resolveServicePath(serviceBuildDir);
+  }
+
+  private resolveServiceBuildPath(relPath: string): string {
+    return path.join(this.getServiceBuildDir(), relPath);
+  }
+
+  /**
+   * Writes file into service build directory and creates necessary directories.
+   * Returns absolute file path of written file.
+   */
+  private async writeServiceBuildFile(
+    relPath: string,
+    fileData: string,
+  ): Promise<string> {
+    const filePath = this.resolveServiceBuildPath(relPath);
+
+    await mkdirp(path.dirname(filePath));
+    await writeFile(filePath, fileData);
+
+    return filePath;
+  }
+
+  /*
+   * Template Processing
+   */
 
   private async processServiceServerlessTemplateMerging(
     template: ServerlessTemplatePreMerging,
@@ -282,25 +348,46 @@ export abstract class AbstractService<
     );
   }
 
-  importsService(otherService: Service<D>): boolean {
-    return this.importedServices.includes(otherService);
-  }
+  /*
+   * Serverless Template Building
+   */
 
-  exportedToService(otherService: Service<D>): boolean {
-    return this.exportedToServices.includes(otherService);
+  /**
+   * Builds serverless template and returns it.
+   */
+  private async buildServiceServerlessTemplateInMemory(
+
+  ): Promise<ServerlessTemplate> {
+    const step0: PreCompilationServerlessTemplate = {};
+    const step1 = await this.processServiceServerlessTemplateMerging(step0);
+    const step2 = await this.processServiceServerlessTemplatePreparation(step1);
+    const step3 = await this.processServiceServerlessTemplateNaming(step2);
+    const step4 = await this.processServiceServerlessTemplateImports(step3);
+    const step5 = await this.processServiceServerlessTemplateExports(step4);
+
+    return step5;
   }
 
   /**
-   * Builds serverless template used for service.
-   * Returns the built template. (caches built)
+   * Writes serverless template to service build directory.
+   * Returns absolute file path of written template file.
    */
-  async getServerlessTemplate(): Promise<ServerlessTemplate> {
-    if (this.__serverlessTemplate === null) {
-      this.__serverlessTemplate = await this.buildServiceServerlessTemplateInMemory();
-    }
+  private writeSerializedServerlessTemplate(
+    serverlessTemplate: ServerlessTemplate,
+  ): Promise<string> {
+    const data = `module.exports = ${JSON.stringify(serverlessTemplate, undefined, " ")};`;
 
-    return this.__serverlessTemplate;
+    return this.writeServiceBuildFile(
+      `${serviceBuild.serverlessTemplate}.js`,
+      data,
+    );
   }
+
+  /*
+   * Service Hook and Serverless Command Methods
+   */
+
+  // TODO: refactor execution methods
 
   async executeHook(
     hook: ServiceHook<D>,
@@ -381,65 +468,5 @@ export abstract class AbstractService<
     if (isRemoving) {
       await hookExecutor(this, "postRemove", log);
     }
-  }
-
-  /**
-   * Builds serverless template used for service.
-   * Returns the built template.
-   */
-  private async buildServiceServerlessTemplateInMemory(
-
-  ): Promise<ServerlessTemplate> {
-    const step0: PreCompilationServerlessTemplate = {};
-    const step1 = await this.processServiceServerlessTemplateMerging(step0);
-    const step2 = await this.processServiceServerlessTemplatePreparation(step1);
-    const step3 = await this.processServiceServerlessTemplateNaming(step2);
-    const step4 = await this.processServiceServerlessTemplateImports(step3);
-    const step5 = await this.processServiceServerlessTemplateExports(step4);
-
-    return step5;
-  }
-
-  /**
-   * Builds serverless template used for service and writes it to disk.
-   * Returns the file path of the written template file. (caches built)
-   */
-  async createServerlessTemplateFilePath(): Promise<string> {
-    const template = await this.getServerlessTemplate();
-    const serializedTemplate = await AbstractService.serializeServiceServerlessTemplate(
-      template, ServerlessTemplateFormat.JavaScript,
-    );
-
-    return this.writeSerializedServerlessTemplate(serializedTemplate);
-  }
-
-  /**
-   * Serializes serverless template to supported file format.
-   * Returns data and used format for the file.
-   */
-  private static async serializeServiceServerlessTemplate(
-    template: PostCompilationServerlessTemplate, // which template will be serialized
-    format: ServerlessTemplateFormat, // which file format will be generated
-  ): Promise<SerializedServerlessTemplate> {
-    if (format === ServerlessTemplateFormat.JavaScript) {
-      return {
-        data: `module.exports = ${JSON.stringify(template, undefined, " ")};`,
-        format,
-      };
-    } else {
-      throw new Error("Invalid Template Format");
-    }
-  }
-
-  resolveServicePath(relPath: string): string {
-    return path.join(this.dirPath, relPath);
-  }
-
-  getServiceBuildDir(): string {
-    return this.resolveServicePath(serviceBuildDir);
-  }
-
-  protected resolveServiceBuildPath(relPath: string): string {
-    return path.join(this.getServiceBuildDir(), relPath);
   }
 }
