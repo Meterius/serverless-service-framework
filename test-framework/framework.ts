@@ -1,10 +1,8 @@
-import { FrameworkSchemaProperties } from "serverless-service-framework";
+import { AwsFrameworkDefinition } from "serverless-service-framework";
 
-export const schema: FrameworkSchemaProperties = {
+export const framework = new AwsFrameworkDefinition(__dirname, {
   name: "Test Backend",
-  shortName: "cqz-be",
-
-  serviceRootDir: "services",
+  shortName: "sff-test",
 
   importSettings: {
     defaultImportType: "direct",
@@ -12,8 +10,11 @@ export const schema: FrameworkSchemaProperties = {
 
   template: {
     provider: {
-      name: "aws",
       region: "eu-central-1",
     }
   }
-};
+});
+
+framework.addServiceDefinitionRoot(
+  "services", true,
+);

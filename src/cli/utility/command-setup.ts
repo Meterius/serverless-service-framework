@@ -1,32 +1,84 @@
-import { TB } from "../cli-types";
+import { GC, TB } from "../cli-types";
 import {
-  getFrameworkOptionsOption, getFrameworkSchemaOption,
+  applyFrameworkOptionOptions, getFrameworkDefinitionOption,
+  getFrameworkOptionsOption, getProfileOption, requireStageOption,
 } from "./common-options";
-import { ProviderContext, setupProvider } from "./provider-configuration";
-import { FrameworkContext } from "../../framework/classes/framework-context";
-import { loadFrameworkContext } from "./framework";
-
-export interface FrameworkContextSetup {
-  context: FrameworkContext;
-  providerContext: ProviderContext;
-}
+import { CliError } from "./exceptions";
+import {
+  getFrameworkDefinitionFilePath,
+  getFrameworkOptionsFilePath, loadFrameworkDefinitionFile,
+  loadFrameworkOptionsFile,
+} from "../../framework";
+import { createFramework } from "../../framework/framework";
+import { Framework, ServiceHookMap } from "../../framework/provider-definition";
+import { requireVariadicParameters } from "./options-handling";
+import { filterDuplicates } from "../../common/utility";
+import { executeHook, getService } from "./framework";
 
 /**
- * Retrieves framework context using common options
- * and sets up the provider. (Used for commands operating on the complete framework context)
- * Returns necessary options and context.
+ * Retrieves framework using common options.
  */
 export async function setupFrameworkContextFunction(
   tb: TB,
-): Promise<FrameworkContextSetup> {
-  const filePath = getFrameworkSchemaOption(tb);
-  const optsFilePath = getFrameworkOptionsOption(tb);
+): Promise<Framework> {
+  const providedDefinitionFilePath = getFrameworkDefinitionOption(tb);
+  const providedOptionsFilePath = getFrameworkOptionsOption(tb);
 
-  const context = await loadFrameworkContext(tb, filePath, optsFilePath);
-  const providerContext = await setupProvider(tb, context);
+  const definitionFilePath = await getFrameworkDefinitionFilePath(
+    providedDefinitionFilePath, process.cwd(),
+  );
 
+  if (definitionFilePath === undefined && providedDefinitionFilePath === undefined) {
+    throw new CliError("No framework definition file exists in current directory");
+  } else if (definitionFilePath === undefined) {
+    throw new CliError(
+      `Specified framework definition file "${providedDefinitionFilePath}" does not exist`,
+    );
+  }
+
+  const optionFilePath = await getFrameworkOptionsFilePath(providedOptionsFilePath, process.cwd());
+
+  if (optionFilePath === undefined && providedOptionsFilePath === undefined) {
+    throw new CliError("No Framework Options file exists in current directory");
+  } else if (optionFilePath === undefined) {
+    throw new CliError(
+      `Specified Framework Options file "${providedOptionsFilePath}" does not exist`,
+    );
+  }
+
+  const frOpts = applyFrameworkOptionOptions(
+    tb, await loadFrameworkOptionsFile(optionFilePath),
+  );
+
+  const stage = requireStageOption(tb, frOpts);
+  const profile = getProfileOption(tb, frOpts);
+
+  const frDef = await loadFrameworkDefinitionFile(definitionFilePath, frOpts);
+
+  return createFramework(frDef, frOpts, stage, profile);
+}
+
+export function createHookCommand(hookName: keyof ServiceHookMap): GC {
   return {
-    context,
-    providerContext,
+    name: hookName,
+    description: `Executes "${hookName}" hook`,
+    run: async (tb: TB): Promise<void> => {
+      const framework = await setupFrameworkContextFunction(tb);
+
+      const [...serviceIds] = requireVariadicParameters(tb, "service-name");
+
+      const services = serviceIds.length === 0 ? framework.services
+        : filterDuplicates(serviceIds.map((id) => getService(framework, id)));
+
+      for (let i = 0; i < services.length; i += 1) {
+        const service = services[i];
+
+        const log = (
+          msg: string, raw: boolean,
+        ): void => tb.log(msg, `${hookName} ${service.name}`, raw);
+
+        await executeHook(service, hookName, log);
+      }
+    },
   };
 }

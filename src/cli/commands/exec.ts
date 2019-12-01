@@ -1,5 +1,5 @@
 import {
-  execServerlessCommand,
+  executeServerlessCommand,
   getService,
 } from "../utility/framework";
 import { GC, TB } from "../cli-types";
@@ -15,17 +15,21 @@ const exec: GC = {
       tb, ["service-name", "serverless-cmd"],
     );
 
-    const { context, providerContext } = await setupFrameworkContextFunction(tb);
+    const framework = await setupFrameworkContextFunction(tb);
 
-    const service = getService(context, serviceName);
+    const service = getService(framework, serviceName);
 
-    await execServerlessCommand({
-      providerContext,
-      tb,
+    function slsLog(msg: string, raw = false): void {
+      tb.log(msg, undefined, raw);
+    }
+
+    await executeServerlessCommand(
       service,
-      serverlessCommand: slsCmdBase,
-      serverlessOptions: {},
-    });
+      slsCmdBase,
+      {},
+      slsLog,
+      false,
+    );
   },
 };
 

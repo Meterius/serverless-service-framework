@@ -1,7 +1,7 @@
 import { userInfo } from "os";
 import { getFlag, getOption, requireOption } from "./options-handling";
 import { TB } from "../cli-types";
-import { FrameworkOptions } from "../../framework/classes";
+import { FrameworkOptions } from "../../framework/framework-options";
 
 const { username } = userInfo();
 
@@ -17,8 +17,8 @@ export function getParallelFlag(tb: TB): boolean {
   return getFlag(tb, "parallel");
 }
 
-export function getFrameworkSchemaOption(tb: TB): string | undefined {
-  return getOption(tb, "schema");
+export function getFrameworkDefinitionOption(tb: TB): string | undefined {
+  return getOption(tb, "definition");
 }
 
 export function getFrameworkOptionsOption(tb: TB): string | undefined {
