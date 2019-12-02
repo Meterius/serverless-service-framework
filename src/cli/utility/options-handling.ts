@@ -46,16 +46,6 @@ export function requireParameter(
   return requireParameters(tb, [name])[0];
 }
 
-export function getFlag(
-  tb: TB,
-  name: string,
-  shortName?: string,
-): boolean {
-  const option = tb.parameters.options[name] || (shortName && tb.parameters.options[shortName]);
-
-  return option === true;
-}
-
 export function getOption(
   tb: TB,
   name: string,
@@ -76,8 +66,11 @@ export function getOption(
   defaultValue?: string,
 ): string | undefined {
   const option = tb.parameters.options[name] || (shortName && tb.parameters.options[shortName]);
+  const value = option === undefined ? defaultValue : option.toString();
 
-  return option === undefined ? defaultValue : option.toString();
+  process.env[`SSF_CLI_USED_OPTION_${name}`] = value;
+
+  return value;
 }
 
 export function requireOption(
@@ -94,4 +87,17 @@ export function requireOption(
   } else {
     return option;
   }
+}
+
+export function getFlag(
+  tb: TB,
+  name: string,
+  shortName?: string,
+): boolean {
+  const option = tb.parameters.options[name] || (shortName && tb.parameters.options[shortName]);
+  const value = option === true;
+
+  process.env[`SSF_CLI_USED_FLAG_${name}`] = value.toString();
+
+  return value;
 }
