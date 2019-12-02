@@ -1,4 +1,5 @@
 import aws from "aws-sdk";
+import deasync from "deasync";
 import { AbstractProvider } from "../abstract-provider";
 import { AwsProviderDefinition } from "./aws-provider-definition";
 import { AwsStack } from "./aws-stack";
@@ -26,9 +27,13 @@ TemplateExportValue
   constructor(framework: AwsFramework) {
     super(awsBaseParameter, framework);
 
-    this.credentials = new aws.SharedIniFileCredentials({
-      profile: framework.profile,
-    });
+    const chain = new aws.CredentialProviderChain([
+      (): aws.Credentials => new aws.EnvironmentCredentials("AWS"),
+      (): aws.Credentials => new aws.EnvironmentCredentials("AMAZON"),
+      (): aws.Credentials => new aws.SharedIniFileCredentials({ profile: framework.profile }),
+    ]);
+
+    this.credentials = deasync((cb: (err: any, creds: any) => void) => chain.resolve(cb))();
   }
 
   // eslint-disable-next-line class-methods-use-this
