@@ -31,6 +31,9 @@ TemplateExportValue
       (): aws.Credentials => new aws.EnvironmentCredentials("AWS"),
       (): aws.Credentials => new aws.EnvironmentCredentials("AMAZON"),
       (): aws.Credentials => new aws.SharedIniFileCredentials({ profile: framework.profile }),
+      (): aws.Credentials => new aws.ECSCredentials(),
+      (): aws.Credentials => new aws.EC2MetadataCredentials(),
+      (): aws.Credentials => new aws.ProcessCredentials(),
     ]);
 
     this.credentials = deasync((cb: (err: any, creds: any) => void) => chain.resolve(cb))();
