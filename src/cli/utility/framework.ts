@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import path from "path";
+import { titleCase } from "change-case";
 import { CliError } from "./exceptions";
 import {
   Framework, Service, ServiceHookContext, ServiceHookMap,
@@ -50,7 +51,7 @@ export async function executeServerlessCommand(
       if (raw) {
         return log(data, raw);
       } else {
-        return log(chalk`{white ({blue ${hookName}}): }${data}`, raw);
+        return log(chalk`{white ({blue ${titleCase(hookName.toString())}}): }${data}`, raw);
       }
     };
   }
