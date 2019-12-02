@@ -4,7 +4,7 @@ import {
 import path from "path";
 import {
   APD, BaseParameter,
-  Framework, Service, ServiceHook, ServiceHookMap, ServiceSchema, ServiceSchemaProperties,
+  Framework, Service, ServiceHook, ServiceHookContext, ServiceHookMap, ServiceSchema, ServiceSchemaProperties,
   Stack,
 } from "./abstract-provider-definition";
 import {
@@ -426,92 +426,5 @@ export abstract class AbstractService<
       `${serviceBuild.serverlessTemplate}.js`,
       data,
     );
-  }
-
-  /*
-   * Service Hook and Serverless Command Methods
-   */
-
-  // TODO: refactor execution methods
-
-  async executeHook(
-    hook: ServiceHook<D>,
-    log: (data: string, raw: boolean) => void,
-  ): Promise<void> {
-    await hook(this, (data: string, raw = false) => log(data, raw));
-  }
-
-  async createExecutableServerlessCommand(
-    command: string,
-    options: Record<string, boolean | string>,
-  ): Promise<string> {
-    const serviceDir = this.dirPath;
-
-    const templatePath = path.relative(serviceDir, await this.createServerlessTemplateFilePath());
-
-    const extendedServerlessOptions: Record<string, string | boolean> = {
-      ...options,
-      "--verbose": true,
-      "--config": templatePath,
-    };
-
-    const serverlessOptionList = Object.entries(extendedServerlessOptions).map(
-      ([key, value]) => {
-        if (typeof value === "boolean") {
-          return value ? `${key} ` : "";
-        } else {
-          return `${key} "${value}" `;
-        }
-      },
-    ).join("");
-
-    return `sls ${command} ${serverlessOptionList}`.trimRight();
-  }
-
-  async executeExecutableServerlessCommand(
-    executableServerlessCommand: string,
-    log: (data: string, raw: boolean) => void,
-    async: boolean,
-    hookExecutor: (
-      service: Service<D>,
-      hookName: keyof ServiceHookMap<D>,
-      log: (data: string, raw: boolean) => void
-    ) => Promise<void>,
-    preExecutionTrigger: () => void,
-  ): Promise<void> {
-    const isDeploying = executableServerlessCommand.startsWith("sls deploy");
-    const isRemoving = executableServerlessCommand.startsWith("sls remove");
-
-    const logR = (data: string): void => log(data, true);
-
-    await hookExecutor(this, "setup", log);
-
-    if (isDeploying) {
-      await hookExecutor(this, "preDeploy", log);
-    }
-
-    if (isRemoving) {
-      await hookExecutor(this, "preRemove", log);
-    }
-
-    const fullCommand = `npx --no-install ${executableServerlessCommand}`;
-
-    preExecutionTrigger();
-
-    await bufferedExec({
-      cwd: this.dirPath,
-      env: { ...process.env },
-      command: fullCommand,
-      log: logR,
-      async,
-    });
-
-    if (isDeploying) {
-      await hookExecutor(this, "postDeploy", log);
-    }
-
-    if (isRemoving) {
-      await hookExecutor(this, "postRemove", log);
-    }
   }
 }
