@@ -60,8 +60,8 @@ export async function setupFrameworkContextFunction(
 
 export function createHookCommand(hookName: keyof ServiceHookMap): GC {
   return {
-    name: hookName,
-    description: `Executes "${hookName}" hook`,
+    name: hookName.toString(),
+    description: `Executes "${hookName.toString()}" hook`,
     run: async (tb: TB): Promise<void> => {
       const framework = await setupFrameworkContextFunction(tb);
 
@@ -77,7 +77,7 @@ export function createHookCommand(hookName: keyof ServiceHookMap): GC {
           msg: string, raw: boolean,
         ): void => tb.log(msg, `${hookName} ${service.name}`, raw);
 
-        await executeHook(service, hookName, log);
+        await executeHook(service, hookName, { async: false, log });
       }
     },
   };

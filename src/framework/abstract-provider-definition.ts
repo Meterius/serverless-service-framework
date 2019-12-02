@@ -12,7 +12,7 @@ import { AbstractFrameworkActionLogic } from "./abstract-framework-action-logic"
 import { AbstractServiceSchemaCollection } from "./abstract-service-schema-collection";
 import { AbstractServiceDefinition } from "./abstract-service-definition";
 import { AbstractFrameworkDefinition } from "./abstract-framework-definition";
-import { AbstractServiceHook, AbstractServiceHookMap } from "./abstract-service-hook";
+import { AbstractServiceHookContext, AbstractServiceHookMap } from "./abstract-service-hook";
 import { AbstractClassCollection } from "./abstract-class-collection";
 import { AbstractBaseCollection } from "./abstract-base-collection";
 
@@ -30,7 +30,7 @@ AbstractServiceSchema<any>,
 AbstractServiceSchemaCollection<any>,
 AbstractService<any>,
 AbstractServiceDefinition<any>,
-AbstractServiceHook<any>,
+AbstractServiceHookContext<any>,
 AbstractServiceHookMap<any>,
 AbstractFrameworkSchemaProperties<any>,
 AbstractFrameworkSchema<any>,
@@ -53,7 +53,7 @@ export type AbstractProviderDefinition<
   ServiceSchemaCollection extends AbstractServiceSchemaCollection<Definition>,
   Service extends AbstractService<Definition>,
   ServiceDefinition extends AbstractServiceDefinition<Definition>,
-  ServiceHook extends AbstractServiceHook<Definition>,
+  ServiceHookContext extends AbstractServiceHookContext<Definition>,
   ServiceHookMap extends AbstractServiceHookMap<Definition>,
   FrameworkSchemaProperties extends AbstractFrameworkSchemaProperties<Definition>,
   FrameworkSchema extends AbstractFrameworkSchema<Definition>,
@@ -74,7 +74,7 @@ export type AbstractProviderDefinition<
   serviceSchemaCollection: ServiceSchemaCollection;
   service: Service;
   serviceDefinition: ServiceDefinition;
-  serviceHook: ServiceHook;
+  serviceHookContext: ServiceHookContext;
   serviceHookMap: ServiceHookMap;
   frameworkSchemaProperties: FrameworkSchemaProperties;
   frameworkSchema: FrameworkSchema;
@@ -109,7 +109,9 @@ export type Service<D extends APD> = D["service"];
 
 export type ServiceDefinition<D extends APD> = D["serviceDefinition"];
 
-export type ServiceHook<D extends APD> = D["serviceHook"];
+export { ServiceHook } from "./abstract-service-hook";
+
+export type ServiceHookContext<D extends APD> = D["serviceHookContext"];
 
 export type ServiceHookMap<D extends APD> = D["serviceHookMap"];
 

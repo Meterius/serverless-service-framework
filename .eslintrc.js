@@ -1,4 +1,4 @@
-{
+module.exports = {
   "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -28,4 +28,4 @@
     "no-else-return": "off",
     "linebreak-style": ["error", "windows"]
   }
-}
+};

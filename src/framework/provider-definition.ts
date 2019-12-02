@@ -25,6 +25,8 @@ export type ServiceDefinition = APD.ServiceDefinition<PD>;
 
 export type ServiceHook = APD.ServiceHook<PD>;
 
+export type ServiceHookContext = APD.ServiceHookContext<PD>;
+
 export type ServiceHookMap = APD.ServiceHookMap<PD>;
 
 export type FrameworkSchemaProperties = APD.FrameworkSchemaProperties<PD>;
