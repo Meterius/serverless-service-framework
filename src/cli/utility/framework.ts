@@ -1,7 +1,10 @@
 import chalk from "chalk";
 import path from "path";
+import { titleCase } from "change-case";
 import { CliError } from "./exceptions";
-import { Framework, Service, ServiceHookMap } from "../../framework/provider-definition";
+import {
+  Framework, Service, ServiceHookContext, ServiceHookMap,
+} from "../../framework/provider-definition";
 
 export function getService(
   fr: Framework,
@@ -16,21 +19,24 @@ export function getService(
   }
 }
 
+async function preHookExecutionTrigger(hookName: keyof ServiceHookMap, context: ServiceHookContext): Promise<void> {
+  context.log(chalk`Executing Hook "{blue ${hookName.toString()}}"`, false);
+}
+
+async function preHookExecutionSkipTrigger(hookName: keyof ServiceHookMap, context: ServiceHookContext): Promise<void> {
+  context.log(chalk`Hook "{blue ${hookName.toString()}}" not set, skipping execution...`, false);
+}
+
 export async function executeHook(
   service: Service,
   hookName: keyof ServiceHookMap,
-  log: (data: string, raw: boolean) => void,
+  baseContext: { async: boolean; log: (data: string, raw: boolean) => void },
 ): Promise<void> {
-  const hook = service.hookMap[hookName];
-
-  if (hook === undefined) {
-    log(chalk`Hook "{blue ${hookName.toString()}}" not set, skipping execution...`, false);
-  } else {
-    log(chalk`Executing Hook "{blue ${hookName.toString()}}"`, false);
-    await service.executeHook(
-      hook, (data: string, raw: boolean) => log(chalk`{white ({blue ${hookName}}):} ${data}`, raw),
-    );
-  }
+  await service.runHook(
+    hookName, baseContext,
+    preHookExecutionTrigger,
+    preHookExecutionSkipTrigger,
+  );
 }
 
 export async function executeServerlessCommand(
@@ -40,21 +46,29 @@ export async function executeServerlessCommand(
   log: (data: string, raw: boolean) => void,
   async: boolean,
 ): Promise<void> {
-  const execCmd = await service.createExecutableServerlessCommand(command, options);
+  function hookLogGen(hookName: keyof ServiceHookMap) {
+    return function logHook(data: string, raw: boolean): void {
+      if (raw) {
+        return log(data, raw);
+      } else {
+        return log(chalk`{white ({blue ${titleCase(hookName.toString())}}): }${data}`, raw);
+      }
+    };
+  }
 
-  const printInfo = (): void => {
-    log(chalk`Running Serverless Command: "{blue ${execCmd}}"`, false);
-    log(
-      chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), service.dirPath)}}"`,
-      false,
-    );
-  };
-
-  await service.executeExecutableServerlessCommand(
-    execCmd,
+  await service.executeServerlessCommand(
+    command,
+    options,
     log,
+    hookLogGen,
     async,
-    executeHook,
-    printInfo,
+    async (extendedServerlessCommand: string) => {
+      log(chalk`Running Serverless Command: "{blue ${extendedServerlessCommand}}"`, false);
+      log(
+        chalk`In Serverless Directory: "{blue ${path.relative(process.cwd(), service.dirPath)}}"`,
+        false,
+      );
+    },
+    preHookExecutionTrigger, preHookExecutionSkipTrigger,
   );
 }

@@ -1,4 +1,5 @@
 dist/
+test-framework/dist/
 node_modules/
 .serverless/
 .serverless-service/

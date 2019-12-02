@@ -5,10 +5,12 @@
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
+    "outDir": "dist",
     "lib": ["es6"],
     "baseUrl": ".",
     "paths": {
       "@services/*": ["services/*"]
     }
-  }
+  },
+  "include": ["framework.ts", "services/**/*.ts"]
 }

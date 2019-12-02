@@ -1,5 +1,5 @@
 import {
-  APD, ServiceHookMap, ServiceHook, ServiceSchemaProperties, BaseParameter,
+  APD, ServiceHookMap, ServiceHook, ServiceSchemaProperties, BaseParameter, ServiceHookContext,
 } from "./abstract-provider-definition";
 import { AbstractBase } from "./abstract-base";
 
@@ -33,10 +33,10 @@ export abstract class AbstractServiceDefinition<
     Object.entries(nextHooks).forEach(([name, func]) => {
       if (currHooks[name] !== undefined) {
         currHooks[name] = async function combinedHook(
-          service: ServiceHook<D>, log: (data: string, raw?: boolean) => void,
+          context: ServiceHookContext<D>,
         ): Promise<void> {
-          await currHooks[name](service, log);
-          await nextHooks[name](service, log);
+          await currHooks[name](context);
+          await nextHooks[name](context);
         };
       } else {
         currHooks[name] = func;

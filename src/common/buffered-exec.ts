@@ -36,8 +36,6 @@ export async function bufferedExec(params: BufferedExecParams): Promise<void> {
 
   let thrownErr: Error | undefined;
 
-  log("-----------------------------------------------------\n");
-
   if (params.async) {
     const [err, stdout, stderr] = await execAsync(command, options);
 
@@ -58,8 +56,6 @@ export async function bufferedExec(params: BufferedExecParams): Promise<void> {
 
     thrownErr = err;
   }
-
-  log("-----------------------------------------------------\n");
 
   if (thrownErr) {
     throw thrownErr;
