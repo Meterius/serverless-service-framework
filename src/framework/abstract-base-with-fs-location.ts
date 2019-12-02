@@ -60,7 +60,7 @@ export abstract class AbstractBaseWithFsLocation<
    * Note: It will create necessary sub directories if the file
    * is contained in one that does not exist yet
    */
-  async writeServiceFile(relPath: string, data: string | Buffer): Promise<void> {
+  async writeFile(relPath: string, data: string | Buffer): Promise<void> {
     const filePath = this.resolvePath(relPath);
     await mkdirp(path.dirname(filePath));
 
