@@ -1,2 +1,3 @@
-test-framework/
+dist/
+test-framework/dist/
 bin/ssf.js
