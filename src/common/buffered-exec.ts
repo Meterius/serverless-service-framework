@@ -1,11 +1,11 @@
 import chalk from "chalk";
-import { exec, execSync } from "child_process";
+import { exec, ExecOptions, execSync } from "child_process";
 
 /**
  * Like exec but as promise based instead of callback based
  */
 export function execAsync(
-  command: string, options: Record<string, unknown>,
+  command: string, options: ExecOptions,
 ): Promise<[Error | undefined, string, string]> {
   return new Promise((resolve) => {
     exec(command, options, (err, stdout, stderr) => {
@@ -19,9 +19,8 @@ export function execAsync(
 }
 
 export interface BufferedExecParams {
-  env: Record<string, string | undefined>;
-  cwd: string;
   command: string;
+  options: ExecOptions;
 
   log: (data: string) => void;
   async: boolean;
@@ -29,10 +28,8 @@ export interface BufferedExecParams {
 
 export async function bufferedExec(params: BufferedExecParams): Promise<void> {
   const {
-    cwd, env, command, log,
+    options, command, log,
   } = params;
-
-  const options = { cwd, env };
 
   let thrownErr: Error | undefined;
 
