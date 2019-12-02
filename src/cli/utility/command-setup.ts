@@ -4,16 +4,13 @@ import {
   getFrameworkOptionsOption, getProfileOption, requireStageOption,
 } from "./common-options";
 import { CliError } from "./exceptions";
-import {
-  getFrameworkDefinitionFilePath,
-  getFrameworkOptionsFilePath, loadFrameworkDefinitionFile,
-  loadFrameworkOptionsFile,
-} from "../../framework";
 import { createFramework } from "../../framework/framework";
 import { Framework, ServiceHookMap } from "../../framework/provider-definition";
 import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
 import { executeHook, getService } from "./framework";
+import { getFrameworkDefinitionFilePath, loadFrameworkDefinitionFile } from "../../framework/framework-definition";
+import { getFrameworkOptionsFilePath, loadFrameworkOptionsFile } from "../../framework/framework-options";
 
 /**
  * Retrieves framework using common options.
