@@ -227,6 +227,7 @@ export abstract class AbstractService<
    * @param hookName - Name of the hook to be executed
    * @param baseContext - Required parameters for the hook
    * @param preExecutionTrigger - Trigger function that if the hook is set, is executed before the hook is executed
+   * @param preExecutionSkipTrigger - Trigger function that if the hook is not set, is executed
    * @returns Whether the hook exists i.e. whether it was executed
    */
   async runHook(
@@ -234,22 +235,26 @@ export abstract class AbstractService<
     baseContext: { async: boolean; log: (data: string, raw: boolean) => void },
     preExecutionTrigger: (hookName: keyof ServiceHookMap<D>, context: ServiceHookContext<D>) => Promise<void>
     = async () => {},
+    preExecutionSkipTrigger: (hookName: keyof ServiceHookMap<D>, context: ServiceHookContext<D>) => Promise<void>
+    = async () => {},
   ): Promise<boolean> {
+    const context = {
+      ...baseContext,
+      service: this,
+      log: (data: string, raw = false) => baseContext.log(data, raw),
+    };
+
     const hook: ServiceHook<D> | undefined = this.hookMap[hookName];
 
     if (hook !== undefined) {
-      const context = {
-        ...baseContext,
-        service: this,
-        log: (data: string, raw = false) => baseContext.log(data, raw),
-      };
-
       await preExecutionTrigger(hookName, context);
 
       await hook(context);
 
       return true;
     } else {
+      await preExecutionSkipTrigger(hookName, context);
+
       return false;
     }
   }
