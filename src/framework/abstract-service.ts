@@ -195,6 +195,142 @@ export abstract class AbstractService<
   }
 
   /*
+   * Service Hook and Serverless Command Methods
+   */
+
+  /**
+   * Executes a command as a child process with the current environment inherited and the service dir as cwd.
+   * The command will buffer the output if async is set to true and print it via the log function.
+   * This is the function intended to be used by service hooks in order to execute commands properly when
+   * the hook is executed in parallel (asynchronously). The asyncParams can be assigned the context parameter directly.
+   * @param command - Command executed
+   * @param asyncParams - If async is true stdio is inherited otherwise the log function is used to print
+   */
+  async execute(
+    command: string,
+    asyncParams: { async: true; log: (data: string, raw: boolean) => void } | { async: false } = { async: false },
+  ): Promise<void> {
+    const log = asyncParams.async
+      ? (data: string) => asyncParams.log(data, true) : (data: string) => process.stdout.write(data);
+
+    await bufferedExec({
+      cwd: this.dirPath,
+      env: { ...process.env },
+      command,
+      log,
+      async: asyncParams.async,
+    });
+  }
+
+  /**
+   * Runs a hook of the service.
+   * @param hookName - Name of the hook to be executed
+   * @param baseContext - Required parameters for the hook
+   * @param preExecutionTrigger - Trigger function that if the hook is set, is executed before the hook is executed
+   * @returns Whether the hook exists i.e. whether it was executed
+   */
+  async runHook(
+    hookName: keyof ServiceHookMap<D>,
+    baseContext: { async: boolean; log: (data: string, raw: boolean) => void },
+    preExecutionTrigger: (hookName: keyof ServiceHookMap<D>, context: ServiceHookContext<D>) => Promise<void>
+    = async () => {},
+  ): Promise<boolean> {
+    const hook: ServiceHook<D> | undefined = this.hookMap[hookName];
+
+    if (hook !== undefined) {
+      const context = {
+        ...baseContext,
+        service: this,
+        log: (data: string, raw = false) => baseContext.log(data, raw),
+      };
+
+      await preExecutionTrigger(hookName, context);
+
+      await hook(context);
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Execute a serverless command.
+   * Will build the template and run hooks if necessary.
+   * @param serverlessCommand - Serveress Command to be executed
+   * @param serverlessOptions - Serverless CLI arguments where boolean values are used as flag arguments
+   * @param log - Log function output is printed to (note that if async is false, exec will print directly to console)
+   * @param async - Whether this is executed parallel i.e. whether output will be buffered and only printed with log
+   * @param preServerlessExecutionTrigger - Trigger run before the serverless command is executed
+   * @param preHookExecutionTrigger - Trigger given to runHook (works as specified there)
+   */
+  async executeServerlessCommand(
+    serverlessCommand: string,
+    serverlessOptions: Record<string, boolean | string>,
+    log: (data: string, raw: boolean) => void
+    = (data: string, raw: boolean) => (raw ? process.stdout.write(data) : console.log(data)),
+    async
+    = false,
+    preServerlessExecutionTrigger: (extendedServerlessCommand: string) => Promise<void>
+    = async () => {},
+    preHookExecutionTrigger: (hookName: keyof ServiceHookMap<D>, context: ServiceHookContext<D>) => Promise<void>
+    = async () => {},
+  ): Promise<void> {
+    const hookBaseContext = { async, log };
+
+    const serviceDir = this.dirPath;
+
+    const templatePath = path.relative(serviceDir, await this.createServerlessTemplateFilePath());
+
+    const extendedServerlessOptions: Record<string, string | boolean> = {
+      ...serverlessOptions,
+      "--verbose": true,
+      "--config": templatePath,
+    };
+
+    const serverlessOptionList = Object.entries(extendedServerlessOptions).map(
+      ([key, value]) => {
+        if (typeof value === "boolean") {
+          return value ? `${key} ` : "";
+        } else {
+          return `${key} "${value}" `;
+        }
+      },
+    ).join("");
+
+    const slsCmd = `sls ${serverlessCommand} ${serverlessOptionList}`.trimRight();
+
+    const isDeploying = slsCmd.startsWith("sls deploy ");
+    const isRemoving = slsCmd.startsWith("sls remove ");
+
+    const logR = (data: string): void => log(data, true);
+
+    await this.runHook("setup", hookBaseContext, preHookExecutionTrigger);
+
+    if (isDeploying) {
+      await this.runHook("preDeploy", hookBaseContext, preHookExecutionTrigger);
+    }
+
+    if (isRemoving) {
+      await this.runHook("preRemove", hookBaseContext, preHookExecutionTrigger);
+    }
+
+    const fullCommand = `npx --no-install ${slsCmd}`;
+
+    await preServerlessExecutionTrigger(slsCmd);
+
+    await this.execute(fullCommand, { async, log: logR });
+
+    if (isDeploying) {
+      await this.runHook("postDeploy", hookBaseContext, preHookExecutionTrigger);
+    }
+
+    if (isRemoving) {
+      await this.runHook("postRemove", hookBaseContext, preHookExecutionTrigger);
+    }
+  }
+
+  /*
    * PRIVATE
    */
 
