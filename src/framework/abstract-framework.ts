@@ -11,11 +11,11 @@ import {
 } from "./abstract-provider-definition";
 import { FrameworkOptions } from "./framework-options";
 import { filterObject } from "../common/utility";
-import { AbstractBase } from "./abstract-base";
+import { AbstractBaseWithFsLocation } from "./abstract-base-with-fs-location";
 
 export abstract class AbstractFramework<
   D extends APD, // AbstractProviderDefinition
-> extends AbstractBase<D> {
+> extends AbstractBaseWithFsLocation<D> {
   readonly dirPath: string;
 
   readonly services: Service<D>[] = [];
@@ -39,7 +39,7 @@ export abstract class AbstractFramework<
     stage: string,
     profile?: string,
   ) {
-    super(base);
+    super(base, dirPath, "Framework");
 
     this.dirPath = dirPath;
     this.stage = stage;
