@@ -268,6 +268,7 @@ export abstract class AbstractService<
    * @param async - Whether this is executed parallel i.e. whether output will be buffered and only printed with log
    * @param preServerlessExecutionTrigger - Trigger run before the serverless command is executed
    * @param preHookExecutionTrigger - Trigger given to runHook (works as specified there)
+   * @param preHookExecutionSkipTrigger - Trigger given to runHook (works as specified there)
    */
   async executeServerlessCommand(
     serverlessCommand: string,
@@ -279,6 +280,8 @@ export abstract class AbstractService<
     preServerlessExecutionTrigger: (extendedServerlessCommand: string) => Promise<void>
     = async () => {},
     preHookExecutionTrigger: (hookName: keyof ServiceHookMap<D>, context: ServiceHookContext<D>) => Promise<void>
+    = async () => {},
+    preHookExecutionSkipTrigger: (hookName: keyof ServiceHookMap<D>, context: ServiceHookContext<D>) => Promise<void>
     = async () => {},
   ): Promise<void> {
     const hookBaseContext = { async, log };
@@ -310,14 +313,14 @@ export abstract class AbstractService<
 
     const logR = (data: string): void => log(data, true);
 
-    await this.runHook("setup", hookBaseContext, preHookExecutionTrigger);
+    await this.runHook("setup", hookBaseContext, preHookExecutionTrigger, preHookExecutionSkipTrigger);
 
     if (isDeploying) {
-      await this.runHook("preDeploy", hookBaseContext, preHookExecutionTrigger);
+      await this.runHook("preDeploy", hookBaseContext, preHookExecutionTrigger, preHookExecutionSkipTrigger);
     }
 
     if (isRemoving) {
-      await this.runHook("preRemove", hookBaseContext, preHookExecutionTrigger);
+      await this.runHook("preRemove", hookBaseContext, preHookExecutionTrigger, preHookExecutionSkipTrigger);
     }
 
     const fullCommand = `npx --no-install ${slsCmd}`;
@@ -327,11 +330,11 @@ export abstract class AbstractService<
     await this.execute(fullCommand, { async, log: logR });
 
     if (isDeploying) {
-      await this.runHook("postDeploy", hookBaseContext, preHookExecutionTrigger);
+      await this.runHook("postDeploy", hookBaseContext, preHookExecutionTrigger, preHookExecutionSkipTrigger);
     }
 
     if (isRemoving) {
-      await this.runHook("postRemove", hookBaseContext, preHookExecutionTrigger);
+      await this.runHook("postRemove", hookBaseContext, preHookExecutionTrigger, preHookExecutionSkipTrigger);
     }
   }
 
