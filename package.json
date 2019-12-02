@@ -1,6 +1,6 @@
 {
   "name": "serverless-service-framework",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "",
   "main": "dist/lib.js",
   "types": "dist/types/lib.d.ts",
