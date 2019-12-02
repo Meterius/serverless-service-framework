@@ -35,7 +35,7 @@ service.addHooks({
       ssfEnv[key] = process.env[key];
     });
 
-    context.log(JSON.stringify(ssfEnv, undefined, " "), true);
+    context.log(JSON.stringify(ssfEnv, undefined, " ") + "\n", true);
   },
   preRemove: async (context: AwsServiceHookContext) => {
     const stack = await context.service.retrieveStack();
