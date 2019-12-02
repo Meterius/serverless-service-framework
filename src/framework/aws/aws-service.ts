@@ -3,7 +3,7 @@ import { AbstractService } from "../abstract-service";
 import { AwsProviderDefinition } from "./aws-provider-definition";
 import { AwsServiceSchemaProperties } from "./aws-service-schema-properties";
 import { AwsFramework } from "./aws-framework";
-import { AwsServiceHookMap } from "./aws-service-hook-map";
+import { AwsServiceHookMap } from "./aws-service-hook";
 import { awsBaseParameter } from "./aws-base-parameter";
 
 export class AwsService extends AbstractService<AwsProviderDefinition> {
