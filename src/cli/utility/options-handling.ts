@@ -65,7 +65,10 @@ export function getOption(
   shortName?: string,
   defaultValue?: string,
 ): string | undefined {
-  const option = tb.parameters.options[name] || (shortName && tb.parameters.options[shortName]);
+  const option = tb.parameters.options[name]
+    || (shortName && tb.parameters.options[shortName])
+    || process.env[`SSF_CLI_OPTION_${name}`];
+
   const value = option === undefined ? defaultValue : option.toString();
 
   process.env[`SSF_CLI_USED_OPTION_${name}`] = value;
@@ -94,7 +97,10 @@ export function getFlag(
   name: string,
   shortName?: string,
 ): boolean {
-  const option = tb.parameters.options[name] || (shortName && tb.parameters.options[shortName]);
+  const option = tb.parameters.options[name]
+    || (shortName && tb.parameters.options[shortName])
+    || process.env[`SSF_CLI_FLAG_${name}`] === "true";
+
   const value = option === true;
 
   process.env[`SSF_CLI_USED_FLAG_${name}`] = value.toString();
