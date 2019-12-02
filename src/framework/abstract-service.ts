@@ -211,7 +211,7 @@ export abstract class AbstractService<
     asyncParams: { async: true; log: (data: string, raw: boolean) => void } | { async: false } = { async: false },
   ): Promise<void> {
     const log = asyncParams.async
-      ? (data: string) => asyncParams.log(data, true) : (data: string) => process.stdout.write(data);
+      ? (data: string): void => asyncParams.log(data, true) : (data: string): void => { process.stdout.write(data); };
 
     await bufferedExec({
       cwd: this.dirPath,
@@ -234,14 +234,14 @@ export abstract class AbstractService<
     hookName: keyof ServiceHookMap<D>,
     baseContext: { async: boolean; log: (data: string, raw: boolean) => void },
     preExecutionTrigger: (hookName: keyof ServiceHookMap<D>, context: ServiceHookContext<D>) => Promise<void>
-    = async () => {},
+    = async (): Promise<void> => {},
     preExecutionSkipTrigger: (hookName: keyof ServiceHookMap<D>, context: ServiceHookContext<D>) => Promise<void>
-    = async () => {},
+    = async (): Promise<void> => {},
   ): Promise<boolean> {
     const context = {
       ...baseContext,
       service: this,
-      log: (data: string, raw = false) => baseContext.log(data, raw),
+      log: (data: string, raw = false): void => baseContext.log(data, raw),
     };
 
     const hook: ServiceHook<D> | undefined = this.hookMap[hookName];
@@ -265,6 +265,7 @@ export abstract class AbstractService<
    * @param serverlessCommand - Serveress Command to be executed
    * @param serverlessOptions - Serverless CLI arguments where boolean values are used as flag arguments
    * @param log - Log function output is printed to (note that if async is false, exec will print directly to console)
+   * @param hookLogGen - Generator for the log functions given to runHook calls
    * @param async - Whether this is executed parallel i.e. whether output will be buffered and only printed with log
    * @param preServerlessExecutionTrigger - Trigger run before the serverless command is executed
    * @param preHookExecutionTrigger - Trigger given to runHook (works as specified there)
@@ -274,17 +275,23 @@ export abstract class AbstractService<
     serverlessCommand: string,
     serverlessOptions: Record<string, boolean | string>,
     log: (data: string, raw: boolean) => void
-    = (data: string, raw: boolean) => (raw ? process.stdout.write(data) : console.log(data)),
-    async
-    = false,
+    // eslint-disable-next-line no-console
+    = (data: string, raw: boolean): void => { if (raw) { process.stdout.write(data); } else { console.log(data); } },
+    hookLogGen: (hookName: keyof ServiceHookMap<D>) => (data: string, raw: boolean) => void
+    = (): (data: string, raw: boolean) => void => log,
+    async = false,
     preServerlessExecutionTrigger: (extendedServerlessCommand: string) => Promise<void>
-    = async () => {},
+    = async (): Promise<void> => {},
     preHookExecutionTrigger: (hookName: keyof ServiceHookMap<D>, context: ServiceHookContext<D>) => Promise<void>
-    = async () => {},
+    = async (): Promise<void> => {},
     preHookExecutionSkipTrigger: (hookName: keyof ServiceHookMap<D>, context: ServiceHookContext<D>) => Promise<void>
-    = async () => {},
+    = async (): Promise<void> => {},
   ): Promise<void> {
-    const hookBaseContext = { async, log };
+    const runHook = async (hookName: keyof ServiceHookMap<D>): Promise<void> => {
+      await this.runHook(hookName, {
+        async, log: hookLogGen(hookName),
+      }, preHookExecutionTrigger, preHookExecutionSkipTrigger);
+    };
 
     const serviceDir = this.dirPath;
 
@@ -313,14 +320,14 @@ export abstract class AbstractService<
 
     const logR = (data: string): void => log(data, true);
 
-    await this.runHook("setup", hookBaseContext, preHookExecutionTrigger, preHookExecutionSkipTrigger);
+    await runHook("setup");
 
     if (isDeploying) {
-      await this.runHook("preDeploy", hookBaseContext, preHookExecutionTrigger, preHookExecutionSkipTrigger);
+      await runHook("preDeploy");
     }
 
     if (isRemoving) {
-      await this.runHook("preRemove", hookBaseContext, preHookExecutionTrigger, preHookExecutionSkipTrigger);
+      await runHook("preRemove");
     }
 
     const fullCommand = `npx --no-install ${slsCmd}`;
@@ -330,11 +337,11 @@ export abstract class AbstractService<
     await this.execute(fullCommand, { async, log: logR });
 
     if (isDeploying) {
-      await this.runHook("postDeploy", hookBaseContext, preHookExecutionTrigger, preHookExecutionSkipTrigger);
+      await runHook("postDeploy");
     }
 
     if (isRemoving) {
-      await this.runHook("postRemove", hookBaseContext, preHookExecutionTrigger, preHookExecutionSkipTrigger);
+      await runHook("postRemove");
     }
   }
 

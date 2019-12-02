@@ -45,8 +45,22 @@ export async function executeServerlessCommand(
   log: (data: string, raw: boolean) => void,
   async: boolean,
 ): Promise<void> {
+  function hookLogGen(hookName: keyof ServiceHookMap) {
+    return function logHook(data: string, raw: boolean): void {
+      if (raw) {
+        return log(data, raw);
+      } else {
+        return log(chalk`{white ({blue ${hookName}}): }${data}`, raw);
+      }
+    };
+  }
+
   await service.executeServerlessCommand(
-    command, options, log, async,
+    command,
+    options,
+    log,
+    hookLogGen,
+    async,
     async (extendedServerlessCommand: string) => {
       log(chalk`Running Serverless Command: "{blue ${extendedServerlessCommand}}"`, false);
       log(
