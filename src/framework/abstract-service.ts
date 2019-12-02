@@ -2,6 +2,7 @@ import {
   mkdirp, writeFile,
 } from "fs-extra";
 import path from "path";
+import { ExecOptions } from "child_process";
 import {
   APD, BaseParameter,
   Framework, Service, ServiceHook, ServiceHookContext, ServiceHookMap, ServiceSchema, ServiceSchemaProperties,
@@ -146,23 +147,26 @@ export abstract class AbstractService<
 
   /**
    * Executes a command as a child process with the current environment inherited and the service dir as cwd.
+   * Via the options the default cwd and env can be overwritten.
    * The command will buffer the output if async is set to true and print it via the log function.
    * This is the function intended to be used by service hooks in order to execute commands properly when
    * the hook is executed in parallel (asynchronously). The asyncParams can be assigned the context parameter directly.
    * @param command - Command executed
    * @param asyncParams - If async is true stdio is inherited otherwise the log function is used to print
+   * @param options - Options for exec
    */
   async execute(
     command: string,
     asyncParams: { async: true; log: (data: string, raw: boolean) => void } | { async: false } = { async: false },
+    options: ExecOptions = {},
   ): Promise<void> {
     const log = asyncParams.async
       ? (data: string): void => asyncParams.log(data, true) : (data: string): void => { process.stdout.write(data); };
 
     await bufferedExec({
-      cwd: this.dirPath,
-      env: { ...process.env },
       command,
+      options: { cwd: this.dirPath, env: { ...process.env }, ...options },
+
       log,
       async: asyncParams.async,
     });
