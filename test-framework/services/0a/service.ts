@@ -26,7 +26,7 @@ export const service = new AwsServiceDefinition(__dirname, {
 
 service.addHooks({
   setup: async (context: AwsServiceHookContext) => {
-    context.log("This is the Service 0A Setup Hook");
+    await context.service.execute("echo Hello Test", context);
   },
   preRemove: async (context: AwsServiceHookContext) => {
     const stack = await context.service.retrieveStack();
