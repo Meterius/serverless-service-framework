@@ -11,5 +11,6 @@
     "paths": {
       "@services/*": ["services/*"]
     }
-  }
+  },
+  "include": ["framework.ts", "services/**/*.ts"]
 }
