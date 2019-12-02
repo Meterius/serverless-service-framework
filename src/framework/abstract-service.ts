@@ -1,5 +1,5 @@
 import {
-  mkdirp, writeFile, readFile,
+  mkdirp, writeFile,
 } from "fs-extra";
 import path from "path";
 import {
@@ -22,7 +22,7 @@ import { serviceBuild, serviceBuildDir } from "../common/constants";
 import { merge } from "../common/utility";
 import { AbstractServiceSchema } from "./abstract-service-schema";
 import { bufferedExec } from "../common/buffered-exec";
-import { AbstractBase } from "./abstract-base";
+import { AbstractBaseWithFsLocation } from "./abstract-base-with-fs-location";
 
 /**
  * Class to define the representation of a loaded Service
@@ -31,9 +31,7 @@ import { AbstractBase } from "./abstract-base";
  */
 export abstract class AbstractService<
   D extends APD, // AbstractProviderDefinition
-> extends AbstractBase<D> {
-  readonly dirPath: string;
-
+> extends AbstractBaseWithFsLocation<D> {
   readonly framework: Framework<D>;
 
   readonly schema: ServiceSchema<D>;
@@ -49,9 +47,8 @@ export abstract class AbstractService<
     dirPath: string,
     hookMap: ServiceHookMap<D>,
   ) {
-    super(base);
+    super(base, dirPath, "Service");
 
-    this.dirPath = dirPath;
     this.hookMap = hookMap;
     this.framework = framework;
 
@@ -141,57 +138,6 @@ export abstract class AbstractService<
     const template = await this.getServerlessTemplate(ignoreCache);
 
     return this.writeSerializedServerlessTemplate(template);
-  }
-
-  /*
-   * Service Directory Management
-   */
-
-  // returns absolute file path of file path relative to the service directory
-  resolveServicePath(relPath: string): string {
-    return path.join(this.dirPath, relPath);
-  }
-
-  /**
-   * Returns data of file at file path relative to the service directory.
-   * Returns undefined if the file does not exist.
-   */
-  async retrieveServiceFile(relPath: string): Promise<string | undefined> {
-    try {
-      return (await readFile(this.resolveServicePath(relPath))).toString();
-    } catch (err) {
-      if (err.code === "ENOENT") {
-        return undefined;
-      } else {
-        throw err;
-      }
-    }
-  }
-
-  /**
-   * Returns data of file at file path relative to the service directory.
-   * Throws if file does not exist.
-   */
-  async getServiceFile(relPath: string): Promise<string> {
-    const data = await this.retrieveServiceFile(relPath);
-
-    if (data === undefined) {
-      throw new Error(`Service File "${relPath}" in Service "${this.name}" not found`);
-    } else {
-      return data;
-    }
-  }
-
-  /**
-   * Writes file at file path relative to the service directory.
-   * Note: It will create necessary sub directories if the file
-   * is contained in one that does not exist yet
-   */
-  async writeServiceFile(relPath: string, data: string | Buffer): Promise<void> {
-    const filePath = this.resolveServicePath(relPath);
-    await mkdirp(path.dirname(filePath));
-
-    await writeFile(relPath, data);
   }
 
   /*
@@ -378,7 +324,7 @@ export abstract class AbstractService<
    */
 
   private getServiceBuildDir(): string {
-    return this.resolveServicePath(serviceBuildDir);
+    return this.resolvePath(serviceBuildDir);
   }
 
   private resolveServiceBuildPath(relPath: string): string {
