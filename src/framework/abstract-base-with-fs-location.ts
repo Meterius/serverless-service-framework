@@ -64,6 +64,6 @@ export abstract class AbstractBaseWithFsLocation<
     const filePath = this.resolvePath(relPath);
     await mkdirp(path.dirname(filePath));
 
-    await writeFile(relPath, data);
+    await writeFile(filePath, data);
   }
 }
