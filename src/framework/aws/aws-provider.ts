@@ -15,6 +15,26 @@ const deletedStackStates = ["DELETE_IN_PROGRESS", "DELETE_COMPLETE"];
 
 type TemplateExportValue = { Value: unknown };
 
+function customBackoff(retryCount: number, err: any): number {
+  if (!err.retryable) {
+    return -1;
+  }
+
+  if (err.code === "Throttling") {
+    if (retryCount > 1000) {
+      return -1;
+    }
+
+    return 1000 + Math.random() * Math.min((2 ** retryCount) * 500, 10000);
+  } else {
+    if (retryCount > 5) {
+      return -1;
+    }
+
+    return (2 ** retryCount) * 100;
+  }
+}
+
 export class AwsProvider extends AbstractProvider<
 AwsProviderDefinition,
 { "provider-based": undefined; "direct-import": AwsStack },
@@ -161,6 +181,10 @@ TemplateExportValue
   private static getCloudFormation(service: AwsService): aws.CloudFormation {
     return new aws.CloudFormation({
       ...service.awsClientConfig,
+      maxRetries: Infinity,
+      retryDelayOptions: {
+        customBackoff,
+      },
     });
   }
 }
