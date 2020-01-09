@@ -24,6 +24,7 @@ import { merge } from "../common/utility";
 import { AbstractServiceSchema } from "./abstract-service-schema";
 import { bufferedExec } from "../common/buffered-exec";
 import { AbstractBaseWithFsLocation } from "./abstract-base-with-fs-location";
+import { ImportType } from "./abstract-common-schema-properties";
 
 /**
  * Class to define the representation of a loaded Service
@@ -78,15 +79,21 @@ export abstract class AbstractService<
 
   // services that are imported by this service
   get importedServices(): Service<D>[] {
-    return this.framework.services.filter(
-      (otherService) => this.schema.isImporting(otherService.schema),
-    );
+    return this.importedServicesFilterByImportType();
   }
 
   // services that import this service
   get exportedToServices(): Service<D>[] {
     return this.framework.services.filter(
       (otherService) => this.schema.isExportedTo(otherService.schema),
+    );
+  }
+
+  // services that are imported by this service at least partially via the specified import type
+  // if it is not specified all imported services are returned
+  importedServicesFilterByImportType(importType?: ImportType): Service<D>[] {
+    return this.schema.importedServicesFilteredByType(importType).map(
+      (serviceIdentifier) => this.framework.referenceService(serviceIdentifier),
     );
   }
 
@@ -98,6 +105,18 @@ export abstract class AbstractService<
   // whether the other service imports this service
   exportedToService(otherService: Service<D>): boolean {
     return this.exportedToServices.includes(otherService);
+  }
+
+  // returns (as a promise) whether all services that are imported by this service
+  // at least partially via direct import are deployed.
+  // this is useful when trying to retrieve the serverless template that requires all
+  // services imported via direct imports to be deployed.
+  async areDirectlyImportedServicesDeployed(): Promise<boolean> {
+    return (await Promise.all(
+      this.importedServicesFilterByImportType("direct").map(
+        (service) => service.isDeployed(),
+      ),
+    )).every((isDeployed) => isDeployed);
   }
 
   /*
@@ -112,6 +131,11 @@ export abstract class AbstractService<
   // loads the service stack, returns it if deployed, throws otherwise
   getStack(): Promise<Stack<D>> {
     return this.framework.provider.getServiceStack(this);
+  }
+
+  // loads the service stacks, returns whether it is deployed
+  isDeployed(): Promise<boolean> {
+    return this.framework.provider.isServiceDeployed(this);
   }
 
   /*

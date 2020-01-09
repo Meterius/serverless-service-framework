@@ -24,9 +24,6 @@ export abstract class AbstractServiceSchema<
 
   readonly importMap: ProcessedImportMap;
 
-  // list of default service identifiers of services that this service imports
-  readonly importedServices: string[];
-
   readonly exportMap: ExportMap;
 
   readonly template: ServiceTemplate;
@@ -52,8 +49,6 @@ export abstract class AbstractServiceSchema<
       props.importMap || {}, this.commonSchema.importSettings,
     );
 
-    this.importedServices = AbstractServiceSchema.getImportedServices(this.importMap);
-
     this.exportMap = props.exportMap || {};
     this.template = props.template;
   }
@@ -75,6 +70,25 @@ export abstract class AbstractServiceSchema<
     return [this.name, this.shortName];
   }
 
+  /*
+   * Returns default service identifier for all services that are imported by this service schema.
+   */
+  get importedServices(): string[] {
+    return this.importedServicesFilteredByType();
+  }
+
+  /**
+   * Returns default service identifier for all services that are imported by this service schema,
+   * if they import some value via the specified importType, if importType is unspecified then
+   * as long as they import anything they are listed.
+   * @param importType
+   */
+  importedServicesFilteredByType(importType?: ImportType): string[] {
+    return AbstractServiceSchema.getImportedServices(
+      this.importMap, importType,
+    );
+  }
+
   /**
    * Returns whether the identifier is an identifier of this schema.
    */
@@ -83,10 +97,12 @@ export abstract class AbstractServiceSchema<
   }
 
   /**
-   * Whether this service imports the other service.
+   * Returns whether this service imports the other service.
+   * If the importType is specified it will only return true if the
+   * other service has an import that uses the given import type.
    */
-  isImporting(otherServiceSchema: ServiceSchema<D>): boolean {
-    return this.importedServices.some(
+  isImporting(otherServiceSchema: ServiceSchema<D>, importType?: ImportType): boolean {
+    return this.importedServicesFilteredByType(importType).some(
       (importedServiceIdentifier) => otherServiceSchema.isReferredToBy(importedServiceIdentifier),
     );
   }
@@ -135,9 +151,16 @@ export abstract class AbstractServiceSchema<
   }
 
   private static getImportedServices(
-    importMap: ImportMap,
+    importMap: ProcessedImportMap,
+    importType?: ImportType,
   ): string[] {
-    return Object.keys(importMap);
+    const importedServices = Object.keys(importMap);
+
+    return importType === undefined ? importedServices : importedServices.filter(
+      (key) => importMap[key].some(
+        (importValue) => importValue.type === importType,
+      ),
+    );
   }
 
   static filterImportValuesByType<T extends ImportType>(
