@@ -21,7 +21,7 @@ any,
 any,
 AbstractClassCollection<any>,
 AbstractBaseCollection<any>,
-AbstractProvider<any, any, any>,
+AbstractProvider<any, any, any, any>,
 AbstractStack<any, any>,
 AbstractCommonSchemaProperties<any>,
 AbstractCommonSchema<any>,
@@ -44,7 +44,7 @@ export type AbstractProviderDefinition<
   Definition extends APD,
   ClassCollection extends AbstractClassCollection<Definition>,
   BaseCollection extends AbstractBaseCollection<Definition>,
-  Provider extends AbstractProvider<Definition, any, any>,
+  Provider extends AbstractProvider<Definition, any, any, any>,
   Stack extends AbstractStack<Definition, InferredStackData>,
   CommonSchemaProperties extends AbstractCommonSchemaProperties<Definition>,
   CommonSchema extends AbstractCommonSchema<Definition>,
@@ -90,6 +90,9 @@ export type BaseCollection<D extends APD> = D["baseCollection"];
 export type BaseParameter<D extends APD> = () => BaseCollection<D>;
 
 export type Provider<D extends APD> = D["provider"];
+
+export type ProviderDirectImportValue<D extends APD> =
+  Provider<D> extends AbstractProvider<any, any, any, infer DIV> ? DIV : unknown;
 
 export type Stack<D extends APD> = D["stack"];
 
