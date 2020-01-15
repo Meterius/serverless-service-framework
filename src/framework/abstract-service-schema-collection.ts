@@ -1,7 +1,7 @@
 import * as graphlib from "graphlib";
 import { APD, BaseParameter, ServiceSchema } from "./abstract-provider-definition";
 import { ProcessedImportMap, ProcessedImportValue } from "./abstract-service-schema-properties";
-import { fromEntries, mapObject } from "../common/utility";
+import { flat, fromEntries, mapObject } from "../common/utility";
 import { AbstractBase } from "./abstract-base";
 
 export class AbstractServiceSchemaCollection<
@@ -65,6 +65,29 @@ export class AbstractServiceSchemaCollection<
         (id: string) => !this.usedDefaultIdentifiers.includes(id),
       ),
     }));
+  }
+
+  getServiceImportsUsingSameName(
+  ): ({ schema: ServiceSchema<D>; importsUsingSameName: [string, ProcessedImportValue][] })[] {
+    return this.schemas.map((inspectedSchema) => {
+      const importNameMap: Record<string, [string, ProcessedImportValue][]> = {};
+
+      Object.entries(inspectedSchema.importMap).forEach(
+        ([importedServiceName, importValues]: [string, ProcessedImportValue[]]) => {
+          importValues.forEach((importedValue: ProcessedImportValue) => {
+            const entry: [string, ProcessedImportValue] = [importedServiceName, importedValue];
+            const currentEntries: [string, ProcessedImportValue][] = importNameMap[importedValue.name] ?? [];
+
+            importNameMap[importedValue.name] = currentEntries.concat([entry]);
+          });
+        },
+      );
+
+      return {
+        schema: inspectedSchema,
+        importsUsingSameName: flat(Object.values(importNameMap).filter((entries) => entries.length > 1)),
+      };
+    });
   }
 
   getServiceImportsNotExportedByTheOtherServices(

@@ -164,12 +164,28 @@ export abstract class AbstractFramework<
       );
     }
 
-    const test5 = collection.getCyclicImportChains().map((cycle) => cycle.concat([cycle[0]]));
+    const test5 = collection.getServiceImportsUsingSameName();
+    const test5Item = test5.find(({ importsUsingSameName }) => importsUsingSameName.length > 0);
 
-    if (test5.length > 0) {
-      const cycleDisplay = test5.length === 1 ? "Cycle" : "Cycles";
+    if (test5Item !== undefined) {
+      const duplicatedImportNames: string[] = [];
+      test5Item.importsUsingSameName.forEach(([, importValue]) => {
+        if (!duplicatedImportNames.includes(importValue.name)) {
+          duplicatedImportNames.push(importValue.name);
+        }
+      });
 
-      const cycles = joinC(test5
+      throw new Error(
+        `Service "${test5Item.schema.name}" has multiple imports using the names [${joinCQ(duplicatedImportNames)}]`,
+      );
+    }
+
+    const test6 = collection.getCyclicImportChains().map((cycle) => cycle.concat([cycle[0]]));
+
+    if (test6.length > 0) {
+      const cycleDisplay = test6.length === 1 ? "Cycle" : "Cycles";
+
+      const cycles = joinC(test6
         .map((cycle) => cycle.map((schema) => `"${schema.name}"`).join(" > "))
         .map((str) => `(${str})`));
 
