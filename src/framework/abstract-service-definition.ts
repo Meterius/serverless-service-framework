@@ -32,11 +32,14 @@ export abstract class AbstractServiceDefinition<
     //  it is overwritten by a combined hook that executes first the old and then the new
     Object.entries(nextHooks).forEach(([name, func]) => {
       if (currHooks[name] !== undefined) {
+        const currHook = currHooks[name];
+        const nextHook = nextHooks[name];
+
         currHooks[name] = async function combinedHook(
           context: ServiceHookContext<D>,
         ): Promise<void> {
-          await currHooks[name](context);
-          await nextHooks[name](context);
+          await currHook(context);
+          await nextHook(context);
         };
       } else {
         currHooks[name] = func;

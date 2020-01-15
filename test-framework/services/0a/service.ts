@@ -49,3 +49,9 @@ service.addHooks({
     }
   },
 });
+
+service.addHooks({
+  setup: async (context: AwsServiceHookContext) => {
+    context.log("hook appended");
+  },
+});
