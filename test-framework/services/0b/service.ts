@@ -1,4 +1,4 @@
-import {AwsServiceDefinition} from "serverless-service-framework";
+import {AwsServiceDefinition, AwsServiceHookContext} from "serverless-service-framework";
 
 export const service = new AwsServiceDefinition(
   __dirname,
@@ -16,3 +16,9 @@ export const service = new AwsServiceDefinition(
   },
 );
 
+service.addHooks({
+  preDeploy: async (context: AwsServiceHookContext): Promise<void> => {
+    const importMap = await context.service.getDirectImportValues("0a");
+    context.log(JSON.stringify(importMap));
+  },
+});

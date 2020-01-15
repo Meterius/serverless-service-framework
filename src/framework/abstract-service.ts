@@ -127,15 +127,15 @@ export abstract class AbstractService<
     )).every((isDeployed) => isDeployed);
   }
 
-  retrieveDirectImportValues<K extends string[]>(
-    ...keys: K
-  ): Promise<Record<K extends (infer V)[] ? V : string, ProviderDirectImportValue<D>> | undefined> {
+  retrieveDirectImportValues<K extends string>(
+    ...keys: K[]
+  ): Promise<Record<K, ProviderDirectImportValue<D>> | undefined> {
     return this.framework.provider.retrieveDirectImportValues(this, ...keys);
   }
 
-  getDirectImportValues<K extends string[]>(
-    ...keys: K
-  ): Promise<Record<K extends (infer V)[] ? V : string, ProviderDirectImportValue<D>>> {
+  getDirectImportValues<K extends string>(
+    ...keys: K[]
+  ): Promise<Record<K, ProviderDirectImportValue<D>>> {
     return this.framework.provider.getDirectImportValues(this, ...keys);
   }
 

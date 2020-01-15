@@ -51,10 +51,10 @@ export abstract class AbstractProvider<
     return (await this.retrieveServiceStack(service)) !== undefined;
   }
 
-  async getDirectImportValues<K extends string[]>(
+  async getDirectImportValues<K extends string>(
     service: Service<D>,
-    ...keys: K
-  ): Promise<Record<K extends (infer V)[] ? V : string, DIV>> {
+    ...keys: K[]
+  ): Promise<Record<K, DIV>> {
     const directImportMap: any = {};
 
     const servicePreps: Record<string, ID["direct-import"] | undefined> = {};
@@ -113,10 +113,10 @@ export abstract class AbstractProvider<
     return directImportMap;
   }
 
-  async retrieveDirectImportValues<K extends string[]>(
+  async retrieveDirectImportValues<K extends string>(
     service: Service<D>,
-    ...keys: K
-  ): Promise<Record<K extends (infer V)[] ? V : string, DIV> | undefined> {
+    ...keys: K[]
+  ): Promise<Record<K, DIV> | undefined> {
     try {
       return (await this.getDirectImportValues(service, ...keys));
     } catch (err) {
