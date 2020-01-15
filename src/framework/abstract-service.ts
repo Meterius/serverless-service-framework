@@ -4,8 +4,16 @@ import {
 import path from "path";
 import { ExecOptions } from "child_process";
 import {
-  APD, BaseParameter,
-  Framework, Service, ServiceHook, ServiceHookContext, ServiceHookMap, ServiceSchema, ServiceSchemaProperties,
+  APD,
+  BaseParameter,
+  Framework,
+  ProviderDirectImportValue,
+  Service,
+  ServiceHook,
+  ServiceHookContext,
+  ServiceHookMap,
+  ServiceSchema,
+  ServiceSchemaProperties,
   Stack,
 } from "./abstract-provider-definition";
 import {
@@ -117,6 +125,18 @@ export abstract class AbstractService<
         (service) => service.isDeployed(),
       ),
     )).every((isDeployed) => isDeployed);
+  }
+
+  retrieveDirectImportValues<K extends string>(
+    ...keys: K[]
+  ): Promise<Record<K, ProviderDirectImportValue<D>> | undefined> {
+    return this.framework.provider.retrieveDirectImportValues(this, ...keys);
+  }
+
+  getDirectImportValues<K extends string>(
+    ...keys: K[]
+  ): Promise<Record<K, ProviderDirectImportValue<D>>> {
+    return this.framework.provider.getDirectImportValues(this, ...keys);
   }
 
   /*
@@ -267,6 +287,8 @@ export abstract class AbstractService<
       }, preHookExecutionTrigger, preHookExecutionSkipTrigger);
     };
 
+    await runHook("setup");
+
     const serviceDir = this.dirPath;
 
     const templatePath = path.relative(serviceDir, await this.createServerlessTemplateFilePath());
@@ -293,8 +315,6 @@ export abstract class AbstractService<
     const isRemoving = slsCmd.startsWith("sls remove ");
 
     const logR = (data: string): void => log(data, true);
-
-    await runHook("setup");
 
     if (isDeploying) {
       await runHook("preDeploy");
@@ -478,13 +498,9 @@ export abstract class AbstractService<
       );
 
       if (providerBasedImportedValues.length > 0) {
-        const providerBasedImportData = await provider.prepareTemplateProviderBasedImports(
-          this, importedService,
-        );
-
         providerBasedImportedValues.forEach((importValue) => {
           importValueMap[importValue.name] = provider.retrieveTemplateProviderBasedImportValue(
-            this, importedService, importValue, providerBasedImportData,
+            this, importedService, importValue,
           );
         });
       }

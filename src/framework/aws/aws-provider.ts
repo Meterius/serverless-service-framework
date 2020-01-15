@@ -15,6 +15,8 @@ const deletedStackStates = ["DELETE_IN_PROGRESS", "DELETE_COMPLETE"];
 
 type TemplateExportValue = { Value: unknown };
 
+type DirectImportValue = string;
+
 function customBackoff(retryCount: number, err: any): number {
   if (!err.retryable) {
     return -1;
@@ -37,8 +39,9 @@ function customBackoff(retryCount: number, err: any): number {
 
 export class AwsProvider extends AbstractProvider<
 AwsProviderDefinition,
-{ "provider-based": undefined; "direct-import": AwsStack },
-TemplateExportValue
+{ "direct-import": AwsStack },
+TemplateExportValue,
+DirectImportValue
 > {
   readonly name = "aws";
 
@@ -90,27 +93,37 @@ TemplateExportValue
     return new AwsStack(service, stackData);
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  async prepareTemplateProviderBasedImports(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line no-dupe-class-members
+  prepareTemplateDirectImports(
     service: AwsService,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     importedService: AwsService,
-  ): Promise<undefined> {
-    return undefined;
-  }
+    throwIfNotDeployed?: true,
+  ): Promise<AwsStack>;
 
+  // eslint-disable-next-line no-dupe-class-members
+  prepareTemplateDirectImports(
+    service: AwsService,
+    importedService: AwsService,
+    throwIfNotDeployed: false,
+  ): Promise<AwsStack | undefined>;
+
+  // eslint-disable-next-line no-dupe-class-members
   async prepareTemplateDirectImports(
     service: AwsService,
     importedService: AwsService,
-  ): Promise<AwsStack> {
+    throwIfNotDeployed = true,
+  ): Promise<AwsStack | undefined> {
     const stack = await this.retrieveServiceStack(importedService);
 
     if (stack === undefined) {
-      throw new Error(
-        `Service "${service.schema.name}" imports via direct import`
-      + ` from service "${importedService.schema.name}" that is not deployed`,
-      );
+      if (throwIfNotDeployed) {
+        throw new Error(
+          `Service "${service.schema.name}" imports via direct import`
+          + ` from service "${importedService.schema.name}" that is not deployed`,
+        );
+      } else {
+        return undefined;
+      }
     }
 
     return stack;
@@ -121,8 +134,6 @@ TemplateExportValue
     service: AwsService,
     importedService: AwsService,
     importValue: ProcessedImportValue<"provider-based">,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    importData: undefined,
   ): unknown {
     return {
       "Fn::ImportValue": `${importedService.stackName}-${importValue.name}`,
@@ -135,7 +146,7 @@ TemplateExportValue
     importedService: AwsService,
     importValue: ProcessedImportValue<"direct">,
     importData: AwsStack,
-  ): unknown {
+  ): DirectImportValue {
     const output: string | undefined = importData.stackExports[importValue.name];
 
     if (output === undefined) {
