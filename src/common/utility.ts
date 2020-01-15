@@ -19,6 +19,16 @@ export function filterDuplicates<T>(
 }
 
 /**
+ * Flattens the array of arrays
+ * @param arrs
+ */
+export function flat<V>(
+  arrs: (V[])[],
+): V[] {
+  return arrs.reduce((prev, val) => prev.concat(val), []);
+}
+
+/**
  * Returns object where Object.entries will equal entries,
  * i.e. a object with the structure {
  *   [key]: value, (for each [key, value] = entry in entries)
