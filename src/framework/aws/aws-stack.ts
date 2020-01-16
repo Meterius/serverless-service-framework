@@ -83,8 +83,18 @@ export class AwsStack extends AbstractStack<AwsProviderDefinition, AwsStackData>
   async emptyAllBuckets(): Promise<string[]> {
     const buckets = await this.getBuckets();
 
+    const emptyBucketAndIgnoreMissingBuckets = async (bucket: string): Promise<void> => {
+      try {
+        await this.emptyBucket(bucket);
+      } catch (err) {
+        if (err.code !== "NoSuchBucket") {
+          throw err;
+        }
+      }
+    };
+
     await Promise.all(
-      buckets.map((bucket) => this.emptyBucket(bucket)),
+      buckets.map(emptyBucketAndIgnoreMissingBuckets),
     );
 
     return buckets;
