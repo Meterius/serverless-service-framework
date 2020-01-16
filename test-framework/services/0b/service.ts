@@ -7,7 +7,7 @@ export const service = new AwsServiceDefinition(
     shortName: "0b",
 
     importMap: {
-      "0a": ["0a"],
+      "0a": ["abc"],
     },
 
     exportMap: {},
@@ -18,7 +18,7 @@ export const service = new AwsServiceDefinition(
 
 service.addHooks({
   preDeploy: async (context: AwsServiceHookContext): Promise<void> => {
-    const importMap = await context.service.getDirectImportValues("0a");
+    const importMap = await context.service.getDirectImportValues("abc");
     context.log(JSON.stringify(importMap));
   },
 });

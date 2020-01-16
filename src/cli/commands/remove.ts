@@ -13,6 +13,9 @@ const removeCommand: GC = {
     actionServerlessCommand: "remove",
     actionDependenciesReversed: true,
     skipServiceIfNotDeployed: true,
+    frameworkOptionsOverwrite: {
+      stubDirectImports: "__remove-template-uses-stubbed-direct-import-values__",
+    },
   }),
 };
 

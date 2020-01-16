@@ -7,7 +7,7 @@ export const service = new AwsServiceDefinition(__dirname, {
   importMap: {},
 
   exportMap: {
-    "0a": "output-0a",
+    "abc": "output-0a",
   },
 
   template: {

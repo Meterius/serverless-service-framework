@@ -6,6 +6,7 @@ import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
 import { Framework, Service } from "../../framework/provider-definition";
 import { executeServerlessCommand, getService } from "./framework";
+import { NativeFrameworkOptions } from "../../framework/framework-options";
 
 const { hrtime } = process;
 
@@ -249,6 +250,7 @@ interface MultiServiceCommandOptions {
   actionServerlessCommand: string | undefined;
   actionDependenciesReversed?: boolean;
   skipServiceIfNotDeployed?: boolean;
+  frameworkOptionsOverwrite?: NativeFrameworkOptions;
 }
 
 export function createMultiServiceCommandRun({
@@ -257,11 +259,14 @@ export function createMultiServiceCommandRun({
   actionServerlessCommand,
   actionDependenciesReversed = false,
   skipServiceIfNotDeployed = false,
+  frameworkOptionsOverwrite = {},
 }: MultiServiceCommandOptions): (tb: TB) => Promise<void> {
   return async function cmd(tb: TB): Promise<void> {
     // ENVIRONMENT SETUP
 
-    const framework = await setupFrameworkContextFunction(tb);
+    const framework = await setupFrameworkContextFunction(
+      tb, frameworkOptionsOverwrite,
+    );
 
     const [...serviceIds] = requireVariadicParameters(tb, "service-name");
 

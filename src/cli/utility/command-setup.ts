@@ -10,13 +10,18 @@ import { requireVariadicParameters } from "./options-handling";
 import { filterDuplicates } from "../../common/utility";
 import { executeHook, getService } from "./framework";
 import { getFrameworkDefinitionFilePath, loadFrameworkDefinitionFile } from "../../framework/framework-definition";
-import { getFrameworkOptionsFilePath, loadFrameworkOptionsFile } from "../../framework/framework-options";
+import {
+  getFrameworkOptionsFilePath,
+  loadFrameworkOptionsFile,
+  NativeFrameworkOptions,
+} from "../../framework/framework-options";
 
 /**
  * Retrieves framework using common options.
  */
 export async function setupFrameworkContextFunction(
   tb: TB,
+  frameworkOptionsOverwrite: NativeFrameworkOptions = {},
 ): Promise<Framework> {
   const providedDefinitionFilePath = getFrameworkDefinitionOption(tb);
   const providedOptionsFilePath = getFrameworkOptionsOption(tb);
@@ -44,7 +49,7 @@ export async function setupFrameworkContextFunction(
   }
 
   const frOpts = applyFrameworkOptionOptions(
-    tb, await loadFrameworkOptionsFile(optionFilePath),
+    tb, { ...(await loadFrameworkOptionsFile(optionFilePath)), ...frameworkOptionsOverwrite },
   );
 
   const stage = requireStageOption(tb, frOpts);
