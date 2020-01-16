@@ -176,7 +176,7 @@ export abstract class AbstractFramework<
       });
 
       throw new Error(
-        `Service "${test5Item.schema.name}" has multiple imports using the names [${joinCQ(duplicatedImportNames)}]`,
+        `Service "${test5Item.schema.name}" has multiple imports using the names ${joinCQ(duplicatedImportNames)}`,
       );
     }
 
