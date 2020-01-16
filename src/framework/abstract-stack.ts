@@ -22,10 +22,16 @@ export abstract class AbstractStack<
 
   abstract get stackExports(): Record<string, string>;
 
+  retrieveStackExport(
+    exportName: string,
+  ): string | undefined {
+    return this.stackExports[exportName];
+  }
+
   getStackExport(
     exportName: string,
   ): string {
-    const exportValue = this.stackExports[exportName];
+    const exportValue = this.retrieveStackExport(exportName);
 
     if (exportValue === undefined) {
       throw new Error(`Export "${exportName}" of Service Stack "${this.service.name}" not found`);
