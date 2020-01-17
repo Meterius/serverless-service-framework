@@ -130,7 +130,7 @@ DirectImportValue
   }
 
   // eslint-disable-next-line class-methods-use-this
-  retrieveTemplateProviderBasedImportValue(
+  getTemplateProviderBasedImportValue(
     service: AwsService,
     importedService: AwsService,
     importValue: ProcessedImportValue<"provider-based">,
@@ -146,17 +146,8 @@ DirectImportValue
     importedService: AwsService,
     importValue: ProcessedImportValue<"direct">,
     importData: AwsStack,
-  ): DirectImportValue {
-    const output: string | undefined = importData.stackExports[importValue.name];
-
-    if (output === undefined) {
-      throw new Error(
-        `Service "${service.schema.name}" imports via direct import "${importValue.name}" `
-        + `from "${importedService.schema.name}" that is not exported by the stack`,
-      );
-    }
-
-    return output;
+  ): DirectImportValue | undefined {
+    return importData.stackExports[importValue.name];
   }
 
   // eslint-disable-next-line class-methods-use-this

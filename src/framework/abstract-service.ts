@@ -482,7 +482,7 @@ export abstract class AbstractService<
           );
 
           directImportedValues.forEach((importValue) => {
-            importValueMap[importValue.name] = provider.retrieveTemplateDirectImportValue(
+            importValueMap[importValue.name] = provider.getTemplateDirectImportValue(
               this, importedService, importValue, directImportData,
             );
           });
@@ -499,7 +499,7 @@ export abstract class AbstractService<
 
       if (providerBasedImportedValues.length > 0) {
         providerBasedImportedValues.forEach((importValue) => {
-          importValueMap[importValue.name] = provider.retrieveTemplateProviderBasedImportValue(
+          importValueMap[importValue.name] = provider.getTemplateProviderBasedImportValue(
             this, importedService, importValue,
           );
         });

@@ -51,41 +51,67 @@ export abstract class AbstractProvider<
     return (await this.retrieveServiceStack(service)) !== undefined;
   }
 
-  async getDirectImportValues<K extends string>(
+  // eslint-disable-next-line no-dupe-class-members
+  private __retrieveDirectImportValues<K extends string>(
     service: Service<D>,
+    throwIfNotDeployedOrNotUpToDate: true,
     ...keys: K[]
-  ): Promise<Record<K, DIV>> {
-    const directImportMap: any = {};
+  ): Promise<Record<K, DIV>>;
+
+  // eslint-disable-next-line no-dupe-class-members
+  private __retrieveDirectImportValues<K extends string>(
+    service: Service<D>,
+    throwIfNotDeployedOrNotUpToDate: false,
+    ...keys: K[]
+  ): Promise<Record<K, DIV> | undefined>;
+
+  // eslint-disable-next-line no-dupe-class-members
+  private async __retrieveDirectImportValues<K extends string>(
+    service: Service<D>,
+    throwIfNotDeployedOrNotUpToDate: boolean,
+    ...keys: K[]
+  ): Promise<Record<K, DIV> | undefined> {
+    const directImportMap: Record<string, DIV> = {};
 
     const servicePreps: Record<string, ID["direct-import"] | undefined> = {};
 
-    const requestedImportValues: [Service<D>, ProcessedImportValue<"direct">][] = keys.map((key) => {
+    const requestedImportValues: [Service<D>, ProcessedImportValue<"direct">][] = [];
+
+    for (let i = 0; i < keys.length; i += 1) {
+      const key = keys[i];
+      let value: undefined | [Service<D>, ProcessedImportValue<"direct">];
+
       const serviceIds = Object.keys(service.schema.importMap);
 
-      for (let i = 0; i < serviceIds.length; i += 1) {
-        const serviceId = serviceIds[i];
+      for (let j = 0; j < serviceIds.length; j += 1) {
+        const serviceId = serviceIds[j];
         const importValues = service.schema.importMap[serviceId];
 
-        for (let j = 0; j < importValues.length; j += 1) {
-          const importValue = importValues[j];
+        for (let k = 0; k < importValues.length; k += 1) {
+          const importValue = importValues[k];
 
           if (importValue.name === key) {
             if (importValue.type === "direct") {
-              return [this.framework.referenceService(serviceId), importValue];
+              value = [this.framework.referenceService(serviceId), importValue];
             } else {
               throw new Error(
-                `Tried to retrieve value of imported "${key}" in`
-                + ` service "${service.name}" but it is not imported via direct-import`,
+                `Tried to retrieve value of import "${key}" from`
+                  + ` service "${service.name}" but it does not import it via a direct import`,
               );
             }
           }
         }
       }
 
-      throw new Error(
-        `Tried to retrieve value of imported "${key}" in service "${service.name}" but it is not imported`,
-      );
-    });
+      if (value === undefined) {
+        throw new Error(
+          `Tried to retrieve value of import "${key}" from service "${service.name}"`
+        + " but it does not have an import with that name",
+        );
+      } else {
+        requestedImportValues.push(value);
+      }
+    }
 
     for (let i = 0; i < requestedImportValues.length; i += 1) {
       const [importedService, importValue] = requestedImportValues[i];
@@ -96,18 +122,36 @@ export abstract class AbstractProvider<
         );
 
         if (prep === undefined) {
-          throw new Error(
-            `Tried to retrieve imports from service "${importedService.name}"`
-            + ` in "${service.name}" but "${importedService.name}" is not deployed yet`,
-          );
+          if (throwIfNotDeployedOrNotUpToDate) {
+            throw new Error(
+              `Tried to retrieve imports that service "${service.name}" imports from`
+              + ` service "${importedService.name}" but service "${importedService.name}" is not deployed`,
+            );
+          } else {
+            return undefined;
+          }
         } else {
           servicePreps[importedService.name] = prep;
         }
       }
 
-      directImportMap[importValue.name] = this.retrieveTemplateDirectImportValue(
+      const directImportValue = this.retrieveTemplateDirectImportValue(
         service, importedService, importValue, servicePreps[importedService.name],
       );
+
+      if (directImportValue === undefined) {
+        if (throwIfNotDeployedOrNotUpToDate) {
+          throw new Error(
+            `Tried to retrieve import "${importValue.name}" that service "${service.name}" imports from`
+            + ` service "${importedService.name}" but the deployed stack of "${importedService.name}"`
+            + " is outdated and does not export it yet",
+          );
+        } else {
+          return undefined;
+        }
+      }
+
+      directImportMap[importValue.name] = directImportValue;
     }
 
     return directImportMap;
@@ -117,11 +161,14 @@ export abstract class AbstractProvider<
     service: Service<D>,
     ...keys: K[]
   ): Promise<Record<K, DIV> | undefined> {
-    try {
-      return (await this.getDirectImportValues(service, ...keys));
-    } catch (err) {
-      return undefined;
-    }
+    return this.__retrieveDirectImportValues(service, false, ...keys);
+  }
+
+  async getDirectImportValues<K extends string>(
+    service: Service<D>,
+    ...keys: K[]
+  ): Promise<Record<K, DIV>> {
+    return this.__retrieveDirectImportValues(service, true, ...keys);
   }
 
   abstract prepareTemplateDirectImports(
@@ -136,13 +183,7 @@ export abstract class AbstractProvider<
     throwIfNotDeployed: false,
   ): Promise<ID["direct-import"] | undefined>;
 
-  abstract prepareTemplateDirectImports(
-    service: Service<D>,
-    importedService: Service<D>,
-    throwIfNotDeployed?: boolean,
-  ): Promise<ID["direct-import"] | undefined>;
-
-  abstract retrieveTemplateProviderBasedImportValue(
+  abstract getTemplateProviderBasedImportValue(
     service: Service<D>,
     importedService: Service<D>,
     importValue: ProcessedImportValue<"provider-based">,
@@ -153,7 +194,25 @@ export abstract class AbstractProvider<
     importedService: Service<D>,
     importValue: ProcessedImportValue<"direct">,
     importData: ID["direct-import"],
-  ): DIV;
+  ): DIV | undefined;
+
+  getTemplateDirectImportValue(
+    service: Service<D>,
+    importedService: Service<D>,
+    importValue: ProcessedImportValue<"direct">,
+    importData: ID["direct-import"],
+  ): DIV {
+    const value = this.retrieveTemplateDirectImportValue(service, importedService, importValue, importData);
+
+    if (value === undefined) {
+      throw new Error(
+        `Service "${service.schema.name}" imports via direct import "${importValue.name}" `
+        + `from "${importedService.schema.name}" that is not exported by the stack`,
+      );
+    } else {
+      return value;
+    }
+  }
 
   abstract retrieveTemplateExportValue(
     service: Service<D>,
