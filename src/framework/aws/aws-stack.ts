@@ -3,6 +3,7 @@ import { AbstractStack } from "../abstract-stack";
 import { awsBaseParameter } from "./aws-base-parameter";
 import { AwsService } from "./aws-service";
 import { AwsProviderDefinition } from "./aws-provider-definition";
+import { Immutable } from "../../common/immutable";
 
 export type AwsStackData = aws.CloudFormation.Stack;
 
@@ -17,6 +18,10 @@ export class AwsStack extends AbstractStack<AwsProviderDefinition, AwsStackData>
 
   private get cf(): aws.CloudFormation {
     return new aws.CloudFormation(this.service.awsClientConfig);
+  }
+
+  get stackData(): Immutable<AwsStackData> {
+    return this.data;
   }
 
   get stackExports(): Record<string, string> {
