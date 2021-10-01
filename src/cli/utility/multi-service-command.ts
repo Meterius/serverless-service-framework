@@ -172,7 +172,7 @@ async function performParallel(env: PerformEnvironment): Promise<void> {
       tb.log(execLog, undefined, true);
     } else {
       let execLog = chalk`\n##### START OF ERROR "{red ${finishedService.name}}" #####\n`;
-      execLog += `${error}\n`;
+      execLog += error.stack ? `${error.stack}\n` : "";
       execLog += chalk`##### END OF ERROR "{red ${finishedService.name}}" #####\n\n`;
       tb.log(execLog, undefined, true);
 
