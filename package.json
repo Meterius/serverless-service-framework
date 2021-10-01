@@ -53,7 +53,7 @@
     "change-case": "^3.1.0",
     "deasync": "^0.1.16",
     "fs-extra": "^8.1.0",
-    "gluegun": "^4.1.0",
+    "gluegun": "^4.7.0",
     "graphlib": "^2.1.7",
     "require-from-string": "^2.0.2",
     "runtypes": "^4.0.3",
