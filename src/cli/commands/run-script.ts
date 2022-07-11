@@ -8,20 +8,22 @@ import { CliError } from "../utility/exceptions";
 const runScriptCommand: GC = {
   name: "run-script",
   description: "Runs a function of a typescript script and gives it an initialized framework instance",
-  run: async (tb: TB): Promise<void> => {
-    const [tsFile, tsExportName] = requireParameters(tb, ["ts-file-path", "ts-export-name"]);
+  run: (tb: TB) => {
+    (async () => {
+      const [tsFile, tsExportName] = requireParameters(tb, ["ts-file-path", "ts-export-name"]);
 
-    const framework = await setupFrameworkContextFunction(tb);
+      const framework = await setupFrameworkContextFunction(tb);
 
-    const tsModule = await loadTypescriptModule(framework.resolvePath(tsFile), framework.schema.options);
+      const tsModule = await loadTypescriptModule(framework.resolvePath(tsFile), framework.schema.options);
 
-    const tsExport = isObject(tsModule) ? tsModule[tsExportName] : undefined;
+      const tsExport = isObject(tsModule) ? tsModule[tsExportName] : undefined;
 
-    if (!(tsExport instanceof Function)) {
-      throw new CliError(`TS Script "${tsFile}" does not export function at export "${tsExportName}"`);
-    }
+      if (!(tsExport instanceof Function)) {
+        throw new CliError(`TS Script "${tsFile}" does not export function at export "${tsExportName}"`);
+      }
 
-    await tsExport(framework);
+      await tsExport(framework);
+    })().catch(console.error);
   },
 };
 

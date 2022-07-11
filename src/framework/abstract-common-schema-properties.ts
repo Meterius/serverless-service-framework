@@ -24,5 +24,6 @@ export interface DependencySettingsProperties {
 }
 
 export type AbstractCommonSchemaProperties<
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   D extends APD, // AbstractProviderDefinition
   > = DependencySettingsProperties;

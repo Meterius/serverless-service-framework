@@ -4,7 +4,7 @@
  * https://github.com/microsoft/TypeScript/issues/13923
  */
 
-type ImmutablePrimitive = undefined | null | boolean | string | number | Function;
+type ImmutablePrimitive = undefined | null | boolean | string | number | ((...args: any) => any);
 
 export type Immutable<T> =
   T extends ImmutablePrimitive ? T :

@@ -40,6 +40,7 @@ AbstractFrameworkActionLogic<any>
 >;
 
 export type AbstractProviderDefinition<
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-constraint
   InferredStackData extends any,
   Definition extends APD,
   ClassCollection extends AbstractClassCollection<Definition>,

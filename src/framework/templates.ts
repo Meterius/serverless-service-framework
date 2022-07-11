@@ -64,6 +64,7 @@ export interface ServiceTemplate {
 
 // INPUT
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export type PreCompilationServerlessTemplate = {};
 
 // STEP 1

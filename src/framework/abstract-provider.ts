@@ -8,6 +8,7 @@ import { ProcessedImportValue } from "./abstract-service-schema-properties";
 import { ExportValue } from "./abstract-common-schema-properties";
 import { AbstractBase } from "./abstract-base";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface AbstractProviderImportData<ProviderBasedData, DirectImportData> {
   "direct-import": DirectImportData;
 }

@@ -260,59 +260,61 @@ export function createMultiServiceCommandRun({
   actionDependenciesReversed = false,
   skipServiceIfNotDeployed = false,
   frameworkOptionsOverwrite = {},
-}: MultiServiceCommandOptions): (tb: TB) => Promise<void> {
-  return async function cmd(tb: TB): Promise<void> {
-    // ENVIRONMENT SETUP
+}: MultiServiceCommandOptions): (tb: TB) => void {
+  return (tb: TB) => {
+    (async () => {
+      // ENVIRONMENT SETUP
 
-    const framework = await setupFrameworkContextFunction(
-      tb, frameworkOptionsOverwrite,
-    );
+      const framework = await setupFrameworkContextFunction(
+        tb, frameworkOptionsOverwrite,
+      );
 
-    const [...serviceIds] = requireVariadicParameters(tb, "service-name");
+      const [...serviceIds] = requireVariadicParameters(tb, "service-name");
 
-    const performingServices = serviceIds.length === 0 ? framework.services
-      : filterDuplicates(serviceIds.map((id) => getService(framework, id)));
+      const performingServices = serviceIds.length === 0 ? framework.services
+        : filterDuplicates(serviceIds.map((id) => getService(framework, id)));
 
-    const parallel = getParallelFlag(tb);
+      const parallel = getParallelFlag(tb);
 
-    const actPres = actionPhrases.presentContinuous;
-    const actPast = actionPhrases.pastSimple;
+      const actPres = actionPhrases.presentContinuous;
+      const actPast = actionPhrases.pastSimple;
 
-    const env: PerformEnvironment = {
-      tb,
-      performingServices,
-      actPast,
-      actPres,
-      framework,
-      actionServerlessCommand,
-      actionTitle,
-      actionDependenciesReversed,
-      skipServiceIfNotDeployed,
-    };
+      const env: PerformEnvironment = {
+        tb,
+        performingServices,
+        actPast,
+        actPres,
+        framework,
+        actionServerlessCommand,
+        actionTitle,
+        actionDependenciesReversed,
+        skipServiceIfNotDeployed,
+      };
 
-    // EXECUTION
+      // EXECUTION
 
-    const log = createLog(env);
+      const log = createLog(env);
 
-    log(`${cap(actPres)} Services ${joinCQ(performingServices.map((s) => s.schema.name))}`);
-    log(
-      chalk`Stage: "{blue ${framework.stage}}" `
-       + (
-         framework.profile !== undefined
-           ? chalk`Profile: "{blue ${framework.profile}}"` : chalk`Profile: {blue default}`
-       ),
-    );
+      log(`${cap(actPres)} Services ${joinCQ(performingServices.map((s) => s.schema.name))}`);
+      log(
+        chalk`Stage: "{blue ${framework.stage}}" `
+        + (
+          framework.profile !== undefined
+            ? chalk`Profile: "{blue ${framework.profile}}"` : chalk`Profile: {blue default}`
+        ),
+      );
 
-    const startTime = hrtime();
+      const startTime = hrtime();
 
-    if (parallel) {
-      await performParallel(env);
-    } else {
-      await performSequential(env);
-    }
+      if (parallel) {
+        await performParallel(env);
+      } else {
+        await performSequential(env);
+      }
 
-    const endTimeInSec = hrtime(startTime)[0].toString(10);
+      const endTimeInSec = hrtime(startTime)[0].toString(10);
 
-    log(chalk`{green Finished ${cap(actPres)} ({blue ${endTimeInSec} seconds}) }`);
+      log(chalk`{green Finished ${cap(actPres)} ({blue ${endTimeInSec} seconds}) }`);
+    })().catch(console.error);
   };
 }

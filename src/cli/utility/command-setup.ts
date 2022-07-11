@@ -64,23 +64,25 @@ export function createHookCommand(hookName: keyof ServiceHookMap): GC {
   return {
     name: hookName.toString(),
     description: `Executes "${hookName.toString()}" hook`,
-    run: async (tb: TB): Promise<void> => {
-      const framework = await setupFrameworkContextFunction(tb);
+    run: (tb: TB) => {
+      (async () => {
+        const framework = await setupFrameworkContextFunction(tb);
 
-      const [...serviceIds] = requireVariadicParameters(tb, "service-name");
+        const [...serviceIds] = requireVariadicParameters(tb, "service-name");
 
-      const services = serviceIds.length === 0 ? framework.services
-        : filterDuplicates(serviceIds.map((id) => getService(framework, id)));
+        const services = serviceIds.length === 0 ? framework.services
+          : filterDuplicates(serviceIds.map((id) => getService(framework, id)));
 
-      for (let i = 0; i < services.length; i += 1) {
-        const service = services[i];
+        for (let i = 0; i < services.length; i += 1) {
+          const service = services[i];
 
-        const log = (
-          msg: string, raw: boolean,
-        ): void => tb.log(msg, `${hookName} ${service.name}`, raw);
+          const log = (
+            msg: string, raw: boolean,
+          ): void => tb.log(msg, `${hookName} ${service.name}`, raw);
 
-        await executeHook(service, hookName, { async: false, log });
-      }
+          await executeHook(service, hookName, { async: false, log });
+        }
+      })().catch(console.error);
     },
   };
 }
