@@ -91,7 +91,7 @@ export class AwsStack extends AbstractStack<AwsProviderDefinition, AwsStackData>
     const emptyBucketAndIgnoreMissingBuckets = async (bucket: string): Promise<void> => {
       try {
         await this.emptyBucket(bucket);
-      } catch (err) {
+      } catch (err: any) {
         if (err.code !== "NoSuchBucket") {
           throw err;
         }

@@ -16,7 +16,7 @@ export abstract class AbstractProvider<
   D extends APD, // AbstractProviderDefinition
   ID extends AbstractProviderImportData<any, any>, // ProviderImportData
   TEV, // TemplateExportValue
-  DIV // DirectImportValue
+  DIV, // DirectImportValue
 > extends AbstractBase<D> {
   abstract readonly name: ServerlessProviderName;
 

@@ -5,5 +5,4 @@ export interface TB extends GluegunToolbox {
   log: Log;
 }
 
-// @ts-ignore
 export type GC = GluegunCommand<TB>;

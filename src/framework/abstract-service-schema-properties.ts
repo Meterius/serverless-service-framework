@@ -36,5 +36,5 @@ interface BaseProperties {
 type ServiceSchemaSpecificProperties = BaseProperties & TemplateProperties & DependencyProperties;
 
 export type AbstractServiceSchemaProperties<
-  D extends APD // AbstractProviderDefinition
+  D extends APD, // AbstractProviderDefinition
 > = ServiceSchemaSpecificProperties & CommonSchemaProperties<D>;

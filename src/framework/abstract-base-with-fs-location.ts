@@ -32,7 +32,7 @@ export abstract class AbstractBaseWithFsLocation<
   async retrieveFile(relPath: string): Promise<string | undefined> {
     try {
       return (await readFile(this.resolvePath(relPath))).toString();
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === "ENOENT") {
         return undefined;
       } else {

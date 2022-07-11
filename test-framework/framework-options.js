@@ -4,6 +4,7 @@ module.exports = {
 
 	usernameStageMap: {
 		"jondow8": "hoff",
-		"Jondow8": "hoff"
+		"Jondow8": "hoff",
+		"jonah": "hoff",
 	},
 };

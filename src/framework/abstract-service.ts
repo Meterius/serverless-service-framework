@@ -1,6 +1,3 @@
-import {
-  mkdirp, writeFile,
-} from "fs-extra";
 import path from "path";
 import { ExecOptions } from "child_process";
 import {
@@ -27,7 +24,6 @@ import {
   ServerlessTemplatePreNaming,
   ServerlessTemplatePrePreparation,
 } from "./templates";
-import { serviceBuild, serviceBuildDir } from "../common/constants";
 import { merge } from "../common/utility";
 import { AbstractServiceSchema } from "./abstract-service-schema";
 import { bufferedExec } from "../common/buffered-exec";
@@ -368,34 +364,6 @@ export abstract class AbstractService<
   }
 
   /*
-   * Service Build Directory Management
-   */
-
-  private getServiceBuildDir(): string {
-    return this.resolvePath(serviceBuildDir);
-  }
-
-  private resolveServiceBuildPath(relPath: string): string {
-    return path.join(this.getServiceBuildDir(), relPath);
-  }
-
-  /**
-   * Writes file into service build directory and creates necessary directories.
-   * Returns absolute file path of written file.
-   */
-  private async writeServiceBuildFile(
-    relPath: string,
-    fileData: string,
-  ): Promise<string> {
-    const filePath = this.resolveServiceBuildPath(relPath);
-
-    await mkdirp(path.dirname(filePath));
-    await writeFile(filePath, fileData);
-
-    return filePath;
-  }
-
-  /*
    * Template Processing
    */
 
@@ -419,7 +387,7 @@ export abstract class AbstractService<
   ): Promise<ServerlessTemplatePostPreparation> {
     return {
       ...template,
-      service: template.service || {},
+      service: undefined,
       custom: template.custom || {},
       resources: template.resources || {},
     };
@@ -431,10 +399,7 @@ export abstract class AbstractService<
     return {
       ...template,
 
-      service: {
-        ...template.service,
-        name: this.getTemplateServiceName(),
-      },
+      service: this.getTemplateServiceName(),
 
       provider: {
         ...template.provider,
@@ -558,14 +523,14 @@ export abstract class AbstractService<
    * Writes serverless template to service build directory.
    * Returns absolute file path of written template file.
    */
-  private writeSerializedServerlessTemplate(
+  private async writeSerializedServerlessTemplate(
     serverlessTemplate: ServerlessTemplate,
   ): Promise<string> {
     const data = `module.exports = ${JSON.stringify(serverlessTemplate, undefined, " ")};`;
+    const relFilePath = ".service.serverless.js";
 
-    return this.writeServiceBuildFile(
-      `${serviceBuild.serverlessTemplate}.js`,
-      data,
-    );
+    await this.writeFile(relFilePath, data);
+
+    return this.resolvePath(relFilePath);
   }
 }

@@ -9,5 +9,5 @@ interface BaseProperties {
 }
 
 export type AbstractFrameworkSchemaProperties<
-  D extends APD
+  D extends APD,
   > = BaseProperties & CommonSchemaProperties<D>;

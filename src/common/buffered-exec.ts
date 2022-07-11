@@ -47,7 +47,7 @@ export async function bufferedExec(params: BufferedExecParams): Promise<void> {
         ...options,
         stdio: "inherit",
       });
-    } catch (execErr) {
+    } catch (execErr: any) {
       err = execErr;
     }
 

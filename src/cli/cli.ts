@@ -7,7 +7,7 @@ const help: GC = {
   name: "help",
   alias: "h",
   description: "Displays Help Page",
-  run: async (tb: TB): Promise<void> => {
+  run: (tb: TB): void => {
     tb.print.printHelp(tb);
   },
 };

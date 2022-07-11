@@ -73,7 +73,7 @@ DirectImportValue
       response = await cf.describeStacks({
         StackName: service.stackName,
       }).promise();
-    } catch (err) {
+    } catch (err: any) {
       if (err.code === "ValidationError"
         && err.message === `Stack with id ${service.stackName} does not exist`) {
         return undefined;
